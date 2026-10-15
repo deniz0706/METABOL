@@ -93,12 +93,12 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("M E T A B O L", color = AMint, fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 3.sp, fontSize = 13.sp)
-                Text("INSIGHTS  /  02", color = AMuted, fontSize = 10.sp, letterSpacing = 1.sp)
+                Text("KİLO TAKİBİ  /  02", color = AMuted, fontSize = 10.sp, letterSpacing = 1.sp)
             }
             Spacer(Modifier.height(24.dp))
             Text("Analiz", color = AText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(4.dp))
-            Text("Sayıların ardındaki değişimi keşfet.", color = AMuted, fontSize = 13.sp)
+            Text("Kilonun zaman içinde nasıl değiştiğini gör.", color = AMuted, fontSize = 13.sp)
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -121,7 +121,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                     RoundedCornerShape(28.dp))
                 .border(1.dp, Color(0xFF2C554F), RoundedCornerShape(28.dp))
                 .padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("NET KİLO DEĞİŞİMİ", color = AMint, fontSize = 10.sp, letterSpacing = 1.8.sp)
+                Text("SEÇİLEN DÖNEMDE KİLO FARKI", color = AMint, fontSize = 10.sp, letterSpacing = 1.8.sp)
                 Text(stats.change?.let { (if (it > 0f) "+" else "") + fmt.format(it) + " kg" } ?: "—",
                     color = AText, fontSize = 43.sp, fontWeight = FontWeight.ExtraBold)
                 Text("${stats.count} kayıt · ${listOf("Tüm zamanlar", "Son 7 gün", "Son 30 gün", "Son 90 gün")[period]}",
@@ -144,7 +144,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         item {
             Column(Modifier.fillMaxWidth().background(APanel, RoundedCornerShape(24.dp))
                 .border(1.dp, AEdge, RoundedCornerShape(24.dp)).padding(20.dp)) {
-                Text("ÖLÇÜM ÖZETİ", color = AMuted, fontSize = 11.sp, letterSpacing = 2.sp)
+                Text("TARTI KAYITLARININ ÖZETİ", color = AMuted, fontSize = 11.sp, letterSpacing = 2.sp)
                 Spacer(Modifier.height(16.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     AnalysisValue("İlk ölçüm", stats.first?.let { fmt.format(it) + " kg" } ?: "—", Modifier.weight(1f))
@@ -176,7 +176,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         item {
             Column(Modifier.fillMaxWidth().background(APanel, RoundedCornerShape(24.dp))
                 .padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("SON 7 TAKVİM GÜNÜ TRENDİ", color = AMuted, fontSize = 11.sp)
+                Text("SON 7 GÜNDE ORTALAMA KİLO", color = AMuted, fontSize = 11.sp)
                 Text(calendarTrend?.let { fmt.format(it) + " kg" } ?: "Yetersiz veri",
                     color = AMint, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text("Her günün son ölçümü kullanılır. En az 3 farklı gün gerekir; kayıtsız günler sıfır sayılmaz.",
@@ -185,7 +185,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         }
         item {
             Column(Modifier.fillMaxWidth().background(APanel, RoundedCornerShape(24.dp)).padding(20.dp)) {
-                Text("Veriyi doğru yorumla", color = AText, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+                Text("Tartı değişimini nasıl yorumlamalısın?", color = AText, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
                 Spacer(Modifier.height(10.dp))
                 Text(
                     if (stats.count < 2) "Değişim analizi için en az iki farklı tarihte ölçüm kaydet."
