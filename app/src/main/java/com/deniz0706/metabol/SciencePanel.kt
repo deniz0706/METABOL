@@ -72,7 +72,9 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         Metric("BMR · Mifflin–St Jeor", kcal(result.bmr))
         Metric("TDEE · Aktiviteye dayalı", kcal(result.initialTdee))
         Metric("AME · Kayıtlardan tahmin", kcal(result.inferredTdee))
-        Metric("Veri güvenilirliği", "${result.reliability}/100 · ${result.reliabilityLabel}")
+        Metric("Kayıt düzenliliği", "${result.reliability}/100 · ${result.reliabilityLabel}")
+        Text("Bu puan ölçüm doğruluğunu değil, kayıtların yeterliliğini gösterir.",
+            color = muted, fontSize = 11.sp)
         Metric("Kütleye bağlı harcama farkı", result.expectedTdeeChange?.let {
             String.format(Locale.US, "%+.0f kcal/gün", it)
         } ?: "Veri yetersiz")
@@ -82,6 +84,8 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         Metric("28 günlük beslenme kaydı", "${result.recordedDays}/28 gün")
         Metric("28 günlük kilo kaydı", "${result.observedDays} gün")
         Metric("Kayıtlı günlerde ort. enerji", kcal(result.dailyCalorieAverage))
+        Text("Kilo trendi, ilk ve son haftanın medyan ölçümleriyle hesaplanır; tek günlük artışlar yağ kazanımı olarak değerlendirilmez.",
+            color = muted, fontSize = 11.sp)
         Metric("Kilo değişim hızı", result.trendKgPerWeek?.let {
             String.format(Locale.US, "%+.2f kg/hafta", it)
         } ?: "Veri yetersiz")
@@ -91,6 +95,8 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             null -> "Veri yetersiz"
         })
         HorizontalDivider(color = Color(0xFF2A394B))
+        Text("Aşağıdaki 30 günlük değer bir senaryodur; hedef veya gerçekleşeceği kesin bir sonuç değildir.",
+            color = muted, fontSize = 11.sp)
         Metric("30 gün sonrası · Senaryo", result.forecast30Kg?.let {
             String.format(Locale.US, "%.1f kg", it)
         } ?: "Veri yetersiz")
