@@ -33,7 +33,13 @@ internal object MetabolicScience {
                     entries.lastOrNull { it.calories != null }?.calories)
             }.sortedBy { it.date }
         val weights = valid.filter { it.weightKg != null && it.weightKg in 20.0..500.0 }
-        val lastWeight = weights.lastOrNull()?.weightKg
+        // Use the median of the latest seven calendar days to dampen transient
+        // water-weight spikes before computing baseline and forecasts.
+        val latestDate = weights.lastOrNull()?.date
+        val lastWeight = latestDate?.let { end ->
+            weights.filter { !it.date.isBefore(end.minusDays(6)) }
+                .mapNotNull { it.weightKg }.takeIf { it.size >= 3 }?.let(::median)
+        } ?: weights.lastOrNull()?.weightKg
         val bmr = if (profile != null && lastWeight != null) bmr(profile, lastWeight) else null
         val initial = bmr?.times(profile!!.activity)
         val windowStart = today.minusDays(27)
