@@ -539,8 +539,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     color = NutritionMuted, modifier = Modifier.padding(vertical = 20.dp))
             }
         } else {
-            items(meals.size) { index ->
-                val meal = meals[index]
+            items(meals, key = { it.id }) { meal ->
                 Row(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(18.dp)).padding(16.dp)) {
                     Column(Modifier.weight(1f)) {
                         Text(meal.name, color = NutritionWhite, fontWeight = FontWeight.SemiBold)
@@ -726,7 +725,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
                             Spacer(Modifier.height(5.dp))
                         }
-                        items(onlineResults) { food ->
+                        items(onlineResults, key = { "online_" + it.name }) { food ->
                             FoodSearchRow(food, true) {
                                 selectedFood = food
                                 selectedGrams = "100"
@@ -744,7 +743,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             Text("KAYDETTİĞİN ÜRÜNLER · ${savedResults.size}",
                                 color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
                         }
-                        items(savedResults) { food ->
+                        items(savedResults, key = { "saved_" + it.name }) { food ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.weight(1f)) {
                                     FoodSearchRow(food, true) {
