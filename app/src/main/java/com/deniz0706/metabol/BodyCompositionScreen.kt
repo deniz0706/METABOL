@@ -3,6 +3,7 @@ package com.deniz0706.metabol
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,7 +36,10 @@ private val BodyText = Color(0xFFF4F8FC)
 private val BodyMuted = Color(0xFF8B9CB2)
 
 private data class BodyRecord(
-    val id: Long, val fatPercent: Double?, val muscleKg: Double?, val waistCm: Double?
+    val id: Long, val fatPercent: Double?, val muscleKg: Double?, val waistCm: Double?,
+    val boneKg: Double? = null, val waterPercent: Double? = null,
+    val chestCm: Double? = null, val underChestCm: Double? = null,
+    val metabolicAge: Double? = null, val visceralFat: Double? = null
 )
 
 @Composable
@@ -47,7 +51,9 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             (0 until array.length()).map { index ->
                 val obj = array.getJSONObject(index)
                 fun optional(key: String) = if (obj.isNull(key)) null else obj.getDouble(key)
-                BodyRecord(obj.getLong("id"), optional("fat"), optional("muscle"), optional("waist"))
+                BodyRecord(obj.getLong("id"), optional("fat"), optional("muscle"), optional("waist"),
+                    optional("bone"), optional("water"), optional("chest"),
+                    optional("underChest"), optional("metabolicAge"), optional("visceralFat"))
             }.sortedBy { it.id }
         }.getOrDefault(emptyList()))
     }
@@ -56,7 +62,10 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         val array = JSONArray()
         records.forEach { r ->
             array.put(JSONObject().put("id", r.id).put("fat", r.fatPercent)
-                .put("muscle", r.muscleKg).put("waist", r.waistCm))
+                .put("muscle", r.muscleKg).put("waist", r.waistCm)
+                .put("bone", r.boneKg).put("water", r.waterPercent)
+                .put("chest", r.chestCm).put("underChest", r.underChestCm)
+                .put("metabolicAge", r.metabolicAge).put("visceralFat", r.visceralFat))
         }
         prefs.edit().putString("records", array.toString()).apply()
     }
@@ -88,7 +97,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                     SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR")).format(Date(it.id))
                 } ?: "Henüz ölçüm yok", color = BodyText, fontSize = 25.sp,
                     fontWeight = FontWeight.ExtraBold)
-                Text("${records.size} kayıt · Yağ, kas ve bel çevresi", color = BodyMuted, fontSize = 12.sp)
+                Text("${records.size} kayıt · Yağ, kas, su ve çevre ölçümleri", color = BodyMuted, fontSize = 12.sp)
             }
         }
         item {
@@ -206,7 +215,10 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                             color = BodyText, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(5.dp))
                         val values = listOfNotNull(r.fatPercent?.let { "Yağ $it%" },
-                            r.muscleKg?.let { "Kas $it kg" }, r.waistCm?.let { "Bel $it cm" })
+                            r.muscleKg?.let { "Kas $it kg" }, r.waistCm?.let { "Bel $it cm" },
+                            r.boneKg?.let { "Kemik $it kg" }, r.waterPercent?.let { "Su $it%" },
+                            r.chestCm?.let { "Göğüs $it cm" }, r.underChestCm?.let { "Göğüs altı $it cm" },
+                            r.metabolicAge?.let { "Metabolizma yaşı $it" }, r.visceralFat?.let { "Visseral yağ $it" })
                         Text(values.joinToString("  ·  "), color = BodyMuted, fontSize = 12.sp)
                     }
                     TextButton(onClick = { editingRecord = r; showAdd = true }) {
@@ -256,17 +268,30 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         var fat by remember(editingRecord) { mutableStateOf(editingRecord?.fatPercent?.toString() ?: "") }
         var muscle by remember(editingRecord) { mutableStateOf(editingRecord?.muscleKg?.toString() ?: "") }
         var waist by remember(editingRecord) { mutableStateOf(editingRecord?.waistCm?.toString() ?: "") }
+        var bone by remember(editingRecord) { mutableStateOf(editingRecord?.boneKg?.toString() ?: "") }
+        var water by remember(editingRecord) { mutableStateOf(editingRecord?.waterPercent?.toString() ?: "") }
+        var chest by remember(editingRecord) { mutableStateOf(editingRecord?.chestCm?.toString() ?: "") }
+        var underChest by remember(editingRecord) { mutableStateOf(editingRecord?.underChestCm?.toString() ?: "") }
+        var metabolicAge by remember(editingRecord) { mutableStateOf(editingRecord?.metabolicAge?.toString() ?: "") }
+        var visceralFat by remember(editingRecord) { mutableStateOf(editingRecord?.visceralFat?.toString() ?: "") }
         fun parse(value: String) = value.replace(',', '.').toDoubleOrNull()
-        val valid = parsedDate != null && listOf(fat, muscle, waist).any { it.isNotBlank() } &&
+        val valid = parsedDate != null && listOf(fat, muscle, waist, bone, water, chest, underChest, metabolicAge, visceralFat).any { it.isNotBlank() } &&
             (fat.isBlank() || (parse(fat) ?: -1.0) in 0.0..75.0) &&
             (muscle.isBlank() || (parse(muscle) ?: -1.0) in 0.0..300.0) &&
-            (waist.isBlank() || (parse(waist) ?: -1.0) in 20.0..300.0)
+            (waist.isBlank() || (parse(waist) ?: -1.0) in 20.0..300.0) &&
+            (bone.isBlank() || (parse(bone) ?: -1.0) in 0.0..20.0) &&
+            (water.isBlank() || (parse(water) ?: -1.0) in 0.0..100.0) &&
+            (chest.isBlank() || (parse(chest) ?: -1.0) in 0.0..300.0) &&
+            (underChest.isBlank() || (parse(underChest) ?: -1.0) in 0.0..300.0) &&
+            (metabolicAge.isBlank() || (parse(metabolicAge) ?: -1.0) in 0.0..120.0) &&
+            (visceralFat.isBlank() || (parse(visceralFat) ?: -1.0) in 0.0..100.0)
         AlertDialog(
             onDismissRequest = { showAdd = false },
             containerColor = BodyCard,
             title = { Text(if (editingRecord == null) "Yeni vücut ölçümü" else "Ölçümü düzenle", color = BodyText) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.heightIn(max = 440.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Bilmediğin alanları boş bırakabilirsin.", color = BodyMuted, fontSize = 12.sp)
                     OutlinedTextField(dateText, { dateText = it }, label = { Text("Tarih (YYYY-AA-GG)") }, singleLine = true)
                     OutlinedTextField(fat, { fat = it }, label = { Text("Yağ oranı (%)") },
@@ -275,13 +300,27 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                         singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     OutlinedTextField(waist, { waist = it }, label = { Text("Bel çevresi (cm)") },
                         singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(bone, { bone = it }, label = { Text("Kemik kütlesi (kg)") },
+                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(water, { water = it }, label = { Text("Vücut su oranı (%)") },
+                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(chest, { chest = it }, label = { Text("Göğüs çevresi (cm)") },
+                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(underChest, { underChest = it }, label = { Text("Göğüs altı (cm)") },
+                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(metabolicAge, { metabolicAge = it }, label = { Text("Metabolizma yaşı") },
+                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(visceralFat, { visceralFat = it }, label = { Text("Visseral yağ göstergesi") },
+                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 }
             },
             confirmButton = {
                 TextButton(enabled = valid, onClick = {
                     if (valid) {
                         val updated = BodyRecord(parsedDate!!.time + 12 * 3_600_000L,
-                            parse(fat), parse(muscle), parse(waist))
+                            parse(fat), parse(muscle), parse(waist),
+                            parse(bone), parse(water), parse(chest), parse(underChest),
+                            parse(metabolicAge), parse(visceralFat))
                         save(if (editingRecord == null) records + updated else records.map {
                             if (it.id == editingRecord!!.id) updated else it
                         })
