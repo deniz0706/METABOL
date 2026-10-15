@@ -96,10 +96,27 @@ internal object OpenFoodFacts {
             val quantity = product.optString("quantity")
             val quantityNumber = product.optDouble("product_quantity", Double.NaN)
             val quantityUnit = product.optString("product_quantity_unit")
-            val packageGrams = if (quantityNumber.isFinite() && quantityNumber in 1.0..5000.0 &&
-                quantityUnit.lowercase() in listOf("g", "gr", "gram", "grams")) quantityNumber.toInt()
-                else Regex("""(?i)(\d{1,4}(?:[.,]\d+)?)\s*(?:g|gr|gram|grams)\b""").find(quantity)
-                    ?.groupValues?.get(1)?.replace(",", ".")?.toDoubleOrNull()?.toInt()
+            // OFF quantity may be "35 g", "2 x 35 g", "0.5 kg" or numeric metadata.
+            // Do not interpret ml/L as grams: density is unknown.
+            val normalizedUnit = quantityUnit.trim().lowercase(java.util.Locale.ROOT)
+            val metadataGrams = when (normalizedUnit) {
+                "g", "gr", "gram", "grams" -> quantityNumber
+                "kg", "kilogram", "kilograms" -> quantityNumber * 1000.0
+                else -> Double.NaN
+            }
+            val quantityMatch = Regex(
+                """(?i)(?:(\\d{1,2})\\s*[x×]\\s*)?(\\d{1,4}(?:[.,]\\d+)?)\\s*(kg|kilograms?|grams?|gr|g)\\b"""
+            ).find(quantity)
+            val textGrams = quantityMatch?.let { match ->
+                val count = match.groupValues[1].toIntOrNull() ?: 1
+                val amount = match.groupValues[2].replace(",", ".").toDoubleOrNull() ?: 0.0
+                val multiplier = if (match.groupValues[3].lowercase().startsWith("k")) 1000.0 else 1.0
+                count * amount * multiplier
+            } ?: Double.NaN
+            // Prefer the package text for multipacks; metadata can describe one item.
+            val rawGrams = if (textGrams.isFinite()) textGrams else metadataGrams
+            val packageGrams = rawGrams.takeIf { it.isFinite() && it in 1.0..5000.0 }
+                ?.toInt()?.takeIf { it > 0 }
             val note = if (packageGrams != null) "Open Food Facts · Paket: ${packageGrams} g · Etiketten doğrula"
                 else "Open Food Facts · Etiketten doğrula"
             FoodReference(displayName.take(120),kcal,p,c,f,note)
