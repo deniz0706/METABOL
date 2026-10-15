@@ -429,9 +429,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 HorizontalDivider(color = Color(0xFF30445C))
                 Spacer(Modifier.height(16.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    MacroValue("Protein", protein, NutritionMint)
-                    MacroValue("Karbonhidrat", carbs, Color(0xFF80A9FF))
-                    MacroValue("Yağ", fat, Color(0xFFFFC483))
+                    MacroValue("Protein", protein, NutritionMint, macroCalories, 4.0)
+                    MacroValue("Karbonhidrat", carbs, Color(0xFF80A9FF), macroCalories, 4.0)
+                    MacroValue("Yağ", fat, Color(0xFFFFC483), macroCalories, 9.0)
                 }
                 if (proteinTarget != null) {
                     Spacer(Modifier.height(16.dp))
@@ -1251,7 +1251,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MacroValue(label: String, value: Double, color: Color) {
+private fun MacroValue(label: String, value: Double, color: Color, totalMacroCalories: Double, caloriesPerGram: Double) {
     val animatedValue by animateFloatAsState(
         targetValue = value.toFloat(), animationSpec = tween(650),
         label = "macro-${label}"
@@ -1260,7 +1260,9 @@ private fun MacroValue(label: String, value: Double, color: Color) {
         verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(Modifier.size(70.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
-                progress = { (animatedValue / 100f).coerceIn(0f, 1f) },
+                progress = { if (totalMacroCalories > 0.0)
+                    ((animatedValue * caloriesPerGram) / totalMacroCalories).toFloat().coerceIn(0f, 1f)
+                else 0f },
                 modifier = Modifier.fillMaxSize(),
                 color = color,
                 trackColor = Color(0xFF30445C),
@@ -1271,6 +1273,6 @@ private fun MacroValue(label: String, value: Double, color: Color) {
                 fontWeight = FontWeight.ExtraBold)
         }
         Text(label, color = NutritionMuted, fontSize = 11.sp)
-        Text("gram", color = color, fontSize = 10.sp)
+        Text("g · enerji payı", color = color, fontSize = 10.sp)
     }
 }
