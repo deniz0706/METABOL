@@ -296,7 +296,6 @@ private fun Dashboard(
     var revealed by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { revealed = true }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        item { Header() }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
@@ -362,6 +361,7 @@ private fun Dashboard(
         }
             }
         item {
+            AnimatedVisibility(visible = revealed, enter = fadeIn(tween(700)) + slideInHorizontally(tween(650)) { it / 6 }) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f)
                     .background(Surface, RoundedCornerShape(22.dp))
@@ -380,6 +380,7 @@ private fun Dashboard(
                         color = White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
                     Text("bugün kaydedilen", color = Muted, fontSize = 11.sp)
                 }
+            }
             }
         }
         item {
