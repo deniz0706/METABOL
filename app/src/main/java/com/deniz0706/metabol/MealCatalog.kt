@@ -3,6 +3,9 @@ package com.deniz0706.metabol
 /** Ev tipi tarifler için yaklaşık 100 gram değerleri; tarif ve yağ miktarı sonucu değiştirir. */
 internal object MealCatalog {
     val foods: List<FoodReference> = listOf(
+        FoodReference("Tavada yumurta - az yağlı", 195.0, 13.5, 1.0, 15.0, "Yaklaşık · YEMEK · 100 g"),
+        FoodReference("Tavada yumurta - tereyağlı", 230.0, 13.0, 1.0, 19.5, "Yaklaşık · YEMEK · 100 g"),
+        FoodReference("Tavada yumurta - yağsız", 155.0, 12.6, 1.1, 10.6, "Yaklaşık · YEMEK · 100 g"),
         FoodReference("Etli türlü", 115.0, 8.0, 8.0, 6.0, "Yaklaşık · HAZIR YEMEK · 100 g"),
         FoodReference("Sebzeli türlü", 85.0, 2.0, 10.0, 4.0, "Yaklaşık · HAZIR YEMEK · 100 g"),
         FoodReference("Tas kebabı", 155.0, 15.0, 5.0, 8.0, "Yaklaşık · HAZIR YEMEK · 100 g"),
