@@ -1,4 +1,4 @@
-name: Android Debug APK
+name: Android APK Builds
 
 on:
   push:
@@ -32,6 +32,15 @@ jobs:
         run: gradle --no-daemon :app:testDebugUnitTest
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
+      - name: Build performance-test APK
+        run: gradle --no-daemon :app:assembleRelease
+      - name: Upload performance-test APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: METABOL-performance-test-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 14
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4
