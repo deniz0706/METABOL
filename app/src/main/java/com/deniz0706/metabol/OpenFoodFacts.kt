@@ -84,7 +84,11 @@ internal object OpenFoodFacts {
             val name = product.optString("product_name_tr").ifBlank { product.optString("product_name") }.trim().take(100)
             val n = product.optJSONObject("nutriments") ?: return@mapNotNull null
             if (name.isEmpty()) return@mapNotNull null
-            val kcal = n.optDouble("energy-kcal_100g", Double.NaN)
+            val kcalDirect = n.optDouble("energy-kcal_100g", Double.NaN)
+            val energyKj = n.optDouble("energy-kj_100g", Double.NaN)
+            val kcal = if (kcalDirect.isFinite()) kcalDirect
+                else if (energyKj.isFinite()) energyKj / 4.184
+                else Double.NaN
             val p = n.optDouble("proteins_100g", Double.NaN)
             val c = n.optDouble("carbohydrates_100g", Double.NaN)
             val f = n.optDouble("fat_100g", Double.NaN)
