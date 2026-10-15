@@ -397,7 +397,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }
         item {
-            Column(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF79445E), Color(0xFF38263E), NutritionPanel)), RoundedCornerShape(28.dp)).border(1.dp, Color(0xFF715068), RoundedCornerShape(28.dp)).padding(23.dp)) {
+            Column(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF24485D), Color(0xFF152D42), NutritionPanel)), RoundedCornerShape(28.dp)).border(1.dp, Color(0xFF34586D), RoundedCornerShape(28.dp)).padding(23.dp)) {
                 Text("TOPLAM ENERJİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -464,7 +464,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             Column(
                 Modifier.fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(listOf(Color(0xFF263C5C), Color(0xFF201C37))),
+                        Brush.verticalGradient(listOf(Color(0xFF24465C), Color(0xFF172A40))),
                         RoundedCornerShape(26.dp)
                     )
                     .border(1.dp, Color(0xFF38527C), RoundedCornerShape(26.dp))
@@ -1252,10 +1252,25 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MacroValue(label: String, value: Double, color: Color) {
-    Column {
+    val animatedValue by animateFloatAsState(
+        targetValue = value.toFloat(), animationSpec = tween(650),
+        label = "macro-${label}"
+    )
+    Column(horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.size(70.dp), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(
+                progress = { (animatedValue / 100f).coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxSize(),
+                color = color,
+                trackColor = Color(0xFF30445C),
+                strokeWidth = 6.dp
+            )
+            Text(String.format(Locale("tr", "TR"), "%.0f", animatedValue),
+                color = NutritionWhite, fontSize = 17.sp,
+                fontWeight = FontWeight.ExtraBold)
+        }
         Text(label, color = NutritionMuted, fontSize = 11.sp)
-        Spacer(Modifier.height(7.dp))
-        Text(String.format(Locale.US, "%.1f g", value), color = color, fontSize = 17.sp,
-            fontWeight = FontWeight.Bold)
+        Text("gram", color = color, fontSize = 10.sp)
     }
 }
