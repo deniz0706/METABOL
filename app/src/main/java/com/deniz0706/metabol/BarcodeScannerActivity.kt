@@ -116,7 +116,6 @@ class BarcodeScannerActivity : ComponentActivity() {
                                             val vibrator = getSystemService(VIBRATOR_SERVICE) as? Vibrator
                                             if (android.os.Build.VERSION.SDK_INT >= 26)
                                                 vibrator?.vibrate(VibrationEffect.createOneShot(75, VibrationEffect.DEFAULT_AMPLITUDE))
-                                            else @Suppress("DEPRECATION") vibrator?.vibrate(75)
                                         }
                                         setResult(Activity.RESULT_OK, Intent().putExtra(EXTRA_BARCODE, code))
                                         finish()
