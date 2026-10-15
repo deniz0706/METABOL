@@ -116,7 +116,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
             val allowed = when (name) {
                 "metabol_local" -> key == "weights"
                 "metabol_body" -> key == "records"
-                "metabol_profile" -> key == "goal_weight"
+                "metabol_profile" -> key in listOf("goal_weight", "calorie_target", "protein_target")
                 "metabol_nutrition" -> key.startsWith("meals_") ||
                     key == "recent_foods" || key == "saved_foods"
                 else -> false
@@ -181,6 +181,13 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                         }
                     }
                 }
+                name == "metabol_profile" && key == "calorie_target" -> {
+                    if ((value.toIntOrNull() ?: -1) !in 500..10000) return false
+                }
+                name == "metabol_profile" && key == "protein_target" -> {
+                    val target = value.toDoubleOrNull() ?: return false
+                    if (!target.isFinite() || target !in 1.0..500.0) return false
+                }
                 name == "metabol_profile" && key == "goal_weight" -> {
                     if ((value.toFloatOrNull() ?: -1f) !in 20f..500f) return false
                 }
@@ -205,6 +212,17 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
     var goalInput by remember { mutableStateOf(profilePrefs.getString("goal_weight", "") ?: "") }
     val goalValue = goalInput.replace(',', '.').toFloatOrNull()
     val goalValid = goalValue != null && goalValue in 20f..500f
+    var calorieTargetInput by remember {
+        mutableStateOf(profilePrefs.getString("calorie_target", "") ?: "")
+    }
+    var proteinTargetInput by remember {
+        mutableStateOf(profilePrefs.getString("protein_target", "") ?: "")
+    }
+    val calorieTarget = calorieTargetInput.trim().toIntOrNull()
+    val proteinTarget = proteinTargetInput.trim().replace(',', '.').toDoubleOrNull()
+    val calorieTargetValid = calorieTargetInput.isBlank() || calorieTarget in 500..10000
+    val proteinTargetValid = proteinTargetInput.isBlank() ||
+        (proteinTarget != null && proteinTarget.isFinite() && proteinTarget in 1.0..500.0)
     var pendingImport by remember { mutableStateOf<String?>(null) }
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -302,6 +320,46 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                     message = "Hedef kaldırıldı."
                     onGoalChanged()
                 }) { Text("Hedefi kaldır", color = SMuted) }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(SCard, RoundedCornerShape(24.dp)).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(13.dp)) {
+                Text("Beslenme hedefleri", color = SText, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text("Kendi belirlediğin hedefleri takip et. METABOL otomatik kalori kısıtlaması önermez.",
+                    color = SMuted, fontSize = 12.sp)
+                OutlinedTextField(
+                    value = calorieTargetInput, onValueChange = { calorieTargetInput = it },
+                    label = { Text("Günlük enerji hedefi (kcal) · isteğe bağlı") },
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = proteinTargetInput, onValueChange = { proteinTargetInput = it },
+                    label = { Text("Günlük protein hedefi (g) · isteğe bağlı") },
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                if (!calorieTargetValid || !proteinTargetValid) {
+                    Text("Kalori hedefi 500–10000, protein hedefi 1–500 arasında olmalı.",
+                        color = Color(0xFFFF879A), fontSize = 12.sp)
+                }
+                Button(
+                    onClick = {
+                        val editor = profilePrefs.edit()
+                        if (calorieTarget == null) editor.remove("calorie_target")
+                        else editor.putString("calorie_target", calorieTarget.toString())
+                        if (proteinTarget == null) editor.remove("protein_target")
+                        else editor.putString("protein_target", proteinTarget.toString())
+                        if (editor.commit()) message = "Beslenme hedefleri kaydedildi."
+                        else message = "Hedefler kaydedilemedi."
+                    },
+                    enabled = calorieTargetValid && proteinTargetValid,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = SMint, contentColor = SBack)
+                ) { Text("Beslenme hedeflerini kaydet") }
+                Text("Alanları boş bırakıp kaydederek hedefleri kaldırabilirsin.",
+                    color = SMuted, fontSize = 11.sp)
             }
         }
         item {
