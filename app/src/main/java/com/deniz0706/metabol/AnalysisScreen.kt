@@ -1,5 +1,11 @@
 package com.deniz0706.metabol
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Brush
@@ -85,9 +91,9 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
     val stats = remember(filtered) { summarizeWeights(filtered) }
     val calendarTrend = remember(points) { sevenDayCalendarTrend(points) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val animatedChange by animateFloatAsState(stats.change ?: 0f, tween(650), label = "weight-change")
     LazyColumn(modifier.fillMaxSize().background(ABack),
         contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { SciencePanel(context, points) }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
@@ -117,16 +123,16 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         }
         item {
             Column(Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(Color(0xFF21473F), Color(0xFF172C37), APanel)),
+                .background(Brush.linearGradient(listOf(Color(0xFF714361), Color(0xFF3A2B4D), APanel)),
                     RoundedCornerShape(28.dp))
-                .border(1.dp, Color(0xFF2C554F), RoundedCornerShape(28.dp))
+                .border(1.dp, Color(0xFF76506D), RoundedCornerShape(28.dp))
                 .padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("SEÇİLEN DÖNEMDE KİLO FARKI", color = AMint, fontSize = 10.sp, letterSpacing = 1.8.sp)
-                Text(stats.change?.let { (if (it > 0f) "+" else "") + fmt.format(it) + " kg" } ?: "—",
+                Text(stats.change?.let { (if (animatedChange > 0f) "+" else "") + fmt.format(animatedChange) + " kg" } ?: "—",
                     color = AText, fontSize = 43.sp, fontWeight = FontWeight.ExtraBold)
                 Text("${stats.count} kayıt · ${listOf("Tüm zamanlar", "Son 7 gün", "Son 30 gün", "Son 90 gün")[period]}",
                     color = AMuted, fontSize = 12.sp)
-                HorizontalDivider(color = Color(0xFF315047))
+                HorizontalDivider(color = Color(0xFF6B4966))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text("İLK ÖLÇÜM", color = AMuted, fontSize = 10.sp)
@@ -198,6 +204,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                     color = AMuted, fontSize = 12.sp)
             }
         }
+        item { SciencePanel(context, points) }
     }
 }
 
