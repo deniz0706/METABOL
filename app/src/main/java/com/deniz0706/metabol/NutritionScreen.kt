@@ -215,6 +215,26 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         updated.forEach { array.put(it) }
         prefs.edit().putString("recent_foods", array.toString()).apply()
     }
+    var templates by remember {
+        mutableStateOf(runCatching {
+            val array = JSONArray(prefs.getString("meal_templates", "[]"))
+            (0 until array.length()).map { index ->
+                val item = array.getJSONObject(index)
+                MealEntry(index.toLong(), item.getString("name"), item.getInt("calories"),
+                    item.getDouble("protein"), item.getDouble("carbs"), item.getDouble("fat"))
+            }
+        }.getOrDefault(emptyList()))
+    }
+    var templatePickerOpen by remember { mutableStateOf(false) }
+    fun storeTemplates(updated: List<MealEntry>) {
+        templates = updated.take(30)
+        val array = JSONArray()
+        templates.forEach { meal ->
+            array.put(JSONObject().put("name", meal.name).put("calories", meal.calories)
+                .put("protein", meal.protein).put("carbs", meal.carbs).put("fat", meal.fat))
+        }
+        prefs.edit().putString("meal_templates", array.toString()).apply()
+    }
     var pendingDeleteMeal by remember { mutableStateOf<MealEntry?>(null) }
     var confirmCopyPrevious by remember { mutableStateOf(false) }
     var historyRevision by remember { mutableIntStateOf(0) }
@@ -615,6 +635,12 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 ) { Text("↗  Bu özeti paylaş", color = NutritionMint) }
             }
         }
+        item {
+            OutlinedButton(onClick = { templatePickerOpen = true },
+                enabled = templates.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+                Text("Öğün şablonundan ekle (${templates.size})", color = NutritionMint)
+            }
+        }
         item { Text("SEÇİLİ GÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
         if (meals.isEmpty()) {
             item {
@@ -651,6 +677,12 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             }
                         }
                     }
+                    TextButton(onClick = {
+                        if (templates.none { it.name == meal.name && it.calories == meal.calories &&
+                                it.protein == meal.protein && it.carbs == meal.carbs && it.fat == meal.fat }) {
+                            storeTemplates(templates + meal)
+                        }
+                    }, enabled = templates.size < 30) { Text("Şablon", color = NutritionMint) }
                     TextButton(onClick = { editingMeal = meal; dialogOpen = true }) {
                         Text("Düzenle", color = NutritionMint)
                     }
@@ -946,6 +978,37 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             },
             dismissButton = {
                 TextButton(onClick = { selectedFood = null }) { Text("Vazgeç", color = NutritionMuted) }
+            }
+        )
+    }
+
+    if (templatePickerOpen) {
+        AlertDialog(
+            onDismissRequest = { templatePickerOpen = false },
+            title = { Text("Öğün şablonları") },
+            text = {
+                Column(Modifier.heightIn(max = 360.dp)) {
+                    templates.forEach { template ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(modifier = Modifier.weight(1f), onClick = {
+                                val nextId = generateSequence(System.currentTimeMillis()) { it + 1 }
+                                    .first { candidate -> meals.none { it.id == candidate } }
+                                save(meals + template.copy(id = nextId))
+                                templatePickerOpen = false
+                            }) { Text("${template.name} · ${template.calories} kcal") }
+                            TextButton(onClick = {
+                                storeTemplates(templates.filterNot {
+                                    it.name == template.name && it.calories == template.calories &&
+                                        it.protein == template.protein && it.carbs == template.carbs && it.fat == template.fat
+                                })
+                                if (templates.isEmpty()) templatePickerOpen = false
+                            }) { Text("Sil") }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { templatePickerOpen = false }) { Text("Kapat") }
             }
         )
     }
