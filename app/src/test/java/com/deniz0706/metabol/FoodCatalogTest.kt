@@ -31,7 +31,16 @@ class FoodCatalogTest {
         }
     }
 
+    @Test fun servingPresetsMatchExpectedWeights() {
+        val egg = FoodCatalog.search("Yumurta - haşlanmış").first()
+        assertEquals("adet" to 50, FoodCatalog.serving(egg))
+        val soup = FoodCatalog.search("Mercimek çorbası").first()
+        assertEquals("kase" to 250, FoodCatalog.serving(soup))
+        val iskender = FoodCatalog.search("İskender").first()
+        assertEquals("porsiyon" to 400, FoodCatalog.serving(iskender))
+    }
+
     @Test fun emptySearchReturnsStarterCatalog() {
-        assertTrue(FoodCatalog.search("").size >= 190)
+        assertTrue(FoodCatalog.search("").size >= 310)
     }
 }
