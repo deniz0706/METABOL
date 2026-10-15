@@ -2,6 +2,10 @@ package com.deniz0706.metabol
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -66,6 +70,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     }
     var dialogOpen by remember { mutableStateOf(false) }
     var editingMeal by remember { mutableStateOf<MealEntry?>(null) }
+    var catalogOpen by remember { mutableStateOf(false) }
+    var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
+    var selectedGrams by remember { mutableStateOf("100") }
     var pendingDeleteMeal by remember { mutableStateOf<MealEntry?>(null) }
     var historyRevision by remember { mutableIntStateOf(0) }
     val lastSevenDays = remember(historyRevision, selectedDay) {
@@ -142,11 +149,20 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }
         item {
-            Button(onClick = { editingMeal = null; dialogOpen = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(14.dp),
+            Button(onClick = { catalogOpen = true }, modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(17.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)) {
-                Text("+  Öğün ekle", fontWeight = FontWeight.Bold)
+                Text("⌕   Besin ara ve gramajla ekle", fontWeight = FontWeight.Bold)
             }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(onClick = { editingMeal = null; dialogOpen = true },
+                modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(17.dp)) {
+                Text("+   Manuel öğün ekle", color = NutritionMint, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        item {
+            Text("Besin arama çevrimdışı örnek katalog kullanır. Değerler yaklaşık ortalamadır; marka, pişirme ve yağ miktarına göre değişebilir.",
+                color = NutritionMuted, fontSize = 11.sp)
         }
         item {
             Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(22.dp)).padding(18.dp),
@@ -206,6 +222,100 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             Text("Besin değerleri kullanıcı girişidir; otomatik doğrulanmaz.", color = NutritionMuted, fontSize = 11.sp)
         }
     }
+
+    if (catalogOpen) {
+        var query by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { catalogOpen = false },
+            containerColor = NutritionPanel,
+            title = { Text("Besin kütüphanesi", color = NutritionWhite, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = query, onValueChange = { query = it },
+                        label = { Text("Besin ara: muz, tavuk, pilav...") },
+                        singleLine = true, modifier = Modifier.fillMaxWidth()
+                    )
+                    Text("Yaklaşık değerler · 100 gram başına", color = NutritionMuted, fontSize = 11.sp)
+                    Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val results = FoodCatalog.search(query)
+                        if (results.isEmpty()) Text("Sonuç bulunamadı. Manuel giriş yapabilirsin.", color = NutritionMuted)
+                        results.forEach { food ->
+                            Row(
+                                Modifier.fillMaxWidth()
+                                    .background(Color(0xFF1B2839), RoundedCornerShape(14.dp))
+                                    .clickable {
+                                        selectedFood = food
+                                        selectedGrams = "100"
+                                        catalogOpen = false
+                                    }.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(food.name, color = NutritionWhite, fontWeight = FontWeight.Medium)
+                                    Text("P ${food.protein100} · K ${food.carbs100} · Y ${food.fat100} g",
+                                        color = NutritionMuted, fontSize = 11.sp)
+                                }
+                                Text("${food.kcal100.toInt()} kcal", color = NutritionMint,
+                                    fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { catalogOpen = false }) { Text("Kapat", color = NutritionMint) }
+            }
+        )
+    }
+    selectedFood?.let { food ->
+        val grams = selectedGrams.replace(',', '.').toDoubleOrNull()
+        val validGrams = grams != null && grams.isFinite() && grams in 1.0..5000.0
+        val portion = if (validGrams) FoodCatalog.calculate(food, grams!!) else null
+        AlertDialog(
+            onDismissRequest = { selectedFood = null },
+            containerColor = NutritionPanel,
+            title = { Text(food.name, color = NutritionWhite, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Miktarı gram olarak gir; besin değerleri otomatik hesaplanır.",
+                        color = NutritionMuted, fontSize = 12.sp)
+                    OutlinedTextField(
+                        selectedGrams, { selectedGrams = it },
+                        label = { Text("Miktar (gram)") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (portion != null) {
+                        Column(Modifier.fillMaxWidth().background(Color(0xFF1B2839), RoundedCornerShape(16.dp))
+                            .padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                            Text("${portion.calories} kcal", color = NutritionMint,
+                                fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                            Text(String.format(Locale.US, "Protein %.1f g", portion.protein), color = NutritionWhite)
+                            Text(String.format(Locale.US, "Karbonhidrat %.1f g", portion.carbs), color = NutritionWhite)
+                            Text(String.format(Locale.US, "Yağ %.1f g", portion.fat), color = NutritionWhite)
+                        }
+                    }
+                    Text("Tahmini ortalama · Etiket ve tarif farklı olabilir.", color = NutritionMuted,
+                        fontSize = 11.sp)
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = portion != null, onClick = {
+                    if (portion != null) {
+                        save(meals + MealEntry(System.currentTimeMillis(), food.name,
+                            portion.calories, portion.protein, portion.carbs, portion.fat))
+                        selectedFood = null
+                    }
+                }) { Text("Günlüğe ekle", color = NutritionMint) }
+            },
+            dismissButton = {
+                TextButton(onClick = { selectedFood = null }) { Text("Vazgeç", color = NutritionMuted) }
+            }
+        )
+    }
+
     if (pendingDeleteMeal != null) {
         AlertDialog(
             onDismissRequest = { pendingDeleteMeal = null },
