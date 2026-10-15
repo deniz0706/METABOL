@@ -32,6 +32,6 @@ class FoodCatalogTest {
     }
 
     @Test fun emptySearchReturnsStarterCatalog() {
-        assertTrue(FoodCatalog.search("").size >= 15)
+        assertTrue(FoodCatalog.search("").size >= 190)
     }
 }
