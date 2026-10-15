@@ -7,6 +7,17 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateColorAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -104,41 +115,65 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
     Scaffold(
         containerColor = Bg,
         bottomBar = {
-            Surface(color = Bg) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)
-                    .background(Surface, RoundedCornerShape(25.dp))
-                    .border(1.dp, Edge, RoundedCornerShape(25.dp))
-                    .padding(horizontal = 7.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically) {
+            Surface(color = Bg, tonalElevation = 0.dp) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 9.dp)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF292034), Color(0xFF241D32))
+                            ), RoundedCornerShape(30.dp)
+                        )
+                        .border(1.dp, Color(0xFF51415B), RoundedCornerShape(30.dp))
+                        .padding(horizontal = 6.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     val labels = listOf("Özet", "Beslenme", "Analiz", "Vücut", "Ayarlar")
-                    val symbols = listOf("◈", "◉", "⌁", "◇", "⚙")
+                    val symbols = listOf("⌂", "◉", "⌁", "◇", "⚙")
                     labels.forEachIndexed { index, title ->
                         val active = tab == index
+                        val pillColor by animateColorAsState(
+                            if (active) Color(0xFFFFBE76) else Color.Transparent,
+                            animationSpec = tween(280), label = "navigation-pill"
+                        )
+                        val symbolColor by animateColorAsState(
+                            if (active) Bg else Muted,
+                            animationSpec = tween(280), label = "navigation-icon"
+                        )
                         Column(
                             Modifier.weight(1f)
-                                .background(if (active) Surface2 else Color.Transparent, RoundedCornerShape(17.dp))
+                                .background(pillColor, RoundedCornerShape(23.dp))
                                 .clickable { tab = index }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 10.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
-                            Text(symbols[index], fontSize = 20.sp,
-                                color = if (active) Mint else Muted)
-                            Text(title, fontSize = 10.sp,
-                                color = if (active) White else Muted,
-                                fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                            Text(symbols[index], fontSize = 22.sp, color = symbolColor,
+                                fontWeight = FontWeight.Bold)
+                            AnimatedVisibility(visible = active) {
+                                Text(title, fontSize = 10.sp, color = Bg,
+                                    fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                            }
                         }
                     }
                 }
             }
         }
     ) { insets ->
-        // Render only the active screen. Crossfade kept two full screens (including
-        // charts and food search) composing simultaneously on every tab switch.
-        key(tab) {
-            when (tab) {
-                0 -> Dashboard(entries, tab, goalRevision, nutritionRevision,
+        AnimatedContent(
+            targetState = tab,
+            transitionSpec = {
+                val forward = targetState > initialState
+                (fadeIn(tween(250)) + slideInHorizontally(tween(330)) {
+                    if (forward) it / 5 else -it / 5
+                }) togetherWith (fadeOut(tween(170)) + slideOutHorizontally(tween(250)) {
+                    if (forward) -it / 7 else it / 7
+                })
+            },
+            label = "metabol-screen-transition"
+        ) { activeTab ->
+            when (activeTab) {
+                0 -> Dashboard(entries, activeTab, goalRevision, nutritionRevision,
                     onAddClick = { editing = null; addDialog = true },
                     onEdit = { editing = it; addDialog = true },
                     onDelete = { pendingDelete = it }, onNutritionClick = { tab = 1 },
