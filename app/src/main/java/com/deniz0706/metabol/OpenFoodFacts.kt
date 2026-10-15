@@ -17,7 +17,7 @@ internal object OpenFoodFacts {
     private fun cached(key: String, fetch: () -> List<FoodReference>): List<FoodReference> {
         val now = System.currentTimeMillis()
         synchronized(cache) {
-            cache[key]?.takeIf { now - it.savedAt in 0 until CACHE_TTL_MS }?.let {
+            cache[key]?.takeIf { now >= it.savedAt && now - it.savedAt < CACHE_TTL_MS }?.let {
                 return it.foods
             }
         }
