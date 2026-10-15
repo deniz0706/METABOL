@@ -7,9 +7,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Handler
 import android.os.Looper
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
-import com.google.mlkit.vision.barcode.common.Barcode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
@@ -135,18 +132,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }.start()
     }
-    val barcodeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val code = result.data?.getStringExtra(BarcodeScannerActivity.EXTRA_BARCODE)
-            if (code != null && code.matches(Regex("[0-9]{8,14}"))) {
-                query = code
-                searchOnline(code)
-            } else onlineError = "Barkod numarası alınamadı."
-        }
-    }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     fun initialGrams(food: FoodReference): String =
-        Regex("""Paket: (\\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
+        Regex("""Paket: (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
     var selectedGrams by remember { mutableStateOf("100") }
     var savedFoods by remember {
         mutableStateOf(runCatching {
@@ -597,6 +585,15 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 
     if (catalogOpen) {
         var query by remember { mutableStateOf("") }
+    val barcodeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val code = result.data?.getStringExtra(BarcodeScannerActivity.EXTRA_BARCODE)
+            if (code != null && code.matches(Regex("[0-9]{8,14}"))) {
+                query = code
+                searchOnline(code)
+            } else onlineError = "Barkod numarası alınamadı."
+        }
+    }
         var category by remember { mutableStateOf("Tümü") }
         val savedResults = remember(query, savedFoods) {
             val needle = query.trim()
