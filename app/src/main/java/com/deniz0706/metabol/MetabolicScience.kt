@@ -24,7 +24,14 @@ internal object MetabolicScience {
         return 10 * weightKg + 6.25 * profile.heightCm - 5 * profile.age + if (profile.male) 5.0 else -161.0
     }
     fun estimate(profile: Profile?, days: List<Day>, today: LocalDate): Estimate {
-        val valid = days.filter { !it.date.isAfter(today) }.sortedBy { it.date }
+        // One calendar day must count only once toward evidence thresholds. Merge partial
+        // records rather than treating duplicate entries as additional days.
+        val valid = days.filter { !it.date.isAfter(today) }
+            .groupBy { it.date }
+            .map { (date, entries) ->
+                Day(date, entries.lastOrNull { it.weightKg != null }?.weightKg,
+                    entries.lastOrNull { it.calories != null }?.calories)
+            }.sortedBy { it.date }
         val weights = valid.filter { it.weightKg != null && it.weightKg in 20.0..500.0 }
         val lastWeight = weights.lastOrNull()?.weightKg
         val bmr = if (profile != null && lastWeight != null) bmr(profile, lastWeight) else null
