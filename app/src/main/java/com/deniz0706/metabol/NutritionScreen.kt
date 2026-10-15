@@ -554,6 +554,18 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }
         item {
+            Button(onClick = { catalogOpen = true }, modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(17.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)) {
+                Text("⌕   Besin ara ve gramajla ekle", fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(onClick = { editingMeal = null; dialogOpen = true },
+                modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(17.dp)) {
+                Text("+   Manuel öğün ekle", color = NutritionMint, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        item {
             Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(24.dp))
                 .padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("GÜNLÜK NOT", color = NutritionMint, fontSize = 12.sp,
@@ -573,18 +585,6 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 }, modifier = Modifier.fillMaxWidth()) {
                     Text(if (noteSaved) "Kaydedildi" else "Notu kaydet")
                 }
-            }
-        }
-        item {
-            Button(onClick = { catalogOpen = true }, modifier = Modifier.fillMaxWidth().height(54.dp),
-                shape = RoundedCornerShape(17.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)) {
-                Text("⌕   Besin ara ve gramajla ekle", fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(10.dp))
-            OutlinedButton(onClick = { editingMeal = null; dialogOpen = true },
-                modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(17.dp)) {
-                Text("+   Manuel öğün ekle", color = NutritionMint, fontWeight = FontWeight.SemiBold)
             }
         }
         if (previousMeals.isNotEmpty()) {
@@ -609,7 +609,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         item {
             Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(22.dp)).padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("SON 7 GÜN · KALORİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.5.sp)
+                Text("SON 7 GÜN · KAYDEDİLEN KALORİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.2.sp)
                 val maxCalories = (lastSevenDays.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
                 lastSevenDays.forEach { (day, total) ->
                     val hasEntry = recordedSevenDays[day] == true
@@ -638,6 +638,12 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 HorizontalDivider(color = Color(0xFF30445C))
                 Text("7 günlük kayıt toplamı: $sevenDayTotal kcal", color = NutritionWhite, fontSize = 13.sp)
                 Text("Kayıt bulunan gün: $recordedDays / 7", color = NutritionMuted, fontSize = 12.sp)
+                Text(
+                    if (recordedDays > 0)
+                        "Kayıtlı gün ortalaması: ${String.format(Locale("tr", "TR"), "%.0f", sevenDayTotal.toDouble() / recordedDays)} kcal"
+                    else "Kayıtlı gün ortalaması: —",
+                    color = NutritionMint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
+                )
                 Text("Boş günler sıfır tüketim anlamına gelmez. Grafik kaydedilen enerjiyi gösterir.",
                     color = NutritionMuted, fontSize = 11.sp)
             }
