@@ -100,8 +100,10 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
             }
         }
     ) { insets ->
-        if (tab == 0 || tab == 2) {
+        if (tab == 0) {
             Dashboard(entries, tab, onAddClick = { addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
+        } else if (tab == 2) {
+            AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) }, Modifier.padding(insets))
         } else if (tab == 1) {
             NutritionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
         } else if (tab == 3) {
