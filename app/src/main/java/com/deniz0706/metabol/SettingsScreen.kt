@@ -47,8 +47,12 @@ internal fun createBackup(context: Context): String {
     return root.toString(2)
 }
 
-private fun csvCell(value: String): String =
-    "\"" + value.replace("\"", "\"\"").replace("\r", " ").replace("\n", " ") + "\""
+private fun csvCell(value: String): String {
+    val safe = value.replace("\r", " ").replace("\n", " ")
+    // Avoid spreadsheet formula interpretation of user-provided food names.
+    val escaped = if (safe.trimStart().firstOrNull() in listOf('=', '+', '-', '@', '\t')) "'" + safe else safe
+    return "\"" + escaped.replace("\"", "\"\"") + "\""
+}
 
 internal fun exportMeasurementsCsv(context: Context): String {
     val lines = mutableListOf("category,date,value,unit,detail")
