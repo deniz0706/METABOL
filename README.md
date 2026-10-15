@@ -53,7 +53,7 @@ Recent foods are stored locally and appear first in the offline catalog. Portion
 
 ## Opt-in product search (preview)
 
-The food picker now offers **online product search** via Open Food Facts. Enter a food name or an 8–14 digit barcode number, then explicitly tap the online-search button. A network connection is required. The query/barcode is sent to the third-party Open Food Facts service; local weight measurements and meal history are **not** transmitted. The offline catalog remains available if search fails. Only entries with numeric per-100-g kcal, protein, carbohydrate and fat values are displayed. Product data is community-maintained and can be inaccurate: check the package label before saving. Barcode **camera scanning is not implemented**; barcode numbers can be entered manually.
+The food picker now offers **online product search** via Open Food Facts. Enter a food name or an 8–14 digit barcode number, then explicitly tap the online-search button. A network connection is required. The query/barcode is sent to the third-party Open Food Facts service; local weight measurements and meal history are **not** transmitted. The offline catalog remains available if search fails. Only entries with numeric per-100-g kcal, protein, carbohydrate and fat values are displayed. Product data is community-maintained and can be inaccurate: check the package label before saving. Barcode scanning through Google Play services is implemented in the food explorer (supported devices only); barcode numbers can also be entered manually. Camera scanning may require a Google Play services module download on first use, and the user can fall back to typing the barcode if scanning is unavailable.
 
 ## Full-screen food explorer and offline reuse
 
@@ -62,3 +62,7 @@ The food search is a full-screen Compose dialog with lazy-loaded lists for local
 ## Navigation polish
 
 All five sections now use a short Compose crossfade when switching tabs. The food explorer is a full-screen search surface rather than a constrained alert, with virtualized result rows. These changes are in active beta and should be verified on a physical Android device, especially with the on-screen keyboard and smaller screens.
+
+## Camera barcode scanning (beta)
+
+The food explorer includes an opt-in camera barcode button using Google Play services Code Scanner. No app-level CAMERA permission is requested; Google Play services handles the scanning UI. Recognized retail barcodes are looked up by number through Open Food Facts. The feature requires compatible Google Play services and network access for product lookup. A successful scan does not guarantee that the product exists in the public database.
