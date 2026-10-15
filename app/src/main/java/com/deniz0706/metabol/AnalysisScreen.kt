@@ -66,8 +66,10 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         if (days == null) points else points.filter { it.timestamp >= now - days * 86_400_000L && it.timestamp <= now }
     }
     val stats = remember(filtered) { summarizeWeights(filtered) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     LazyColumn(modifier.fillMaxSize().background(ABack),
         contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        item { SciencePanel(context, points) }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
