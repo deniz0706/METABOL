@@ -144,6 +144,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     }
     var pendingDeleteMeal by remember { mutableStateOf<MealEntry?>(null) }
     var confirmCopyPrevious by remember { mutableStateOf(false) }
+    var historyRevision by remember { mutableIntStateOf(0) }
     val previousDay = remember(selectedDay) {
         val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val calendar = Calendar.getInstance().apply {
@@ -163,7 +164,6 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }.getOrDefault(emptyList())
     }
-    var historyRevision by remember { mutableIntStateOf(0) }
     val lastSevenDays = remember(historyRevision, selectedDay) {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val date = format.parse(selectedDay) ?: Date()
