@@ -66,6 +66,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     }
     var dialogOpen by remember { mutableStateOf(false) }
     var editingMeal by remember { mutableStateOf<MealEntry?>(null) }
+    var pendingDeleteMeal by remember { mutableStateOf<MealEntry?>(null) }
     var historyRevision by remember { mutableIntStateOf(0) }
     val lastSevenDays = remember(historyRevision, selectedDay) {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -188,7 +189,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     TextButton(onClick = { editingMeal = meal; dialogOpen = true }) {
                         Text("Düzenle", color = NutritionMint)
                     }
-                    TextButton(onClick = { save(meals.filterNot { it.id == meal.id }) }) {
+                    TextButton(onClick = { pendingDeleteMeal = meal }) {
                         Text("Sil", color = Color(0xFFFF879A))
                     }
                 }
@@ -197,6 +198,20 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         item {
             Text("Besin değerleri kullanıcı girişidir; otomatik doğrulanmaz.", color = NutritionMuted, fontSize = 11.sp)
         }
+    }
+    if (pendingDeleteMeal != null) {
+        AlertDialog(
+            onDismissRequest = { pendingDeleteMeal = null },
+            title = { Text("Öğünü sil?") },
+            text = { Text("Bu öğün seçili günün kayıtlarından silinecek.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingDeleteMeal?.let { target -> save(meals.filterNot { it.id == target.id }) }
+                    pendingDeleteMeal = null
+                }) { Text("Sil", color = Color(0xFFFF879A)) }
+            },
+            dismissButton = { TextButton(onClick = { pendingDeleteMeal = null }) { Text("Vazgeç") } }
+        )
     }
     if (dialogOpen) {
         var name by remember(editingMeal) { mutableStateOf(editingMeal?.name ?: "") }
