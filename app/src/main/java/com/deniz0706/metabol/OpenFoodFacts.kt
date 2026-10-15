@@ -11,7 +11,7 @@ internal object OpenFoodFacts {
         require(term.length >= 2)
         val address = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" +
             URLEncoder.encode(term, "UTF-8") +
-            "&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,nutriments"
+            "&search_simple=1&action=process&json=1&page_size=20&fields=product_name,product_name_tr,brands,nutriments"
         val connection = URL(address).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = 8000
@@ -77,7 +77,10 @@ internal object OpenFoodFacts {
             val f = n.optDouble("fat_100g", Double.NaN)
             if (!listOf(kcal,p,c,f).all { it.isFinite() } ||
                 kcal !in 0.0..1000.0 || listOf(p,c,f).any { it !in 0.0..100.0 }) return@mapNotNull null
-            FoodReference(name,kcal,p,c,f,"Open Food Facts · Etiketten doğrula")
+            val brand = product.optString("brands").trim().take(32)
+            val displayName = if (brand.isBlank() || name.contains(brand, ignoreCase = true)) name
+                else "$brand · $name"
+            FoodReference(displayName.take(120),kcal,p,c,f,"Open Food Facts · Etiketten doğrula")
         }.distinctBy { it.name }.take(20)
     }
 }
