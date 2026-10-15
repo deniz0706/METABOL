@@ -19,6 +19,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Calendar
 import java.util.Locale
 
 private val NutritionBg = Color(0xFF080D15)
@@ -40,7 +41,15 @@ private data class MealEntry(
 internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val prefs = remember(context) { context.getSharedPreferences("metabol_nutrition", Context.MODE_PRIVATE) }
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
-    val storageKey = "meals_$today"
+    var selectedDay by remember { mutableStateOf(today) }
+    val storageKey = "meals_$selectedDay"
+    fun shiftDay(days: Int) {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val current = format.parse(selectedDay) ?: Date()
+        val calendar = Calendar.getInstance().apply { time = current; add(Calendar.DATE, days) }
+        val candidate = format.format(calendar.time)
+        if (candidate <= today) selectedDay = candidate
+    }
     var meals by remember(storageKey) {
         mutableStateOf(runCatching {
             val array = JSONArray(prefs.getString(storageKey, "[]"))
@@ -75,7 +84,16 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(24.dp))
             Text("BESLENME GÜNLÜĞÜ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
             Spacer(Modifier.height(8.dp))
-            Text("Bugün ne yedin?", color = NutritionWhite, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+            Text("Beslenme kayıtların.", color = NutritionWhite, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(14.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                OutlinedButton(onClick = { shiftDay(-1) }) { Text("‹  Önceki", color = NutritionMint) }
+                Text(selectedDay, color = NutritionWhite, fontWeight = FontWeight.SemiBold)
+                OutlinedButton(onClick = { shiftDay(1) }, enabled = selectedDay < today) {
+                    Text("Sonraki  ›", color = NutritionMint)
+                }
+            }
         }
         item {
             Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(24.dp)).padding(22.dp)) {
@@ -99,7 +117,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("+  Öğün ekle", fontWeight = FontWeight.Bold)
             }
         }
-        item { Text("BUGÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
+        item { Text("SEÇİLİ GÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
         if (meals.isEmpty()) {
             item {
                 Text("Henüz öğün eklemedin. Değerleri besin etiketinden girerek başlayabilirsin.",
