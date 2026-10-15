@@ -63,6 +63,20 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }.getOrDefault(emptyList()))
     }
     var dialogOpen by remember { mutableStateOf(false) }
+    var historyRevision by remember { mutableIntStateOf(0) }
+    val lastSevenDays = remember(historyRevision, selectedDay) {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val date = format.parse(selectedDay) ?: Date()
+        (6 downTo 0).map { offset ->
+            val cal = Calendar.getInstance().apply { time = date; add(Calendar.DATE, -offset) }
+            val dayKey = format.format(cal.time)
+            val array = runCatching { JSONArray(prefs.getString("meals_$dayKey", "[]")) }.getOrDefault(JSONArray())
+            val total = (0 until array.length()).sumOf { index ->
+                runCatching { array.getJSONObject(index).getInt("calories") }.getOrDefault(0)
+            }
+            dayKey to total
+        }
+    }
     fun save(updated: List<MealEntry>) {
         meals = updated
         val json = JSONArray()
@@ -72,6 +86,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 .put("carbs", item.carbs).put("fat", item.fat))
         }
         prefs.edit().putString(storageKey, json.toString()).apply()
+        historyRevision++
     }
     val calories = meals.sumOf { it.calories }
     val protein = meals.sumOf { it.protein }
@@ -115,6 +130,28 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)) {
                 Text("+  Öğün ekle", fontWeight = FontWeight.Bold)
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(22.dp)).padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("SON 7 GÜN · KALORİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.5.sp)
+                val maxCalories = (lastSevenDays.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
+                lastSevenDays.forEach { (day, total) ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Text(day.takeLast(5), color = NutritionMuted, fontSize = 11.sp, modifier = Modifier.width(45.dp))
+                        LinearProgressIndicator(
+                            progress = { total.toFloat() / maxCalories },
+                            modifier = Modifier.weight(1f).height(8.dp),
+                            color = NutritionMint,
+                            trackColor = Color(0xFF2A394B)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text("$total", color = NutritionWhite, fontSize = 12.sp, modifier = Modifier.width(45.dp))
+                    }
+                }
+                Text("Kaydedilen enerji toplamı; günlük enerji ihtiyacı veya hedef değildir.",
+                    color = NutritionMuted, fontSize = 11.sp)
             }
         }
         item { Text("SEÇİLİ GÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
