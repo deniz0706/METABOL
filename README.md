@@ -58,3 +58,7 @@ The food picker now offers **online product search** via Open Food Facts. Enter 
 ## Full-screen food explorer and offline reuse
 
 The food search is a full-screen Compose dialog with lazy-loaded lists for local and online results, explicit network search, progress/error states, and portion selection. Successfully logged online products are stored in a local library (up to 30) for later offline reuse and can be removed from that library. Previous-day meals can be copied into the selected day with confirmation; existing entries are preserved. Nutrition values are estimates and should be verified against labels, especially when ingredients or serving sizes vary.
+
+## Navigation polish
+
+All five sections now use a short Compose crossfade when switching tabs. The food explorer is a full-screen search surface rather than a constrained alert, with virtualized result rows. These changes are in active beta and should be verified on a physical Android device, especially with the on-screen keyboard and smaller screens.
