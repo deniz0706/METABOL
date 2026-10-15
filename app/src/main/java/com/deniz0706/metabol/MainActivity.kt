@@ -177,7 +177,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
                 0 -> Dashboard(entries, activeTab, goalRevision, nutritionRevision,
                     onAddClick = { editing = null; addDialog = true },
                     onEdit = { editing = it; addDialog = true },
-                    onDelete = { pendingDelete = it }, onNutritionClick = { tab = 1 },
+                    onDelete = { pendingDelete = it }, onNutritionClick = { tab = 1 }, onAnalysisClick = { tab = 2 },
                     modifier = Modifier.padding(insets))
                 1 -> NutritionScreen(androidx.compose.ui.platform.LocalContext.current,
                     Modifier.padding(insets))
@@ -269,7 +269,7 @@ private fun Header() {
 private fun Dashboard(
     entries: List<WeightRecord>, tab: Int, goalRevision: Int, nutritionRevision: Int, onAddClick: () -> Unit,
     onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit,
-    onNutritionClick: () -> Unit, modifier: Modifier = Modifier
+    onNutritionClick: () -> Unit, onAnalysisClick: () -> Unit, modifier: Modifier = Modifier
 ) {
     val latest = entries.lastOrNull()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -347,25 +347,34 @@ private fun Dashboard(
                         else "İlk ölçümünden bugüne değişim",
                         color = White, fontSize = 12.sp)
                 }
-                if (entries.size >= 2) {
-                    val recent = entries.takeLast(12)
-                    val low = recent.minOf { it.kg }
-                    val high = recent.maxOf { it.kg }
-                    val spread = (high - low).coerceAtLeast(0.5f)
-                    Column(Modifier.fillMaxWidth().background(Color(0x3320374C),
-                        RoundedCornerShape(18.dp)).padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("SON ${recent.size} ÖLÇÜM", color = Color(0xFFB2E9E2),
-                                fontSize = 10.sp, letterSpacing = 1.sp)
-                            Text("${numberFormat.format(low)} – ${numberFormat.format(high)} kg",
-                                color = White, fontSize = 11.sp)
-                        }
+                val weekStart = System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
+                val recent = entries.filter { it.time >= weekStart }.sortedBy { it.time }
+                Column(
+                    Modifier.fillMaxWidth()
+                        .background(Color(0x3320374C), RoundedCornerShape(18.dp))
+                        .clickable(onClick = onAnalysisClick)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("SON 7 GÜN · KİLO EĞİLİMİ", color = Color(0xFFB2E9E2),
+                            fontSize = 10.sp, letterSpacing = 1.sp)
+                        Text("Analize git ›", color = Mint, fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold)
+                    }
+                    if (recent.size >= 2) {
+                        val low = recent.minOf { it.kg }
+                        val high = recent.maxOf { it.kg }
+                        val spread = (high - low).coerceAtLeast(0.5f)
+                        Text("${numberFormat.format(low)} – ${numberFormat.format(high)} kg",
+                            color = White, fontSize = 11.sp)
                         Canvas(Modifier.fillMaxWidth().height(82.dp)) {
-                            val values = recent.mapIndexed { index, record ->
+                            val startTime = recent.first().time
+                            val timeSpan = (recent.last().time - startTime).coerceAtLeast(1L)
+                            val values = recent.map { record ->
                                 Offset(
-                                    x = size.width * index / (recent.size - 1).toFloat(),
+                                    x = size.width * (record.time - startTime).toFloat() / timeSpan,
                                     y = size.height * (1f - (record.kg - low) / spread)
                                 )
                             }
@@ -381,6 +390,9 @@ private fun Dashboard(
                             drawCircle(Mint, radius = 5.dp.toPx(), center = values.last())
                             drawCircle(White, radius = 2.dp.toPx(), center = values.last())
                         }
+                    } else {
+                        Text("Son 7 günde eğilim için en az iki ölçüm gerekiyor.",
+                            color = Muted, fontSize = 12.sp)
                     }
                 }
                 if (goal != null && latest != null) {
