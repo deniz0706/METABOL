@@ -3,6 +3,10 @@ package com.deniz0706.metabol
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.abs
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -225,13 +229,16 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         if (records.size >= 2) {
             item {
                 var chartMode by remember { mutableIntStateOf(0) }
+                var selectedChartTime by remember { mutableStateOf<Long?>(null) }
                 Column(Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("VÜCUT ÖLÇÜM EĞİLİMİ", color = BodyMuted, fontSize = 11.sp, letterSpacing = 1.5.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("Yağ %", "Kas kg", "Bel cm").forEachIndexed { index, title ->
+                    Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("Yağ %", "Kas kg", "Bel cm", "Kemik kg", "Su %",
+                            "Göğüs cm", "Göğüs altı", "Met. yaş", "Visseral").forEachIndexed { index, title ->
                             FilterChip(
-                                selected = chartMode == index, onClick = { chartMode = index },
+                                selected = chartMode == index, onClick = { chartMode = index; selectedChartTime = null },
                                 label = { Text(title, fontSize = 11.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = BodyMint,
@@ -244,7 +251,13 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                         val value = when (chartMode) {
                             0 -> record.fatPercent
                             1 -> record.muscleKg
-                            else -> record.waistCm
+                            2 -> record.waistCm
+                            3 -> record.boneKg
+                            4 -> record.waterPercent
+                            5 -> record.chestCm
+                            6 -> record.underChestCm
+                            7 -> record.metabolicAge
+                            else -> record.visceralFat
                         }
                         value?.let { record.id to it }
                     }
@@ -261,7 +274,29 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                         val timeSpan = (data.last().first - firstTime).coerceAtLeast(1L)
                         Text(String.format(Locale.US, "Min %.1f    Maks %.1f", minimum, maximum),
                             color = BodyMint, fontSize = 12.sp)
-                        Canvas(Modifier.fillMaxWidth().height(160.dp)) {
+                        val selectedPoint = data.firstOrNull { it.first == selectedChartTime }
+                        if (selectedPoint != null) {
+                            Text(
+                                SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR"))
+                                    .format(Date(selectedPoint.first)) + "  ·  " +
+                                    String.format(Locale("tr", "TR"), "%.1f", selectedPoint.second) +
+                                    " " + listOf("%", "kg", "cm", "kg", "%", "cm", "cm", "yaş", "")[chartMode],
+                                color = BodyMint, fontWeight = FontWeight.Bold, fontSize = 15.sp
+                            )
+                        } else {
+                            Text("Noktaya dokunarak tarih ve ölçümü gör.", color = BodyMuted, fontSize = 11.sp)
+                        }
+                        Canvas(Modifier.fillMaxWidth().height(160.dp).pointerInput(data) {
+                            detectTapGestures { touch ->
+                                val left = 8.dp.toPx()
+                                val right = size.width - 8.dp.toPx()
+                                val width = (right - left).coerceAtLeast(1f)
+                                val fraction = ((touch.x - left) / width).coerceIn(0f, 1f)
+                                selectedChartTime = data.minByOrNull { (time, _) ->
+                                    abs((time - firstTime).toFloat() / timeSpan - fraction)
+                                }?.first
+                            }
+                        }) {
                             val left = 8.dp.toPx()
                             val right = size.width - 8.dp.toPx()
                             val top = 8.dp.toPx()
@@ -281,7 +316,13 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                                 points.drop(1).forEach { lineTo(it.x, it.y) }
                             }
                             drawPath(path, BodyMint, style = Stroke(2.5.dp.toPx()))
-                            points.forEach { drawCircle(BodyMint, 3.5.dp.toPx(), it) }
+                            points.forEachIndexed { index, point ->
+                                val active = data[index].first == selectedChartTime
+                                drawCircle(if (active) Color.White else BodyMint,
+                                    if (active) 6.dp.toPx() else 3.5.dp.toPx(), point)
+                                if (active) drawLine(BodyMint.copy(alpha = 0.5f),
+                                    Offset(point.x, top), Offset(point.x, bottom), 1.dp.toPx())
+                            }
                         }
                     }
                 }
