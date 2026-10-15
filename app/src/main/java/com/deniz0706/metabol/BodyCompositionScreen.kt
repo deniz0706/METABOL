@@ -95,7 +95,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(label, color = BodyMuted, fontSize = 13.sp)
                                 Text(String.format(Locale.US, "%+.1f %s", delta, unit),
-                                    color = if (delta <= 0.0) BodyMint else BodyText,
+                                    color = BodyMint,
                                     fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                             }
                         }
