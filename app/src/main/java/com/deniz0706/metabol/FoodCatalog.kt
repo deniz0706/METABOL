@@ -78,6 +78,33 @@ internal object FoodCatalog {
         }
     }
 
+    /** Standardized approximate serving weights; manual gram entry always remains available. */
+    fun serving(food: FoodReference): Pair<String, Int>? {
+        val name = food.name.lowercase(Locale("tr", "TR"))
+        return when {
+            name.contains("yumurta") && !name.contains("beyazı") && !name.contains("sarısı") -> "adet" to 50
+            name.contains("yumurta beyazı") -> "adet beyaz" to 33
+            name.contains("yumurta sarısı") -> "adet sarı" to 17
+            name.contains("iskender") -> "porsiyon" to 400
+            name.contains("çorbası") || name.contains("çorba") -> "kase" to 250
+            name.contains("ekmek") && !name.contains("balık ekmek") && !name.contains("etli ekmek") -> "dilim" to 30
+            name.contains("lahmacun") -> "adet" to 150
+            name.contains("simit") -> "adet" to 100
+            name.contains("pizza") -> "dilim" to 110
+            name.contains("pilav") -> "porsiyon" to 200
+            name.contains("mantı") -> "porsiyon" to 250
+            name.contains("köfte") && !name.contains("çiğ köfte") -> "adet" to 35
+            name.contains("muz") -> "adet" to 120
+            name.contains("elma") -> "adet" to 180
+            name.contains("mandalina") -> "adet" to 90
+            name.contains("portakal") -> "adet" to 150
+            name.contains("kruvasan") -> "adet" to 70
+            name.contains("poğaça") -> "adet" to 80
+            name.contains("açma") -> "adet" to 90
+            else -> null
+        }
+    }
+
     private val indexedFoods by lazy { foods.map { it to normalize(it.name) } }
 
     fun search(query: String): List<FoodReference> {
