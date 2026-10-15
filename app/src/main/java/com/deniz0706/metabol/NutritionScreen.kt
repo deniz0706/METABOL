@@ -751,7 +751,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     }
                     item {
                         Spacer(Modifier.height(8.dp))
-                        Text("ÇEVRİMDIŞI KATALOG · ${localResults.size} BESİN",
+                        Text("ÇEVRİMDIŞI KATALOG · ${localResults.size} / ${FoodCatalog.foods.size} BESİN",
                             color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.4.sp)
                         if (query.isBlank() && recentFoodNames.isNotEmpty()) {
                             Text("Son kullanılan besinler üstte", color = NutritionMint, fontSize = 11.sp)
