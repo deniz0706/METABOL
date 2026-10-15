@@ -25,7 +25,7 @@ internal data class FoodPortion(
 )
 
 internal object FoodCatalog {
-    val foods = listOf(
+    private val coreFoods = listOf(
         FoodReference("Muz", 89.0, 1.1, 22.8, 0.3),
         FoodReference("Elma", 52.0, 0.3, 13.8, 0.2),
         FoodReference("Yumurta (bütün)", 143.0, 12.6, 0.7, 9.5),
@@ -47,6 +47,10 @@ internal object FoodCatalog {
         FoodReference("Dana kıyma (pişmiş, orta yağlı)", 250.0, 26.0, 0.0, 15.0),
         FoodReference("Portakal", 47.0, 0.9, 11.8, 0.1)
     )
+
+    val foods: List<FoodReference> = (coreFoods + ExtendedFoodCatalog.foods)
+        .distinctBy { it.name }
+        .sortedBy { it.name }
 
     private fun normalize(input: String): String =
         Normalizer.normalize(input.lowercase(Locale("tr", "TR")), Normalizer.Form.NFD)
