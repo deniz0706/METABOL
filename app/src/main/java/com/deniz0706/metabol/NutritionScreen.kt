@@ -13,6 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -44,6 +47,31 @@ private data class MealEntry(
     val carbs: Double,
     val fat: Double
 )
+
+@Composable
+private fun FoodSearchRow(food: FoodReference, online: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .background(if (online) Color(0xFF1C3540) else NutritionPanel, RoundedCornerShape(18.dp))
+            .border(1.dp, if (online) Color(0xFF305A5C) else Color(0xFF263746),
+                RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick).padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(food.name, color = NutritionWhite, fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp)
+            Text("P ${food.protein100} · K ${food.carbs100} · Y ${food.fat100} g / 100 g",
+                color = NutritionMuted, fontSize = 11.sp)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(horizontalAlignment = Alignment.End) {
+            Text("${food.kcal100.toInt()}", color = NutritionMint,
+                fontSize = 19.sp, fontWeight = FontWeight.ExtraBold)
+            Text("kcal / 100 g", color = NutritionMuted, fontSize = 10.sp)
+        }
+    }
+}
 
 @Composable
 internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
@@ -318,94 +346,132 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 
     if (catalogOpen) {
         var query by remember { mutableStateOf("") }
-        AlertDialog(
+        val localResults = remember(query, recentFoodNames) {
+            FoodCatalog.search(query).sortedWith(
+                compareBy<FoodReference> {
+                    if (query.isBlank()) {
+                        val index = recentFoodNames.indexOf(it.name)
+                        if (index == -1) Int.MAX_VALUE else index
+                    } else 0
+                }.thenBy { it.name }
+            )
+        }
+        Dialog(
             onDismissRequest = { catalogOpen = false },
-            containerColor = NutritionPanel,
-            title = { Text("Besin kütüphanesi", color = NutritionWhite, fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value = query, onValueChange = { query = it },
-                        label = { Text("Besin adı veya barkod numarası") },
-                        singleLine = true, modifier = Modifier.fillMaxWidth()
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Column(
+                Modifier.fillMaxSize().background(NutritionBg)
+                    .padding(horizontal = 20.dp, vertical = 22.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("M E T A B O L  /  NUTRITION", color = NutritionMint,
+                            fontSize = 11.sp, letterSpacing = 2.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Besin keşfet", color = NutritionWhite, fontSize = 31.sp,
+                            fontWeight = FontWeight.ExtraBold)
+                        Text("Ara, miktarı seç, günlüğüne ekle.", color = NutritionMuted, fontSize = 12.sp)
+                    }
+                    FilledTonalIconButton(onClick = { catalogOpen = false },
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = NutritionPanel, contentColor = NutritionWhite)) {
+                        Text("✕", fontSize = 18.sp)
+                    }
+                }
+                Spacer(Modifier.height(22.dp))
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = {
+                        query = it
+                        onlineSearched = false
+                        onlineResults = emptyList()
+                        onlineError = null
+                        searchGeneration++
+                        onlineLoading = false
+                    },
+                    label = { Text("Besin adı veya barkod numarası") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(17.dp)
+                )
+                Spacer(Modifier.height(10.dp))
+                Button(
+                    onClick = { searchOnline(query) },
+                    enabled = query.trim().length >= 2 && !onlineLoading,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = NutritionMint, contentColor = NutritionBg)
+                ) {
+                    Text(
+                        if (onlineLoading) "Aranıyor..."
+                        else if (query.trim().matches(Regex("[0-9]{8,14}"))) "Barkod numarasıyla sorgula"
+                        else "Open Food Facts'te ara",
+                        fontWeight = FontWeight.Bold
                     )
-                    Button(
-                        onClick = { searchOnline(query) },
-                        enabled = query.trim().length >= 2 && !onlineLoading,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)
-                    ) { Text(if (onlineLoading) "Aranıyor..." else if (query.trim().matches(Regex("[0-9]{8,14}"))) "Barkodla ürün bul" else "İnternette ürün ara", fontSize = 12.sp) }
-                    Text("Çevrimiçi arama isteğe bağlıdır. Arama metni Open Food Facts'e gönderilir.",
-                        color = NutritionMuted, fontSize = 10.sp)
-                    if (onlineLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = NutritionMint)
-                    onlineError?.let { Text(it, color = Color(0xFFFF879A), fontSize = 11.sp) }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text("İnternet araması isteğe bağlıdır; yalnızca arama metni üçüncü taraf servise gönderilir.",
+                    color = NutritionMuted, fontSize = 10.sp)
+                if (onlineLoading) {
+                    Spacer(Modifier.height(10.dp))
+                    LinearProgressIndicator(Modifier.fillMaxWidth(), color = NutritionMint)
+                }
+                onlineError?.let {
+                    Spacer(Modifier.height(10.dp))
+                    Text(it, color = Color(0xFFFF879A), fontSize = 12.sp)
+                }
+                Spacer(Modifier.height(18.dp))
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(9.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
                     if (onlineResults.isNotEmpty()) {
-                        Text("OPEN FOOD FACTS · ÜRÜNLER", color = NutritionMint, fontSize = 11.sp)
-                        Column(Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            onlineResults.forEach { food ->
-                                Row(Modifier.fillMaxWidth()
-                                    .background(Color(0xFF213345), RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        selectedFood = food
-                                        selectedGrams = "100"
-                                        catalogOpen = false
-                                    }.padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically) {
-                                    Text(food.name, color = NutritionWhite, fontSize = 12.sp,
-                                        modifier = Modifier.weight(1f))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("${food.kcal100.toInt()} kcal", color = NutritionMint, fontSize = 11.sp)
-                                }
+                        item {
+                            Text("ÇEVRİMİÇİ SONUÇLAR · ${onlineResults.size}",
+                                color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
+                            Spacer(Modifier.height(5.dp))
+                        }
+                        items(onlineResults) { food ->
+                            FoodSearchRow(food, true) {
+                                selectedFood = food
+                                selectedGrams = "100"
+                                catalogOpen = false
                             }
                         }
                     } else if (onlineSearched && !onlineLoading && onlineError == null) {
-                        Text("Ürün bulunamadı. Yerel kataloğu kullanabilirsin.", color = NutritionMuted, fontSize = 11.sp)
-                    }
-                    Text("ÇEVRİMDIŞI KATALOG · 100 gram başına", color = NutritionMuted, fontSize = 11.sp)
-                    Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        val results = FoodCatalog.search(query).sortedWith(
-                            compareBy<FoodReference> {
-                                if (query.isBlank()) {
-                                    val position = recentFoodNames.indexOf(it.name)
-                                    if (position < 0) Int.MAX_VALUE else position
-                                } else 0
-                            }.thenBy { it.name }
-                        )
-                        if (query.isBlank() && recentFoodNames.isNotEmpty()) {
-                            Text("Son kullanılanlar üstte", color = NutritionMuted, fontSize = 11.sp)
+                        item {
+                            Text("Çevrimiçi sonuç bulunamadı. Yerel katalog aşağıda.",
+                                color = NutritionMuted, fontSize = 12.sp)
                         }
-                        Text("${results.size} besin bulundu", color = NutritionMint, fontSize = 11.sp)
-                        if (results.isEmpty()) Text("Sonuç bulunamadı. Manuel giriş yapabilirsin.", color = NutritionMuted)
-                        results.forEach { food ->
-                            Row(
-                                Modifier.fillMaxWidth()
-                                    .background(Color(0xFF1B2839), RoundedCornerShape(14.dp))
-                                    .clickable {
-                                        selectedFood = food
-                                        selectedGrams = "100"
-                                        catalogOpen = false
-                                    }.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text(food.name, color = NutritionWhite, fontWeight = FontWeight.Medium)
-                                    Text("P ${food.protein100} · K ${food.carbs100} · Y ${food.fat100} g",
-                                        color = NutritionMuted, fontSize = 11.sp)
-                                }
-                                Text("${food.kcal100.toInt()} kcal", color = NutritionMint,
-                                    fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-                            }
+                    }
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        Text("ÇEVRİMDIŞI KATALOG · ${localResults.size} BESİN",
+                            color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.4.sp)
+                        if (query.isBlank() && recentFoodNames.isNotEmpty()) {
+                            Text("Son kullanılan besinler üstte", color = NutritionMint, fontSize = 11.sp)
+                        }
+                        Spacer(Modifier.height(4.dp))
+                    }
+                    if (localResults.isEmpty()) {
+                        item {
+                            Text("Yerel katalogda eşleşme yok. Manuel öğün ekleyebilirsin.",
+                                color = NutritionMuted, fontSize = 12.sp)
+                        }
+                    }
+                    items(localResults) { food ->
+                        FoodSearchRow(food, false) {
+                            selectedFood = food
+                            selectedGrams = "100"
+                            catalogOpen = false
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { catalogOpen = false }) { Text("Kapat", color = NutritionMint) }
             }
-        )
+        }
     }
     selectedFood?.let { food ->
         val grams = selectedGrams.replace(',', '.').toDoubleOrNull()
