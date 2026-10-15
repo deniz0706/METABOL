@@ -198,8 +198,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         if (records.isEmpty()) {
             item { Text("Henüz vücut ölçümü kaydedilmedi.", color = BodyMuted) }
         } else {
-            items(records.size) { index ->
-                val r = records.asReversed()[index]
+            items(records.asReversed(), key = { it.id }) { r ->
                 Row(Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(18.dp)).padding(16.dp)) {
                     Column(Modifier.weight(1f)) {
                         Text(SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR")).format(Date(r.id)),
