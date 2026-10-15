@@ -112,7 +112,38 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
             if (key.length > 100 || !group.has(key) || group.isNull(key)) return false
             val value = group.getString(key)
             if (value.length > 2_000_000) return false
+            // Reject unknown keys rather than importing unchecked future or corrupted data.
+            val allowed = when (name) {
+                "metabol_local" -> key == "weights"
+                "metabol_body" -> key == "records"
+                "metabol_profile" -> key == "goal_weight"
+                "metabol_nutrition" -> key.startsWith("meals_") ||
+                    key == "recent_foods" || key == "saved_foods"
+                else -> false
+            }
+            if (!allowed) return false
             when {
+                name == "metabol_nutrition" && key == "recent_foods" -> {
+                    val array = JSONArray(value)
+                    if (array.length() > 8) return false
+                    for (i in 0 until array.length()) {
+                        if (array.getString(i).length !in 1..120) return false
+                    }
+                }
+                name == "metabol_nutrition" && key == "saved_foods" -> {
+                    val array = JSONArray(value)
+                    if (array.length() > 30) return false
+                    for (i in 0 until array.length()) {
+                        val item = array.getJSONObject(i)
+                        if (item.getString("name").length !in 1..120) return false
+                        val kcal = item.getDouble("kcal")
+                        if (!kcal.isFinite() || kcal !in 0.0..1000.0) return false
+                        for (field in listOf("protein", "carbs", "fat")) {
+                            val macro = item.getDouble(field)
+                            if (!macro.isFinite() || macro !in 0.0..100.0) return false
+                        }
+                    }
+                }
                 name == "metabol_local" && key == "weights" -> {
                     val array = org.json.JSONArray(value)
                     if (array.length() > 100_000) return false
