@@ -136,6 +136,20 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                     color = AText, fontSize = 43.sp, fontWeight = FontWeight.ExtraBold)
                 Text("${stats.count} kayıt · ${listOf("Tüm zamanlar", "Son 7 gün", "Son 30 gün", "Son 90 gün")[period]}",
                     color = AMuted, fontSize = 12.sp)
+                if (stats.count < 2) {
+                    Text(
+                        if (stats.count == 0) "Bu dönemde ölçüm bulunmuyor. Farklı bir dönem seçebilir veya yeni tartı kaydı ekleyebilirsin."
+                        else "Değişimi hesaplamak için seçilen dönemde en az iki tartı kaydı gerekiyor.",
+                        color = AMuted, fontSize = 12.sp
+                    )
+                } else {
+                    val direction = when {
+                        stats.change!! < -0.05f -> "Bu dönemde kilo azalmış."
+                        stats.change > 0.05f -> "Bu dönemde kilo artmış."
+                        else -> "Bu dönemde kilo yaklaşık aynı kalmış."
+                    }
+                    Text(direction, color = AMint, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                }
                 HorizontalDivider(color = Color(0xFF6B4966))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
