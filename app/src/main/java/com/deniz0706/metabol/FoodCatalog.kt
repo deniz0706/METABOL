@@ -57,6 +57,27 @@ internal object FoodCatalog {
             .replace(Regex("\\p{M}+"), "")
             .replace('ı', 'i')
 
+    val categories = listOf("Tümü", "Yemekler", "Et ve balık", "Kahvaltı", "Meyve", "Sebze", "Tahıl", "Süt ürünleri", "Kuruyemiş")
+
+    fun categoryOf(food: FoodReference): String {
+        val name = food.name.lowercase(Locale("tr", "TR"))
+        return when {
+            food.note.contains("YEMEK") || food.note.contains("HAZIR YEMEK") -> "Yemekler"
+            name.contains("yumurta") || name.contains("peynir") || name.contains("zeytin") -> "Kahvaltı"
+            food.note.contains("PROTEIN") -> "Et ve balık"
+            food.note.contains("MEYVE") -> "Meyve"
+            food.note.contains("SEBZE") -> "Sebze"
+            food.note.contains("TAHIL") -> "Tahıl"
+            food.note.contains("SUT") -> "Süt ürünleri"
+            food.note.contains("KURUYEMIS") -> "Kuruyemiş"
+            else -> when {
+                name.contains("ekmek") || name.contains("pirinç") || name.contains("bulgur") || name.contains("yulaf") -> "Tahıl"
+                name.contains("süt") || name.contains("yoğurt") -> "Süt ürünleri"
+                else -> "Yemekler"
+            }
+        }
+    }
+
     private val indexedFoods by lazy { foods.map { it to normalize(it.name) } }
 
     fun search(query: String): List<FoodReference> {
