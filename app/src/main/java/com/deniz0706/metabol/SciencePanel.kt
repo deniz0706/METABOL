@@ -51,11 +51,11 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         MetabolicScience.estimate(profile, data, LocalDate.now())
         }
     }
-    val mint = Color(0xFF71E8C4)
-    val muted = Color(0xFF8B9CB2)
-    val white = Color(0xFFF4F8FC)
+    val mint = Color(0xFFFFBE76)
+    val muted = Color(0xFFB9ACCA)
+    val white = Color(0xFFFFF7EE)
     val result = estimate
-    Column(Modifier.fillMaxWidth().background(Color(0xFF121C28), RoundedCornerShape(24.dp)).padding(20.dp),
+    Column(Modifier.fillMaxWidth().background(Color(0xFF211C30), RoundedCornerShape(24.dp)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("METABOL · METABOLİZMA REHBERİ", color = mint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Text("Vücudunun yaklaşık enerji ihtiyacı", color = white, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -113,7 +113,7 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             false -> "Trend devam ediyor"
             null -> "Veri yetersiz"
         })
-        HorizontalDivider(color = Color(0xFF2A394B))
+        HorizontalDivider(color = Color(0xFF45364D))
         Text("Aşağıdaki 30 günlük değer bir senaryodur; hedef veya gerçekleşeceği kesin bir sonuç değildir.",
             color = muted, fontSize = 11.sp)
         Metric("Bu hız sürerse 30 gün sonraki tahmin", result.forecast30Kg?.let {
