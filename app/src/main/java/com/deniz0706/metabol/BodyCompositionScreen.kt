@@ -402,12 +402,12 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                                     moveTo(points.first().x, points.first().y)
                                     points.drop(1).forEach { lineTo(it.x, it.y) }
                                 }
-                                drawPath(path, BodyMint, style = Stroke(2.5.dp.toPx()))
+                                drawPath(path, BodyMint, style = Stroke(3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
                             }
                             points.forEachIndexed { index, point ->
                                 val active = data[index].first == selectedChartTime
                                 drawCircle(if (active) Color.White else BodyMint,
-                                    if (active) 6.dp.toPx() else 3.5.dp.toPx(), point)
+                                    if (active) 6.dp.toPx() else 4.dp.toPx(), point)
                                 if (active) drawLine(BodyMint.copy(alpha = 0.5f),
                                     Offset(point.x, top), Offset(point.x, bottom), 1.dp.toPx())
                             }
