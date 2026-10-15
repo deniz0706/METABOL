@@ -42,9 +42,9 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val Bg = Color(0xFF080D15)
-private val Surface = Color(0xFF131C2A)
-private val Surface2 = Color(0xFF1B2839)
+private val Bg = Color(0xFF070B12)
+private val Surface = Color(0xFF121C28)
+private val Surface2 = Color(0xFF203140)
 private val Mint = Color(0xFF71E8C4)
 private val Violet = Color(0xFFA99BFF)
 private val Muted = Color(0xFF8B9CB2)
@@ -96,14 +96,32 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
     Scaffold(
         containerColor = Bg,
         bottomBar = {
-            NavigationBar(containerColor = Surface, tonalElevation = 0.dp) {
-                listOf("Özet", "Beslenme", "Analiz", "Vücut", "Ayarlar").forEachIndexed { index, title ->
-                    NavigationBarItem(
-                        selected = tab == index, onClick = { tab = index },
-                        icon = { Text(listOf("◈", "◉", "⌁", "◇", "⚙")[index], fontSize = 20.sp) },
-                        label = { Text(title, fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(selectedIconColor = Mint, selectedTextColor = Mint, indicatorColor = Surface2)
-                    )
+            Surface(color = Bg, shadowElevation = 16.dp) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)
+                    .background(Surface, RoundedCornerShape(25.dp))
+                    .border(1.dp, Edge, RoundedCornerShape(25.dp))
+                    .padding(horizontal = 7.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    val labels = listOf("Özet", "Beslenme", "Analiz", "Vücut", "Ayarlar")
+                    val symbols = listOf("◈", "◉", "⌁", "◇", "⚙")
+                    labels.forEachIndexed { index, title ->
+                        val active = tab == index
+                        Column(
+                            Modifier.weight(1f)
+                                .background(if (active) Surface2 else Color.Transparent, RoundedCornerShape(17.dp))
+                                .clickable { tab = index }
+                                .padding(vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Text(symbols[index], fontSize = 20.sp,
+                                color = if (active) Mint else Muted)
+                            Text(title, fontSize = 10.sp,
+                                color = if (active) White else Muted,
+                                fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                        }
+                    }
                 }
             }
         }
