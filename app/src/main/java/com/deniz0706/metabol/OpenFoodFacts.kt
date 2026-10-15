@@ -105,7 +105,7 @@ internal object OpenFoodFacts {
                 else -> Double.NaN
             }
             val quantityMatch = Regex(
-                """(?i)(?:(\\d{1,2})\\s*[x×]\\s*)?(\\d{1,4}(?:[.,]\\d+)?)\\s*(kg|kilograms?|grams?|gr|g)\\b"""
+                """(?i)(?:(\d{1,2})\s*[x×]\s*)?(\d{1,4}(?:[.,]\d+)?)\s*(kg|kilograms?|grams?|gr|g)\b"""
             ).find(quantity)
             val textGrams = quantityMatch?.let { match ->
                 val count = match.groupValues[1].toIntOrNull() ?: 1
