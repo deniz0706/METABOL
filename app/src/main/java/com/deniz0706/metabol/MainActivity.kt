@@ -76,7 +76,9 @@ class MainActivity : ComponentActivity() {
                 prefs.edit().putString("weights", json.toString()).apply()
             }
             MaterialTheme(colorScheme = darkColorScheme(primary = Mint, background = Bg, surface = Surface)) {
-                MetabolApp(entries, onAdd = { persist(entries + it) }, onDelete = {
+                MetabolApp(entries, onAdd = { persist(entries + it) }, onEdit = { old, updated ->
+                    persist(entries.map { if (it == old) updated else it })
+                }, onDelete = {
                     persist(entries.filterNot { entry -> entry == it })
                 })
             }
@@ -85,9 +87,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit) {
+private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Unit, onEdit: (WeightRecord, WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit) {
     var tab by remember { mutableIntStateOf(0) }
     var addDialog by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<WeightRecord?>(null) }
     Scaffold(
         containerColor = Bg,
         bottomBar = {
@@ -104,7 +107,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         }
     ) { insets ->
         if (tab == 0) {
-            Dashboard(entries, tab, onAddClick = { addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
+            Dashboard(entries, tab, onAddClick = { editing = null; addDialog = true }, onEdit = { editing = it; addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
         } else if (tab == 2) {
             AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) }, Modifier.padding(insets))
         } else if (tab == 1) {
@@ -116,8 +119,8 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         }
     }
     if (addDialog) {
-        var value by remember { mutableStateOf("") }
-        var dateValue by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())) }
+        var value by remember(editing) { mutableStateOf(editing?.kg?.let { numberFormat.format(it) } ?: "") }
+        var dateValue by remember(editing) { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(editing?.time ?: System.currentTimeMillis()))) }
         val inputDateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false } }
         val parsedDate = remember(dateValue) {
             val position = ParsePosition(0)
@@ -127,7 +130,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         AlertDialog(
             onDismissRequest = { addDialog = false },
             containerColor = Surface,
-            title = { Text("Yeni kilo ölçümü", color = White) },
+            title = { Text(if (editing == null) "Yeni kilo ölçümü" else "Ölçümü düzenle", color = White) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Geçmiş tarihli ölçümlerini de kaydedebilirsin.", color = Muted)
@@ -149,7 +152,8 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
                     val kg = value.replace(',', '.').toFloatOrNull()
                     if (kg != null && kg in 20f..500f && parsedDate != null) {
                         val calendar = Calendar.getInstance().apply { time = parsedDate; set(Calendar.HOUR_OF_DAY, 12) }
-                        onAdd(WeightRecord(calendar.timeInMillis, kg))
+                        val updated = WeightRecord(calendar.timeInMillis, kg)
+                        if (editing == null) onAdd(updated) else onEdit(editing!!, updated)
                         addDialog = false
                     }
                 }) { Text("Kaydet", color = Mint) }
@@ -176,7 +180,7 @@ private fun Header() {
 @Composable
 private fun Dashboard(
     entries: List<WeightRecord>, tab: Int, onAddClick: () -> Unit,
-    onDelete: (WeightRecord) -> Unit, modifier: Modifier = Modifier
+    onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit, modifier: Modifier = Modifier
 ) {
     val latest = entries.lastOrNull()
     val first = entries.firstOrNull()
@@ -236,7 +240,10 @@ private fun Dashboard(
                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(dateFormat.format(Date(entry.time)), color = Muted, modifier = Modifier.weight(1f))
                         Text(numberFormat.format(entry.kg) + " kg", color = White, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text("Düzenle", color = Mint, fontSize = 12.sp,
+                            modifier = Modifier.clickable { onEdit(entry) }.padding(5.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text("Sil", color = Color(0xFFFF879A), fontSize = 12.sp,
                             modifier = Modifier.clickable { onDelete(entry) }.padding(5.dp))
                     }
