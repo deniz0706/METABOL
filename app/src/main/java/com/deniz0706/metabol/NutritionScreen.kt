@@ -585,7 +585,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 
     if (catalogOpen) {
         var query by remember { mutableStateOf("") }
-        var category by remember { mutableStateOf("Yemekler") }
+        var category by remember { mutableStateOf("Tümü") }
         val savedResults = remember(query, savedFoods) {
             val needle = query.trim()
             savedFoods.filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }
@@ -595,7 +595,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 compareBy<FoodReference> {
                     if (query.isBlank()) {
                         val index = recentFoodNames.indexOf(it.name)
-                        if (index == -1) Int.MAX_VALUE else index
+                        if (index >= 0) index else if (FoodCatalog.categoryOf(it) == "Yemekler") 100 else 200
                     } else 0
                 }.thenBy { it.name }
             )
@@ -782,7 +782,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 color = NutritionMuted, fontSize = 12.sp)
                         }
                     }
-                    items(localResults) { food ->
+                    items(localResults, key = { it.name }) { food ->
                         FoodSearchRow(food, false) {
                             selectedFood = food
                             selectedGrams = "100"
