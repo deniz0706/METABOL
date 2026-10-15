@@ -74,3 +74,7 @@ Nutrition now offers 7/30/90-day summaries with logged-day counts, mean recorded
 ## Personal targets and integrated overview
 
 Users can optionally set daily energy (500–10000 kcal) and protein (1–500 g) tracking targets in Settings; no target is generated automatically. Nutrition displays recorded amounts and progress against these user-defined values. Targets are included in JSON backup/restore with validation. The main dashboard now includes a tappable summary of today's logged meals, calories, and protein, linking to Nutrition. The nutrition diary offers a calendar date picker for direct historical navigation, and its 7-day chart distinguishes days with no records from days explicitly saved with zero energy. Streaks describe diary **recording**, not adherence to any diet.
+
+## Explicit summary sharing
+
+Nutrition's 7/30/90-day recorded-day summary can be shared as plain text through the Android system share sheet. Nothing is shared automatically: the user must press the share button and select a destination. The summary contains only aggregate meal-record statistics, not body measurements or raw meal history.
