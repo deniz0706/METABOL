@@ -37,6 +37,8 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val NutritionBg = Color(0xFF070B12)
 private val NutritionPanel = Color(0xFF121C28)
@@ -223,7 +225,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         historyRevision++
     }
     var insightsWindow by remember { mutableIntStateOf(30) }
-    val insights = remember(selectedDay, historyRevision, insightsWindow) {
+    val insights by produceState(initialValue = NutritionInsights.summarize(emptyList(), insightsWindow, LocalDate.parse(selectedDay)),
+        key1 = selectedDay, key2 = historyRevision, key3 = insightsWindow) {
+        value = withContext(Dispatchers.Default) {
         val anchor = runCatching { LocalDate.parse(selectedDay) }.getOrDefault(LocalDate.now())
         val recorded = (0 until insightsWindow).mapNotNull { offset ->
             val date = anchor.minusDays(offset.toLong())
@@ -245,6 +249,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             NutritionDay(date, kcal, proteinSum, carbSum, fatSum, array.length())
         }
         NutritionInsights.summarize(recorded, insightsWindow, anchor)
+        }
     }
     val profilePrefs = context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE)
     val calorieTarget = profilePrefs.getString("calorie_target", null)?.toIntOrNull()
