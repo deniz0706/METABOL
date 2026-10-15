@@ -27,12 +27,12 @@ import java.text.DecimalFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private val ABack = Color(0xFF110F1B)
-private val APanel = Color(0xFF211C30)
-private val AText = Color(0xFFFFF7EE)
-private val AMuted = Color(0xFFB9ACCA)
-private val AMint = Color(0xFFFFBE76)
-private val AEdge = Color(0xFF45364D)
+private val ABack = Color(0xFF0B1220)
+private val APanel = Color(0xFF172337)
+private val AText = Color(0xFFF3F8FF)
+private val AMuted = Color(0xFF9AAFC5)
+private val AMint = Color(0xFF57D6C1)
+private val AEdge = Color(0xFF30445C)
 private val fmt = DecimalFormat("0.0")
 
 internal data class WeightPoint(val timestamp: Long, val kg: Float)
