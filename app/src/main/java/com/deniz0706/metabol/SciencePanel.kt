@@ -64,6 +64,13 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         Metric("BMR · Mifflin–St Jeor", kcal(estimate.bmr))
         Metric("TDEE · Aktiviteye dayalı", kcal(estimate.initialTdee))
         Metric("AME · Kayıtlardan tahmin", kcal(estimate.inferredTdee))
+        Metric("Veri güvenilirliği", "${estimate.reliability}/100 · ${estimate.reliabilityLabel}")
+        Metric("Kütleye bağlı harcama farkı", estimate.expectedTdeeChange?.let {
+            String.format(Locale.US, "%+.0f kcal/gün", it)
+        } ?: "Veri yetersiz")
+        Metric("Geçmiş 14 gün tahmin hatası", estimate.forecastErrorKg?.let {
+            String.format(Locale.US, "%.1f kg", it)
+        } ?: "Geriye dönük veri yetersiz")
         Metric("28 günlük beslenme kaydı", "${estimate.recordedDays}/28 gün")
         Metric("28 günlük kilo kaydı", "${estimate.observedDays} gün")
         Metric("Kayıtlı günlerde ort. enerji", kcal(estimate.dailyCalorieAverage))
@@ -71,7 +78,7 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             String.format(Locale.US, "%+.2f kg/hafta", it)
         } ?: "Veri yetersiz")
         Metric("Kilo duraklaması", when (estimate.plateau) {
-            true -> "Olası (trend ±0,15 kg/hafta)"
+            true -> "Olası (en az 21 günlük trend)"
             false -> "Trend devam ediyor"
             null -> "Veri yetersiz"
         })
@@ -83,7 +90,7 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             String.format(Locale.US, "%.1f–%.1f kg", estimate.forecastLowKg, estimate.forecastHighKg)
             else "—")
         Text(estimate.message, color = mint, fontSize = 12.sp)
-        Text("BMR bir denklem tahminidir; TDEE aktivite varsayımına dayanır. AME kayıtlı kaloriler ve kilo trendinden yaklaşık çıkarımdır. 30 günlük öngörü, enerji harcamasının kiloyla değişimini hesaba katan basitleştirilmiş senaryodur; Kevin Hall modelinin uygulaması veya klinik olarak kalibre edilmiş güven aralığı değildir. Eksik öğün kayıtları sonucu bozabilir. Su değişimleri yağ değişimi sayılmaz.",
+        Text("BMR bir denklem tahminidir; TDEE aktivite varsayımına dayanır. AME kayıtlı kaloriler ve kilo trendinden yaklaşık çıkarımdır. 30 günlük öngörü, enerji harcamasının kiloyla değişimini hesaba katan basitleştirilmiş senaryodur; Kevin Hall modelinin uygulaması veya klinik olarak kalibre edilmiş güven aralığı değildir. Veri puanı kayıt düzenliliğini gösterir, fizyolojik doğruluğu değil. Kütleye bağlı harcama farkı adaptif termogenez ölçümü değildir. Eksik öğün kayıtları sonucu bozabilir. Su değişimleri yağ değişimi sayılmaz.",
             color = muted, fontSize = 11.sp)
     }
 }
