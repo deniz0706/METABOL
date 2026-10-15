@@ -230,25 +230,32 @@ private fun Dashboard(
         item { Header() }
         item {
             Column {
-                Text(if (tab == 0) "GENEL BAKIŞ" else if (tab == 2) "ANALİZ MERKEZİ" else "VÜCUT ÖLÇÜMLERİ",
-                    color = Muted, fontSize = 11.sp, letterSpacing = 2.5.sp)
-                Spacer(Modifier.height(6.dp))
-                Text(if (tab == 0) "İlerlemeni keşfet." else "Verilerini keşfet.", color = White, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("YOUR OVERVIEW", color = Mint, fontSize = 10.sp, letterSpacing = 1.8.sp)
+                    Text(SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR")).format(Date()),
+                        color = Muted, fontSize = 11.sp)
+                }
+                Spacer(Modifier.height(12.dp))
+                Text("Genel Bakış", color = White, fontSize = 36.sp,
+                    fontWeight = FontWeight.ExtraBold)
+                Spacer(Modifier.height(4.dp))
+                Text("İlerlemen tek bir yerde.", color = Muted, fontSize = 13.sp)
             }
         }
         item {
             Column(
                 Modifier.fillMaxWidth().background(
-                    Brush.verticalGradient(listOf(Color(0xFF1C3040), Surface, Surface)), RoundedCornerShape(28.dp)
+                    Brush.linearGradient(listOf(Color(0xFF21453F), Color(0xFF182D39), Surface)), RoundedCornerShape(28.dp)
                 ).border(1.dp, Edge, RoundedCornerShape(28.dp)).padding(22.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("GÜNCEL AĞIRLIK", color = Muted, fontSize = 11.sp, letterSpacing = 2.sp)
-                    Text("●  YEREL VERİ", color = Mint, fontSize = 10.sp)
+                    Text("●  CİHAZINDA", color = Mint, fontSize = 10.sp)
                 }
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text(latest?.let { numberFormat.format(it.kg) } ?: "—", color = White, fontSize = 53.sp, fontWeight = FontWeight.Bold)
+                    Text(latest?.let { numberFormat.format(it.kg) } ?: "—", color = White, fontSize = 62.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.width(8.dp))
                     Text("kg", color = Muted, fontSize = 22.sp, modifier = Modifier.padding(bottom = 10.dp))
                 }
