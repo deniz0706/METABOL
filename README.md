@@ -54,3 +54,7 @@ Recent foods are stored locally and appear first in the offline catalog. Portion
 ## Opt-in product search (preview)
 
 The food picker now offers **online product search** via Open Food Facts. Enter a food name or an 8–14 digit barcode number, then explicitly tap the online-search button. A network connection is required. The query/barcode is sent to the third-party Open Food Facts service; local weight measurements and meal history are **not** transmitted. The offline catalog remains available if search fails. Only entries with numeric per-100-g kcal, protein, carbohydrate and fat values are displayed. Product data is community-maintained and can be inaccurate: check the package label before saving. Barcode **camera scanning is not implemented**; barcode numbers can be entered manually.
+
+## Full-screen food explorer and offline reuse
+
+The food search is a full-screen Compose dialog with lazy-loaded lists for local and online results, explicit network search, progress/error states, and portion selection. Successfully logged online products are stored in a local library (up to 30) for later offline reuse and can be removed from that library. Previous-day meals can be copied into the selected day with confirmation; existing entries are preserved. Nutrition values are estimates and should be verified against labels, especially when ingredients or serving sizes vary.
