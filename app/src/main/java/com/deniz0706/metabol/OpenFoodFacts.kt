@@ -32,7 +32,7 @@ internal object OpenFoodFacts {
         return cached("search:${term.lowercase(java.util.Locale.ROOT)}") {
             val address = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" +
                 URLEncoder.encode(term, "UTF-8") +
-                "&search_simple=1&action=process&json=1&page_size=20&" +
+                "&search_simple=1&action=process&json=1&page_size=60&" +
                 "fields=product_name,product_name_tr,brands,nutriments"
             parse(request(address))
         }
@@ -94,6 +94,6 @@ internal object OpenFoodFacts {
             val displayName = if (brand.isBlank() || name.contains(brand, ignoreCase = true)) name
                 else "$brand · $name"
             FoodReference(displayName.take(120),kcal,p,c,f,"Open Food Facts · Etiketten doğrula")
-        }.distinctBy { it.name }.take(20)
+        }.distinctBy { it.name }.take(60)
     }
 }
