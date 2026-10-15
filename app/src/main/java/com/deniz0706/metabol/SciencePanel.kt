@@ -26,7 +26,7 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         val height = profilePrefs.getString("science_height", null)?.toDoubleOrNull()
         val activity = profilePrefs.getString("science_activity", null)?.toDoubleOrNull()
         val sex = profilePrefs.getString("science_sex", null)
-        if (age in 18..100 && height != null && height in 100.0..250.0 &&
+        if (age != null && age in 18..100 && height != null && height in 100.0..250.0 &&
             activity != null && activity in 1.2..1.9 && sex in listOf("male", "female"))
             MetabolicScience.Profile(age!!, height, sex == "male", activity)
         else null
