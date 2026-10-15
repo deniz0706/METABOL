@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.text.ParsePosition
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
@@ -115,13 +117,25 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
     }
     if (addDialog) {
         var value by remember { mutableStateOf("") }
+        var dateValue by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())) }
+        val inputDateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false } }
+        val parsedDate = remember(dateValue) {
+            val position = ParsePosition(0)
+            val parsed = inputDateFormat.parse(dateValue, position)
+            parsed?.takeIf { position.index == dateValue.length && it.time <= System.currentTimeMillis() }
+        }
         AlertDialog(
             onDismissRequest = { addDialog = false },
             containerColor = Surface,
             title = { Text("Yeni kilo ölçümü", color = White) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Ölçüm bugünün tarihiyle kaydedilir.", color = Muted)
+                    Text("Geçmiş tarihli ölçümlerini de kaydedebilirsin.", color = Muted)
+                    OutlinedTextField(
+                        value = dateValue, onValueChange = { dateValue = it },
+                        label = { Text("Tarih (YYYY-AA-GG)") }, singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = White, unfocusedTextColor = White)
+                    )
                     OutlinedTextField(
                         value = value, onValueChange = { value = it },
                         label = { Text("Kilo (kg)") }, singleLine = true,
@@ -133,8 +147,9 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
             confirmButton = {
                 TextButton(onClick = {
                     val kg = value.replace(',', '.').toFloatOrNull()
-                    if (kg != null && kg in 20f..500f) {
-                        onAdd(WeightRecord(System.currentTimeMillis(), kg))
+                    if (kg != null && kg in 20f..500f && parsedDate != null) {
+                        val calendar = Calendar.getInstance().apply { time = parsedDate; set(Calendar.HOUR_OF_DAY, 12) }
+                        onAdd(WeightRecord(calendar.timeInMillis, kg))
                         addDialog = false
                     }
                 }) { Text("Kaydet", color = Mint) }
