@@ -1,6 +1,8 @@
 package com.deniz0706.metabol
 
 import android.content.Context
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -33,11 +35,11 @@ import java.text.ParsePosition
 import java.util.Date
 import java.util.Locale
 
-private val BodyBg = Color(0xFF070B12)
-private val BodyCard = Color(0xFF121C28)
-private val BodyMint = Color(0xFF71E8C4)
-private val BodyText = Color(0xFFF4F8FC)
-private val BodyMuted = Color(0xFF8B9CB2)
+private val BodyBg = Color(0xFF110F1B)
+private val BodyCard = Color(0xFF211C30)
+private val BodyMint = Color(0xFFFFBE76)
+private val BodyText = Color(0xFFFFF7EE)
+private val BodyMuted = Color(0xFFB9ACCA)
 
 private data class BodyRecord(
     val id: Long, val fatPercent: Double?, val muscleKg: Double?, val waistCm: Double?,
@@ -78,6 +80,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
     var pendingDeleteRecord by remember { mutableStateOf<BodyRecord?>(null) }
     val latest = records.lastOrNull()
     val previous = records.dropLast(1).lastOrNull()
+    val animatedFat by animateFloatAsState((latest?.fatPercent ?: 0.0).toFloat(), tween(750), label = "body-fat")
     var comparisonStart by remember { mutableStateOf<Long?>(null) }
     var comparisonEnd by remember { mutableStateOf<Long?>(null) }
     val startRecord = records.firstOrNull { it.id == comparisonStart } ?: records.firstOrNull()
@@ -129,12 +132,12 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                 Text("BODY / 03", color = BodyMuted, fontSize = 10.sp, letterSpacing = 1.sp)
             }
             Spacer(Modifier.height(24.dp))
-            Text("Vücut", color = BodyText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Vücudunun haritası", color = BodyText, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(4.dp))
             Text("Ölçümlerindeki değişimi takip et.", color = BodyMuted, fontSize = 13.sp)
             Spacer(Modifier.height(18.dp))
             Column(Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(Color(0xFF20463E), Color(0xFF172B35), BodyCard)),
+                .background(Brush.linearGradient(listOf(Color(0xFF67415B), Color(0xFF352841), BodyCard)),
                     RoundedCornerShape(28.dp)).padding(23.dp),
                 verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("SON VÜCUT ANALİZİ", color = BodyMint, fontSize = 11.sp, letterSpacing = 1.5.sp)
@@ -143,6 +146,17 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                 } ?: "Henüz ölçüm yok", color = BodyText, fontSize = 25.sp,
                     fontWeight = FontWeight.ExtraBold)
                 Text("${records.size} kayıt · Yağ, kas, su ve çevre ölçümleri", color = BodyMuted, fontSize = 12.sp)
+                if (latest?.fatPercent != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("YAĞ ORANI", color = BodyMuted, fontSize = 10.sp, letterSpacing = 1.sp)
+                    Text(String.format(Locale("tr", "TR"), "%%%.1f", animatedFat), color = BodyText,
+                        fontSize = 38.sp, fontWeight = FontWeight.ExtraBold)
+                    LinearProgressIndicator(progress = { (animatedFat / 75f).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().height(8.dp), color = BodyMint,
+                        trackColor = Color(0xFF533D58))
+                    Text("Grafik yalnızca 0–75% ölçüm aralığını gösterir; sağlık hedefi değildir.",
+                        color = BodyMuted, fontSize = 10.sp)
+                }
             }
         }
         item {
