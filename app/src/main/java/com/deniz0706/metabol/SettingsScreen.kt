@@ -232,7 +232,10 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
             confirmButton = {
                 TextButton(onClick = {
                     message = runCatching {
-                        if (restoreBackup(context, pendingImport!!)) { onGoalChanged(); "Yedek geri yüklendi. Uygulamayı kapatıp yeniden aç." }
+                        if (restoreBackup(context, pendingImport!!)) {
+                            (context as? android.app.Activity)?.recreate()
+                            "Yedek geri yüklendi."
+                        }
                         else "Geçersiz yedek dosyası."
                     }.getOrElse { "Geri yükleme başarısız: ${it.message}" }
                     pendingImport = null
