@@ -69,7 +69,7 @@ class BarcodeScannerActivity : ComponentActivity() {
         }
         root.addView(top, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
         status = TextView(this).apply {
-            text = "Ürünün çizgili barkodunu yatay çerçeveye getir.\\nIşık yeterli olsun, tüm çizgiler görünsün."
+            text = "Ürünün çizgili barkodunu yatay çerçeveye getir.\nIşık yeterli olsun, tüm çizgiler görünsün."
             setTextColor(Color.WHITE)
             textSize = 15f
             gravity = Gravity.CENTER
@@ -90,7 +90,7 @@ class BarcodeScannerActivity : ComponentActivity() {
             try {
                 val provider = future.get()
                 val preview = Preview.Builder().build().also {
-                    it.surfaceProvider = previewView.surfaceProvider
+                    it.setSurfaceProvider(previewView.surfaceProvider)
                 }
                 val analysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
