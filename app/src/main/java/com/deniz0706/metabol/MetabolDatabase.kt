@@ -51,6 +51,21 @@ internal interface MetabolDao {
     @Query("SELECT * FROM daily_journal WHERE day = :day LIMIT 1")
     suspend fun journal(day: String): DailyJournalEntity?
 
+    @Query("DELETE FROM weight_entries")
+    suspend fun clearWeights()
+
+    @Query("DELETE FROM nutrition_entries")
+    suspend fun clearNutrition()
+
+    @Query("DELETE FROM daily_journal")
+    suspend fun clearJournal()
+
+    @Query("SELECT COUNT(*) FROM weight_entries")
+    suspend fun weightCount(): Int
+
+    @Query("SELECT COUNT(*) FROM nutrition_entries")
+    suspend fun nutritionCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putWeights(rows: List<WeightEntity>)
 
