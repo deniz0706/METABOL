@@ -39,6 +39,23 @@ internal data class TrendSummary(
     val smoothedLast: Float?
 )
 
+/**
+ * Mean of the latest available measurement per calendar day in the trailing
+ * seven calendar days, including today. Missing days are not treated as zero.
+ * Returns null unless at least three distinct days were measured.
+ */
+internal fun sevenDayCalendarTrend(
+    points: List<WeightPoint>,
+    today: java.time.LocalDate = java.time.LocalDate.now(),
+    zone: java.time.ZoneId = java.time.ZoneId.systemDefault()
+): Double? {
+    val daily = points.groupBy {
+        java.time.Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate()
+    }.mapValues { (_, records) -> records.maxByOrNull { it.timestamp }!!.kg.toDouble() }
+    val values = (0L..6L).mapNotNull { offset -> daily[today.minusDays(offset)] }
+    return values.takeIf { it.size >= 3 }?.average()
+}
+
 internal fun summarizeWeights(points: List<WeightPoint>): TrendSummary {
     val sorted = points.sortedBy { it.timestamp }
     val first = sorted.firstOrNull()
@@ -66,6 +83,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         if (days == null) points else points.filter { it.timestamp >= now - days * 86_400_000L && it.timestamp <= now }
     }
     val stats = remember(filtered) { summarizeWeights(filtered) }
+    val calendarTrend = remember(points) { sevenDayCalendarTrend(points) }
     val context = androidx.compose.ui.platform.LocalContext.current
     LazyColumn(modifier.fillMaxSize().background(ABack),
         contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -153,6 +171,16 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                     (if (it > 0) "+" else "") + fmt.format(it) + " kg"
                 } ?: "—", Modifier.weight(1f))
                 AnalysisTile("SON 7 ÖLÇÜM", stats.smoothedLast?.let { fmt.format(it) + " kg" } ?: "—", Modifier.weight(1f))
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(APanel, RoundedCornerShape(24.dp))
+                .padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("SON 7 TAKVİM GÜNÜ TRENDİ", color = AMuted, fontSize = 11.sp)
+                Text(calendarTrend?.let { fmt.format(it) + " kg" } ?: "Yetersiz veri",
+                    color = AMint, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("Her günün son ölçümü kullanılır. En az 3 farklı gün gerekir; kayıtsız günler sıfır sayılmaz.",
+                    color = AMuted, fontSize = 11.sp)
             }
         }
         item {
