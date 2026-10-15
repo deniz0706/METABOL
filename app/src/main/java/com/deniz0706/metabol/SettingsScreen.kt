@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -25,7 +27,7 @@ private val SCard = Color(0xFF131C2A)
 private val SMint = Color(0xFF71E8C4)
 private val SText = Color(0xFFF4F8FC)
 private val SMuted = Color(0xFF8B9CB2)
-private val preferenceNames = listOf("metabol_local", "metabol_nutrition", "metabol_body")
+private val preferenceNames = listOf("metabol_local", "metabol_nutrition", "metabol_body", "metabol_profile")
 
 internal fun createBackup(context: Context): String {
     val root = JSONObject()
@@ -75,6 +77,10 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
 @Composable
 internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier) {
     var message by remember { mutableStateOf("") }
+    val profilePrefs = remember(context) { context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE) }
+    var goalInput by remember { mutableStateOf(profilePrefs.getString("goal_weight", "") ?: "") }
+    val goalValue = goalInput.replace(',', '.').toFloatOrNull()
+    val goalValid = goalValue != null && goalValue in 20f..500f
     var pendingImport by remember { mutableStateOf<String?>(null) }
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -113,6 +119,33 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier) {
             Text("AYARLAR", color = SMuted, fontSize = 11.sp, letterSpacing = 2.sp)
             Spacer(Modifier.height(8.dp))
             Text("Verilerin kontrolü sende.", color = SText, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(SCard, RoundedCornerShape(24.dp)).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Kişisel hedef", color = SText, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text("Kilo hedefini istediğin zaman değiştirebilirsin. Hedef tamamen sana aittir.",
+                    color = SMuted, fontSize = 12.sp)
+                OutlinedTextField(
+                    value = goalInput, onValueChange = { goalInput = it },
+                    label = { Text("Hedef kilo (kg)") }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                Button(onClick = {
+                    if (goalValid) {
+                        profilePrefs.edit().putString("goal_weight", goalValue.toString()).apply()
+                        message = "Hedef kaydedildi."
+                    }
+                }, enabled = goalValid, modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = SMint, contentColor = SBack)) {
+                    Text("Hedefi kaydet")
+                }
+                TextButton(onClick = {
+                    goalInput = ""
+                    profilePrefs.edit().remove("goal_weight").apply()
+                    message = "Hedef kaldırıldı."
+                }) { Text("Hedefi kaldır", color = SMuted) }
+            }
         }
         item {
             Column(Modifier.fillMaxWidth().background(SCard, RoundedCornerShape(24.dp)).padding(20.dp),
