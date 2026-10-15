@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.DecimalFormat
 import java.util.Locale
-import kotlin.math.abs
+import java.util.concurrent.TimeUnit
 
 private val ABack = Color(0xFF080D15)
 private val APanel = Color(0xFF131C2A)
@@ -59,9 +59,9 @@ internal fun summarizeWeights(points: List<WeightPoint>): TrendSummary {
 internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modifier) {
     var period by remember { mutableIntStateOf(0) }
     val now = System.currentTimeMillis()
-    val filtered = remember(points, period) {
+    val filtered = remember(points, period, now / 86_400_000L) {
         val days = when (period) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
-        if (days == null) points else points.filter { it.timestamp >= now - days * 86_400_000L }
+        if (days == null) points else points.filter { it.timestamp >= now - days * 86_400_000L && it.timestamp <= now }
     }
     val stats = remember(filtered) { summarizeWeights(filtered) }
     LazyColumn(modifier.fillMaxSize().background(ABack),
