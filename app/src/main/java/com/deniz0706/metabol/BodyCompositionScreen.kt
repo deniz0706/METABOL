@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.text.ParsePosition
 import java.util.Date
 import java.util.Locale
 
@@ -134,11 +135,22 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         }
     }
     if (showAdd) {
+        var dateText by remember(editingRecord) {
+            mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                .format(Date(editingRecord?.id ?: System.currentTimeMillis())))
+        }
+        val inputDateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false } }
+        val parsedDate = remember(dateText) {
+            val pos = ParsePosition(0)
+            inputDateFormat.parse(dateText, pos)?.takeIf {
+                pos.index == dateText.length && it.time <= System.currentTimeMillis()
+            }
+        }
         var fat by remember(editingRecord) { mutableStateOf(editingRecord?.fatPercent?.toString() ?: "") }
         var muscle by remember(editingRecord) { mutableStateOf(editingRecord?.muscleKg?.toString() ?: "") }
         var waist by remember(editingRecord) { mutableStateOf(editingRecord?.waistCm?.toString() ?: "") }
         fun parse(value: String) = value.replace(',', '.').toDoubleOrNull()
-        val valid = listOf(fat, muscle, waist).any { it.isNotBlank() } &&
+        val valid = parsedDate != null && listOf(fat, muscle, waist).any { it.isNotBlank() } &&
             (fat.isBlank() || (parse(fat) ?: -1.0) in 0.0..75.0) &&
             (muscle.isBlank() || (parse(muscle) ?: -1.0) in 0.0..300.0) &&
             (waist.isBlank() || (parse(waist) ?: -1.0) in 20.0..300.0)
@@ -149,6 +161,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Bilmediğin alanları boş bırakabilirsin.", color = BodyMuted, fontSize = 12.sp)
+                    OutlinedTextField(dateText, { dateText = it }, label = { Text("Tarih (YYYY-AA-GG)") }, singleLine = true)
                     OutlinedTextField(fat, { fat = it }, label = { Text("Yağ oranı (%)") },
                         singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     OutlinedTextField(muscle, { muscle = it }, label = { Text("Kas kütlesi (kg)") },
@@ -160,7 +173,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             confirmButton = {
                 TextButton(enabled = valid, onClick = {
                     if (valid) {
-                        val updated = BodyRecord(editingRecord?.id ?: System.currentTimeMillis(),
+                        val updated = BodyRecord(parsedDate!!.time + 12 * 3_600_000L,
                             parse(fat), parse(muscle), parse(waist))
                         save(if (editingRecord == null) records + updated else records.map {
                             if (it.id == editingRecord!!.id) updated else it
