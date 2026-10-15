@@ -31,11 +31,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val SBack = Color(0xFF110F1B)
-private val SCard = Color(0xFF211C30)
-private val SMint = Color(0xFFFFBE76)
-private val SText = Color(0xFFFFF7EE)
-private val SMuted = Color(0xFFB9ACCA)
+private val SBack = Color(0xFF0B1220)
+private val SCard = Color(0xFF172337)
+private val SMint = Color(0xFF57D6C1)
+private val SText = Color(0xFFF3F8FF)
+private val SMuted = Color(0xFF9AAFC5)
 private val preferenceNames = listOf("metabol_local", "metabol_nutrition", "metabol_body", "metabol_profile")
 
 internal fun createBackup(context: Context): String {
