@@ -249,6 +249,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         ?.takeIf { it in 500..10000 }
     val proteinTarget = profilePrefs.getString("protein_target", null)?.toDoubleOrNull()
         ?.takeIf { it.isFinite() && it in 1.0..500.0 }
+    val recordedSevenDays = remember(lastSevenDays, historyRevision) {
+        lastSevenDays.map { (day, _) -> day to prefs.contains("meals_$day") }.toMap()
+    }
     val calories = meals.sumOf { it.calories }
     val protein = meals.sumOf { it.protein }
     val carbs = meals.sumOf { it.carbs }
@@ -412,7 +415,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("SON 7 GÜN · KALORİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.5.sp)
                 val maxCalories = (lastSevenDays.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
                 lastSevenDays.forEach { (day, total) ->
-                    val hasEntry = prefs.contains("meals_$day")
+                    val hasEntry = recordedSevenDays[day] == true
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(day.takeLast(5), color = NutritionMuted, fontSize = 11.sp,
                             modifier = Modifier.width(45.dp))
@@ -433,9 +436,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             fontSize = 12.sp, modifier = Modifier.width(45.dp))
                     }
                 }
-                val recordedDays = lastSevenDays.count { (day, _) ->
-                    prefs.contains("meals_$day")
-                }
+                val recordedDays = lastSevenDays.count { (day, _) -> recordedSevenDays[day] == true }
                 val sevenDayTotal = lastSevenDays.sumOf { it.second }
                 HorizontalDivider(color = Color(0xFF2A394B))
                 Text("7 günlük kayıt toplamı: $sevenDayTotal kcal", color = NutritionWhite, fontSize = 13.sp)
