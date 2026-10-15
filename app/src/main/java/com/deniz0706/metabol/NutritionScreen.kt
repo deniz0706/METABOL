@@ -134,6 +134,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }.start()
     }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
+    fun initialGrams(food: FoodReference): String =
+        Regex("""Paket: (\\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
     var selectedGrams by remember { mutableStateOf("100") }
     var savedFoods by remember {
         mutableStateOf(runCatching {
@@ -728,7 +730,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         items(onlineResults) { food ->
                             FoodSearchRow(food, true) {
                                 selectedFood = food
-                                selectedGrams = "100"
+                                selectedGrams = initialGrams(food)
                                 catalogOpen = false
                             }
                         }
@@ -803,7 +805,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             title = { Text(food.name, color = NutritionWhite, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Miktarı gram olarak gir; besin değerleri otomatik hesaplanır.",
+                    Text("Değerler 100 g üzerinden verilir. Paket gramajı biliniyorsa otomatik seçilir.",
                         color = NutritionMuted, fontSize = 12.sp)
                     OutlinedTextField(
                         selectedGrams, { selectedGrams = it },
