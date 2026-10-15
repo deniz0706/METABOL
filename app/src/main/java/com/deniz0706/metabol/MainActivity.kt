@@ -128,12 +128,10 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
             }
         }
     ) { insets ->
-        Crossfade(
-            targetState = tab,
-            animationSpec = tween(durationMillis = 220),
-            label = "metabol-tab-transition"
-        ) { selectedTab ->
-            when (selectedTab) {
+        // Render only the active screen. Crossfade kept two full screens (including
+        // charts and food search) composing simultaneously on every tab switch.
+        key(tab) {
+            when (tab) {
                 0 -> Dashboard(entries, selectedTab, goalRevision,
                     onAddClick = { editing = null; addDialog = true },
                     onEdit = { editing = it; addDialog = true },
