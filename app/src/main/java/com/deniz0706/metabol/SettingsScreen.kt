@@ -220,7 +220,8 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
     }
     val calorieTarget = calorieTargetInput.trim().toIntOrNull()
     val proteinTarget = proteinTargetInput.trim().replace(',', '.').toDoubleOrNull()
-    val calorieTargetValid = calorieTargetInput.isBlank() || calorieTarget in 500..10000
+    val calorieTargetValid = calorieTargetInput.isBlank() ||
+        (calorieTarget != null && calorieTarget in 500..10000)
     val proteinTargetValid = proteinTargetInput.isBlank() ||
         (proteinTarget != null && proteinTarget.isFinite() && proteinTarget in 1.0..500.0)
     var pendingImport by remember { mutableStateOf<String?>(null) }
