@@ -250,8 +250,29 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     Column(Modifier.weight(1f)) {
                         Text(meal.name, color = NutritionWhite, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(6.dp))
-                        Text("${meal.calories} kcal · P ${meal.protein.toInt()} g · K ${meal.carbs.toInt()} g · Y ${meal.fat.toInt()} g",
-                            color = NutritionMuted, fontSize = 11.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("${meal.calories} kcal", color = NutritionMint,
+                                fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.width(10.dp))
+                            Text("P ${meal.protein.toInt()} · K ${meal.carbs.toInt()} · Y ${meal.fat.toInt()} g",
+                                color = NutritionMuted, fontSize = 10.sp)
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        val macroEnergy = meal.protein * 4 + meal.carbs * 4 + meal.fat * 9
+                        if (macroEnergy > 0) {
+                            Row(Modifier.fillMaxWidth().height(4.dp)
+                                .background(Color(0xFF263544), RoundedCornerShape(4.dp))) {
+                                Box(Modifier.fillMaxHeight()
+                                    .weight((meal.protein * 4 / macroEnergy).toFloat().coerceAtLeast(0.001f))
+                                    .background(Color(0xFF71E8C4)))
+                                Box(Modifier.fillMaxHeight()
+                                    .weight((meal.carbs * 4 / macroEnergy).toFloat().coerceAtLeast(0.001f))
+                                    .background(Color(0xFFA99BFF)))
+                                Box(Modifier.fillMaxHeight()
+                                    .weight((meal.fat * 9 / macroEnergy).toFloat().coerceAtLeast(0.001f))
+                                    .background(Color(0xFFFFC483)))
+                            }
+                        }
                     }
                     TextButton(onClick = { editingMeal = meal; dialogOpen = true }) {
                         Text("Düzenle", color = NutritionMint)
