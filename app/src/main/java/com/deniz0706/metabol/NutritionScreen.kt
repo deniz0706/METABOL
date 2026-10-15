@@ -242,6 +242,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }
         NutritionInsights.summarize(recorded, insightsWindow, anchor)
     }
+    val profilePrefs = context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE)
+    val calorieTarget = profilePrefs.getString("calorie_target", null)?.toIntOrNull()
+        ?.takeIf { it in 500..10000 }
+    val proteinTarget = profilePrefs.getString("protein_target", null)?.toDoubleOrNull()
+        ?.takeIf { it.isFinite() && it in 1.0..500.0 }
     val calories = meals.sumOf { it.calories }
     val protein = meals.sumOf { it.protein }
     val carbs = meals.sumOf { it.carbs }
@@ -301,6 +306,24 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         modifier = Modifier.padding(bottom = 10.dp))
                 }
                 Text("${meals.size} öğün kaydedildi", color = NutritionMuted, fontSize = 12.sp)
+                if (calorieTarget != null) {
+                    Spacer(Modifier.height(17.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("GÜNLÜK ENERJİ HEDEFİ", color = NutritionMuted, fontSize = 10.sp)
+                        Text("$calories / $calorieTarget kcal", color = NutritionMint,
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { (calories.toFloat() / calorieTarget).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().height(8.dp),
+                        color = NutritionMint, trackColor = Color(0xFF2A394B)
+                    )
+                    if (calories > calorieTarget) {
+                        Text("Hedefin ${calories - calorieTarget} kcal üzerinde kayıt var.",
+                            color = NutritionMuted, fontSize = 11.sp)
+                    }
+                }
                 Spacer(Modifier.height(16.dp))
                 HorizontalDivider(color = Color(0xFF2A394B))
                 Spacer(Modifier.height(16.dp))
@@ -308,6 +331,20 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     MacroValue("Protein", protein, NutritionMint)
                     MacroValue("Karbonhidrat", carbs, Color(0xFFA99BFF))
                     MacroValue("Yağ", fat, Color(0xFFFFC483))
+                }
+                if (proteinTarget != null) {
+                    Spacer(Modifier.height(16.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("PROTEİN HEDEFİ", color = NutritionMuted, fontSize = 10.sp)
+                        Text("${String.format(Locale.US, "%.1f", protein)} / ${String.format(Locale.US, "%.1f", proteinTarget)} g",
+                            color = NutritionMint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { (protein / proteinTarget).toFloat().coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().height(7.dp),
+                        color = Color(0xFFA99BFF), trackColor = Color(0xFF2A394B)
+                    )
                 }
                 if (meals.isNotEmpty()) {
                     Spacer(Modifier.height(16.dp))
