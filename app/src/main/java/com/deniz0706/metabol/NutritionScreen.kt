@@ -63,6 +63,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }.getOrDefault(emptyList()))
     }
     var dialogOpen by remember { mutableStateOf(false) }
+    var editingMeal by remember { mutableStateOf<MealEntry?>(null) }
     var historyRevision by remember { mutableIntStateOf(0) }
     val lastSevenDays = remember(historyRevision, selectedDay) {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -126,7 +127,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }
         item {
-            Button(onClick = { dialogOpen = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
+            Button(onClick = { editingMeal = null; dialogOpen = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)) {
                 Text("+  Öğün ekle", fontWeight = FontWeight.Bold)
@@ -170,6 +171,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         Text("${meal.calories} kcal · P ${meal.protein.toInt()} g · K ${meal.carbs.toInt()} g · Y ${meal.fat.toInt()} g",
                             color = NutritionMuted, fontSize = 11.sp)
                     }
+                    TextButton(onClick = { editingMeal = meal; dialogOpen = true }) {
+                        Text("Düzenle", color = NutritionMint)
+                    }
                     TextButton(onClick = { save(meals.filterNot { it.id == meal.id }) }) {
                         Text("Sil", color = Color(0xFFFF879A))
                     }
@@ -181,17 +185,17 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }
     }
     if (dialogOpen) {
-        var name by remember { mutableStateOf("") }
-        var kcal by remember { mutableStateOf("") }
-        var p by remember { mutableStateOf("") }
-        var c by remember { mutableStateOf("") }
-        var f by remember { mutableStateOf("") }
+        var name by remember(editingMeal) { mutableStateOf(editingMeal?.name ?: "") }
+        var kcal by remember(editingMeal) { mutableStateOf(editingMeal?.calories?.toString() ?: "") }
+        var p by remember(editingMeal) { mutableStateOf(editingMeal?.protein?.toString() ?: "") }
+        var c by remember(editingMeal) { mutableStateOf(editingMeal?.carbs?.toString() ?: "") }
+        var f by remember(editingMeal) { mutableStateOf(editingMeal?.fat?.toString() ?: "") }
         val valid = name.isNotBlank() && (kcal.toIntOrNull() ?: -1) in 0..10000 &&
             listOf(p, c, f).all { (it.replace(',', '.').toDoubleOrNull() ?: -1.0) in 0.0..1000.0 }
         AlertDialog(
             onDismissRequest = { dialogOpen = false },
             containerColor = NutritionPanel,
-            title = { Text("Öğün ekle", color = NutritionWhite) },
+            title = { Text(if (editingMeal == null) "Öğün ekle" else "Öğünü düzenle", color = NutritionWhite) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(name, { name = it }, label = { Text("Besin / öğün adı") }, singleLine = true)
@@ -208,9 +212,10 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             confirmButton = {
                 TextButton(enabled = valid, onClick = {
                     if (valid) {
-                        save(meals + MealEntry(System.currentTimeMillis(), name.trim(), kcal.toInt(),
+                        val newEntry = MealEntry(editingMeal?.id ?: System.currentTimeMillis(), name.trim(), kcal.toInt(),
                             p.replace(',', '.').toDouble(), c.replace(',', '.').toDouble(),
-                            f.replace(',', '.').toDouble()))
+                            f.replace(',', '.').toDouble())
+                        save(if (editingMeal == null) meals + newEntry else meals.map { if (it.id == editingMeal!!.id) newEntry else it })
                         dialogOpen = false
                     }
                 }) { Text("Kaydet") }
