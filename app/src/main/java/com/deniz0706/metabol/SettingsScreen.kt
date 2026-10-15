@@ -120,7 +120,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                 "metabol_body" -> key == "records"
                 "metabol_profile" -> key in listOf("goal_weight", "calorie_target", "protein_target", "science_age", "science_height", "science_sex", "science_activity")
                 "metabol_nutrition" -> key.startsWith("meals_") || key.startsWith("water_") || key.startsWith("note_") ||
-                    key == "recent_foods" || key == "saved_foods" || key == "meal_templates"
+                    key == "recent_foods" || key == "saved_foods" || key == "meal_templates" || key == "favorite_recipes"
                 else -> false
             }
             if (!allowed) return false
@@ -130,6 +130,27 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                     if (array.length() > 8) return false
                     for (i in 0 until array.length()) {
                         if (array.getString(i).length !in 1..120) return false
+                    }
+                }
+                name == "metabol_nutrition" && key == "favorite_recipes" -> {
+                    val recipes = JSONArray(value)
+                    if (recipes.length() > 30) return false
+                    for (i in 0 until recipes.length()) {
+                        val recipe = recipes.getJSONObject(i)
+                        if (recipe.getString("name").length !in 1..120 ||
+                            recipe.getInt("servings") !in 1..100) return false
+                        val ingredients = recipe.getJSONArray("ingredients")
+                        if (ingredients.length() !in 1..50) return false
+                        for (j in 0 until ingredients.length()) {
+                            val item = ingredients.getJSONObject(j)
+                            if (item.getString("name").length !in 1..120) return false
+                            val grams = item.getDouble("grams")
+                            if (!grams.isFinite() || grams !in 1.0..10000.0) return false
+                            for (field in listOf("kcal", "protein", "carbs", "fat")) {
+                                val amount = item.getDouble(field)
+                                if (!amount.isFinite() || amount !in 0.0..1000.0) return false
+                            }
+                        }
                     }
                 }
                 name == "metabol_nutrition" && key == "meal_templates" -> {
