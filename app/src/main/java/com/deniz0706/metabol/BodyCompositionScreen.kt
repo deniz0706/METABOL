@@ -372,6 +372,14 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                         } else {
                             Text("Noktaya dokunarak tarih ve ölçümü gör.", color = BodyMuted, fontSize = 11.sp)
                         }
+                        Row(Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(String.format(Locale("tr", "TR"), "%.1f", high),
+                                color = BodyMuted, fontSize = 10.sp)
+                            Text("Grafikteki değer aralığı", color = BodyMuted, fontSize = 10.sp)
+                            Text(String.format(Locale("tr", "TR"), "%.1f", low),
+                                color = BodyMuted, fontSize = 10.sp)
+                        }
                         Canvas(Modifier.fillMaxWidth().height(160.dp).pointerInput(data) {
                             detectTapGestures { touch ->
                                 val left = 8.dp.toPx()
@@ -411,6 +419,15 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                                 if (active) drawLine(BodyMint.copy(alpha = 0.5f),
                                     Offset(point.x, top), Offset(point.x, bottom), 1.dp.toPx())
                             }
+                        }
+                        Row(Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(SimpleDateFormat("dd MMM yy", Locale("tr", "TR"))
+                                .format(Date(data.first().first)),
+                                color = BodyMuted, fontSize = 10.sp)
+                            Text(SimpleDateFormat("dd MMM yy", Locale("tr", "TR"))
+                                .format(Date(data.last().first)),
+                                color = BodyMuted, fontSize = 10.sp)
                         }
                     }
                 }
