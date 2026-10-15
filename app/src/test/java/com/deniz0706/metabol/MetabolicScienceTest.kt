@@ -56,4 +56,29 @@ class MetabolicScienceTest {
             MetabolicScience.estimate(profile, sparse, now).reliability)
     }
 
+    @Test fun duplicateCalendarDaysCannotFakeFourWeeksOfEvidence() {
+        val now = LocalDate.of(2026, 10, 15)
+        val repeated = (0..27).map {
+            MetabolicScience.Day(now, 80.0, 2200)
+        }
+        val result = MetabolicScience.estimate(profile, repeated, now)
+        assertEquals(1, result.recordedDays)
+        assertEquals(1, result.observedDays)
+        assertNull(result.inferredTdee)
+        assertNull(result.forecast30Kg)
+        assertNull(result.plateau)
+    }
+
+    @Test fun partialRecordsOnSameDateAreMerged() {
+        val now = LocalDate.of(2026, 10, 15)
+        val days = listOf(
+            MetabolicScience.Day(now, 80.0, null),
+            MetabolicScience.Day(now, null, 2000)
+        )
+        val result = MetabolicScience.estimate(profile, days, now)
+        assertEquals(1, result.recordedDays)
+        assertEquals(1, result.observedDays)
+        assertNotNull(result.bmr)
+    }
+
 }
