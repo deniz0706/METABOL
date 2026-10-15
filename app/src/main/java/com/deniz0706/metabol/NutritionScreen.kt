@@ -148,7 +148,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 val fat = item.getDouble("fat")
                 if (name.isBlank() || !listOf(kcal, protein, carbs, fat).all { it.isFinite() } ||
                     kcal !in 0.0..1000.0 || listOf(protein, carbs, fat).any { it !in 0.0..100.0 }) null
-                else FoodReference(name, kcal, protein, carbs, fat, "Önceden kaydettiğin ürün · Etiketten doğrula")
+                else FoodReference(name, kcal, protein, carbs, fat, item.optString("note").ifBlank { "Önceden kaydettiğin ürün · Etiketten doğrula" })
             }
         }.getOrDefault(emptyList()))
     }
@@ -158,7 +158,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         val array = JSONArray()
         updated.forEach { item ->
             array.put(JSONObject().put("name", item.name).put("kcal", item.kcal100)
-                .put("protein", item.protein100).put("carbs", item.carbs100).put("fat", item.fat100))
+                .put("protein", item.protein100).put("carbs", item.carbs100).put("fat", item.fat100)
+                .put("note", item.note))
         }
         prefs.edit().putString("saved_foods", array.toString()).apply()
     }
@@ -738,7 +739,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 Box(Modifier.weight(1f)) {
                                     FoodSearchRow(food, true) {
                                         selectedFood = food
-                                        selectedGrams = "100"
+                                        selectedGrams = initialGrams(food)
                                         catalogOpen = false
                                     }
                                 }
