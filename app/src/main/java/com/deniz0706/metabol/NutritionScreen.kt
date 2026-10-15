@@ -113,8 +113,12 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var onlineError by remember { mutableStateOf<String?>(null) }
     var onlineSearched by remember { mutableStateOf(false) }
     var searchGeneration by remember { mutableIntStateOf(0) }
+    var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
+    fun initialGrams(food: FoodReference): String =
+        Regex("""Paket: (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
+    var selectedGrams by remember { mutableStateOf("100") }
     fun searchOnline(query: String) {
-        if (query.trim().length < 2 || onlineLoading) return
+        if (query.trim().length < 2) return
         onlineLoading = true
         onlineError = null
         onlineResults = emptyList()
@@ -128,16 +132,19 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             Handler(Looper.getMainLooper()).post {
                 if (generation == searchGeneration) {
                     onlineLoading = false
-                    result.onSuccess { onlineResults = it }
+                    result.onSuccess { foods ->
+                        onlineResults = foods
+                        if (query.trim().matches(Regex("[0-9]{8,14}")) && foods.size == 1) {
+                            selectedFood = foods.first()
+                            selectedGrams = initialGrams(foods.first())
+                            catalogOpen = false
+                        }
+                    }
                         .onFailure { onlineError = "Bağlantı kurulamadı. Tekrar dene veya çevrimdışı kataloğu kullan." }
                 }
             }
         }.start()
     }
-    var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
-    fun initialGrams(food: FoodReference): String =
-        Regex("""Paket: (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
-    var selectedGrams by remember { mutableStateOf("100") }
     var savedFoods by remember {
         mutableStateOf(runCatching {
             val array = JSONArray(prefs.getString("saved_foods", "[]"))
