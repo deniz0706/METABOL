@@ -100,10 +100,12 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
             }
         }
     ) { insets ->
-        if (tab == 0 || tab == 2 || tab == 3) {
+        if (tab == 0 || tab == 2) {
             Dashboard(entries, tab, onAddClick = { addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
         } else if (tab == 1) {
             NutritionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
+        } else if (tab == 3) {
+            BodyCompositionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
         } else {
             Column(Modifier.fillMaxSize().padding(insets).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Header()
