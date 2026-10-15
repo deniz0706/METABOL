@@ -72,6 +72,22 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         Metric("BMR · Mifflin–St Jeor", kcal(result.bmr))
         Metric("TDEE · Aktiviteye dayalı", kcal(result.initialTdee))
         Metric("AME · Kayıtlardan tahmin", kcal(result.inferredTdee))
+        val recentWeight = points.maxByOrNull { it.timestamp }?.kg?.toDouble()
+            ?.takeIf { it in 20.0..500.0 &&
+                System.currentTimeMillis() - (points.maxOfOrNull { it.timestamp } ?: 0L) <= 14L * 86_400_000L }
+        val maintenance = result.inferredTdee ?: result.initialTdee
+        if (maintenance != null) {
+            Metric("Tahmini koruma kalorisi", kcal(maintenance))
+            Metric("Hafif açık örneği (−250 kcal)", kcal((maintenance - 250).coerceAtLeast(1200.0)))
+            Text("Kalori önerileri tıbbi reçete değildir; gerçek gereksinim kişiye ve koşullara göre değişir.",
+                color = muted, fontSize = 11.sp)
+        }
+        if (recentWeight != null) {
+            Metric("Protein · genel aralık (1,2–1,6 g/kg)",
+                String.format(Locale.US, "%.0f–%.0f g/gün", recentWeight * 1.2, recentWeight * 1.6))
+            Text("Bu aralık genel bir referanstır; hedef kilo, yağsız kütle, aktivite ve sağlık durumuna göre uyarlanmalıdır.",
+                color = muted, fontSize = 11.sp)
+        }
         Metric("Kayıt düzenliliği", "${result.reliability}/100 · ${result.reliabilityLabel}")
         Text("Bu puan ölçüm doğruluğunu değil, kayıtların yeterliliğini gösterir.",
             color = muted, fontSize = 11.sp)
