@@ -22,9 +22,9 @@ internal data class WeightEntity(
     val kilograms: Double
 )
 
-@Entity(tableName = "nutrition_entries", indices = [Index("day")])
+@Entity(tableName = "nutrition_entries", primaryKeys = ["day", "id"], indices = [Index("day")])
 internal data class NutritionEntity(
-    @PrimaryKey val id: Long,
+    val id: Long,
     val day: String,
     val name: String,
     val calories: Int,
