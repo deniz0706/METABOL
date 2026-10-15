@@ -396,16 +396,25 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("SON 7 GÜN · KALORİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 1.5.sp)
                 val maxCalories = (lastSevenDays.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
                 lastSevenDays.forEach { (day, total) ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Text(day.takeLast(5), color = NutritionMuted, fontSize = 11.sp, modifier = Modifier.width(45.dp))
-                        LinearProgressIndicator(
-                            progress = { total.toFloat() / maxCalories },
-                            modifier = Modifier.weight(1f).height(8.dp),
-                            color = NutritionMint,
-                            trackColor = Color(0xFF2A394B)
-                        )
+                    val hasEntry = prefs.contains("meals_$day")
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(day.takeLast(5), color = NutritionMuted, fontSize = 11.sp,
+                            modifier = Modifier.width(45.dp))
+                        if (hasEntry) {
+                            LinearProgressIndicator(
+                                progress = { total.toFloat() / maxCalories },
+                                modifier = Modifier.weight(1f).height(8.dp),
+                                color = NutritionMint,
+                                trackColor = Color(0xFF2A394B)
+                            )
+                        } else {
+                            Box(Modifier.weight(1f).height(8.dp)
+                                .background(Color(0xFF202C39), RoundedCornerShape(8.dp)))
+                        }
                         Spacer(Modifier.width(10.dp))
-                        Text("$total", color = NutritionWhite, fontSize = 12.sp, modifier = Modifier.width(45.dp))
+                        Text(if (hasEntry) "$total" else "—",
+                            color = if (hasEntry) NutritionWhite else NutritionMuted,
+                            fontSize = 12.sp, modifier = Modifier.width(45.dp))
                     }
                 }
                 val recordedDays = lastSevenDays.count { (day, _) ->
