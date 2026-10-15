@@ -794,6 +794,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }
     }
     selectedFood?.let { food ->
+        val serving = remember(food) { FoodCatalog.serving(food) }
         val grams = selectedGrams.replace(',', '.').toDoubleOrNull()
         val validGrams = grams != null && grams.isFinite() && grams in 1.0..5000.0
         val portion = if (validGrams) FoodCatalog.calculate(food, grams!!) else null
@@ -811,6 +812,25 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    if (serving != null) {
+                        Text("Yaklaşık 1 ${serving.first} = ${serving.second} g",
+                            color = NutritionMuted, fontSize = 12.sp)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(1, 2, 3).forEach { count ->
+                                val total = count * serving.second
+                                FilterChip(
+                                    selected = selectedGrams == total.toString(),
+                                    onClick = { selectedGrams = total.toString() },
+                                    label = { Text("$count ${serving.first}", fontSize = 11.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = NutritionMint,
+                                        selectedLabelColor = NutritionBg
+                                    )
+                                )
+                            }
+                        }
+                    }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(50, 100, 150, 200).forEach { gramsOption ->
                             FilterChip(
