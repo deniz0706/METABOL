@@ -35,6 +35,35 @@ internal object OpenFoodFacts {
         }
     }
 
+    fun lookupBarcode(code: String): List<FoodReference> {
+        require(code.matches(Regex("[0-9]{8,14}")))
+        val address = "https://world.openfoodfacts.org/api/v2/product/$code.json?fields=product_name,product_name_tr,brands,nutriments"
+        val connection = URL(address).openConnection() as HttpURLConnection
+        try {
+            connection.connectTimeout = 8000
+            connection.readTimeout = 8000
+            connection.setRequestProperty("User-Agent", "METABOL Android nutrition tracker")
+            if (connection.responseCode !in 200..299) error("Service unavailable")
+            val data = connection.inputStream.use { stream ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                while (true) {
+                    val count = stream.read(buffer)
+                    if (count < 0) break
+                    if (output.size() + count > 1_500_000) error("Response too large")
+                    output.write(buffer, 0, count)
+                }
+                output.toString("UTF-8")
+            }
+            val root = JSONObject(data)
+            if (root.optInt("status") != 1) return emptyList()
+            val products = JSONObject().put("products", org.json.JSONArray().put(root.optJSONObject("product")))
+            return parse(products.toString())
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     internal fun parse(json: String): List<FoodReference> {
         val products = JSONObject(json).optJSONArray("products") ?: return emptyList()
         return (0 until products.length()).mapNotNull { i ->
