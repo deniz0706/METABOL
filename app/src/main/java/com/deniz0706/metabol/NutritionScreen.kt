@@ -342,6 +342,22 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(50, 100, 150, 200).forEach { gramsOption ->
+                            FilterChip(
+                                selected = selectedGrams == gramsOption.toString(),
+                                onClick = { selectedGrams = gramsOption.toString() },
+                                label = { Text("$gramsOption g", fontSize = 10.sp) },
+                                modifier = Modifier.weight(1f),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = NutritionMint,
+                                    selectedLabelColor = NutritionBg,
+                                    containerColor = Color(0xFF1B2839),
+                                    labelColor = NutritionMuted
+                                )
+                            )
+                        }
+                    }
                     if (portion != null) {
                         Column(Modifier.fillMaxWidth().background(Color(0xFF1B2839), RoundedCornerShape(16.dp))
                             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
