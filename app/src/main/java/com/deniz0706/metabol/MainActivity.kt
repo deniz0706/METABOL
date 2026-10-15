@@ -349,9 +349,35 @@ private fun Dashboard(
                     if (first != null && abs(first.kg - goal) > 0.05f) {
                         val progress = (1f - abs(latest.kg - goal) /
                             abs(first.kg - goal)).coerceIn(0f, 1f)
-                        LinearProgressIndicator(progress = { progress },
-                            modifier = Modifier.fillMaxWidth().height(8.dp),
-                            color = Mint, trackColor = Color(0x66553344))
+                        val animatedProgress by animateFloatAsState(
+                            targetValue = progress,
+                            animationSpec = tween(900, easing = FastOutSlowInEasing),
+                            label = "goal-progress"
+                        )
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Box(Modifier.size(82.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(
+                                    progress = { animatedProgress },
+                                    modifier = Modifier.fillMaxSize(),
+                                    strokeWidth = 8.dp,
+                                    color = Mint,
+                                    trackColor = Color(0x66553344),
+                                    strokeCap = StrokeCap.Round
+                                )
+                                Text("${(animatedProgress * 100).roundToInt()}%",
+                                    color = White, fontSize = 19.sp,
+                                    fontWeight = FontWeight.ExtraBold)
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                Text("HEDEFE İLERLEME", color = Color(0xFFFFD6B0),
+                                    fontSize = 10.sp, letterSpacing = 1.sp)
+                                Text("İlk tartıdan bugüne", color = White,
+                                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                Text("Hedefine yaklaşmanı ölçüyoruz.", color = Muted,
+                                    fontSize = 11.sp)
+                            }
+                        }
                     }
                 }
                 Button(onClick = onAddClick, modifier = Modifier.fillMaxWidth().height(52.dp),
