@@ -111,9 +111,13 @@ class BarcodeScannerActivity : ComponentActivity() {
                                         barcode.rawValue?.takeIf { it.matches(Regex("[0-9]{8,14}")) }
                                     }
                                     if (code != null && completed.compareAndSet(false, true)) {
-                                        val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
-                                        if (android.os.Build.VERSION.SDK_INT >= 26)
-                                            vibrator.vibrate(VibrationEffect.createOneShot(75, VibrationEffect.DEFAULT_AMPLITUDE))
+                                        // Haptic feedback must never prevent returning a recognized barcode.
+                                        runCatching {
+                                            val vibrator = getSystemService(VIBRATOR_SERVICE) as? Vibrator
+                                            if (android.os.Build.VERSION.SDK_INT >= 26)
+                                                vibrator?.vibrate(VibrationEffect.createOneShot(75, VibrationEffect.DEFAULT_AMPLITUDE))
+                                            else @Suppress("DEPRECATION") vibrator?.vibrate(75)
+                                        }
                                         setResult(Activity.RESULT_OK, Intent().putExtra(EXTRA_BARCODE, code))
                                         finish()
                                     }
