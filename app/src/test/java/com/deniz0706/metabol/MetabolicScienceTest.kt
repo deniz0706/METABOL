@@ -81,4 +81,15 @@ class MetabolicScienceTest {
         assertNotNull(result.bmr)
     }
 
+    @Test fun recentWaterWeightSpikeDoesNotShiftBaselineBmr() {
+        val now = LocalDate.of(2026, 10, 15)
+        val days = (0..27).map { offset ->
+            val weight = if (offset == 0) 84.0 else 80.0
+            MetabolicScience.Day(now.minusDays(offset.toLong()), weight, 2200)
+        }
+        val result = MetabolicScience.estimate(profile, days, now)
+        assertEquals(1805.0, result.bmr!!, 0.01)
+        assertEquals(80.0, result.forecast30Kg!!, 0.01)
+    }
+
 }
