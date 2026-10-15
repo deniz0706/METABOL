@@ -70,3 +70,7 @@ The food explorer includes an opt-in camera barcode button using Google Play ser
 ## Nutrition analytics and resilience
 
 Nutrition now offers 7/30/90-day summaries with logged-day counts, mean recorded calories/protein, and consecutive recording streaks. Days without a diary entry are **missing data**, never assumed to be zero intake. The analysis has JVM tests covering gaps, date windows, empty diaries, duplicates, and streaks. Online product requests have a bounded 10-minute in-memory cache (maximum 32 query keys) and a 1.5 MB response cap. JSON backup restore now validates locally saved food references and recent-food history in addition to weight, body and meal records.
+
+## Personal targets and integrated overview
+
+Users can optionally set daily energy (500–10000 kcal) and protein (1–500 g) tracking targets in Settings; no target is generated automatically. Nutrition displays recorded amounts and progress against these user-defined values. Targets are included in JSON backup/restore with validation. The main dashboard now includes a tappable summary of today's logged meals, calories, and protein, linking to Nutrition. The nutrition diary offers a calendar date picker for direct historical navigation, and its 7-day chart distinguishes days with no records from days explicitly saved with zero energy. Streaks describe diary **recording**, not adherence to any diet.
