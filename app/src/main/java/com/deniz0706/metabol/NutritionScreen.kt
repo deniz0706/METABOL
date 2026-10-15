@@ -3,6 +3,9 @@ package com.deniz0706.metabol
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.barcode.common.Barcode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
@@ -461,6 +464,38 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     shape = RoundedCornerShape(17.dp)
                 )
                 Spacer(Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = {
+                        val options = GmsBarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(
+                                Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
+                                Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E
+                            ).enableAutoZoom().build()
+                        runCatching {
+                            GmsBarcodeScanning.getClient(context, options).startScan()
+                                .addOnSuccessListener { barcode ->
+                                    val code = barcode.rawValue.orEmpty()
+                                    if (code.matches(Regex("[0-9]{8,14}"))) {
+                                        query = code
+                                        searchOnline(code)
+                                    } else {
+                                        onlineError = "Geçerli bir ürün barkodu okunamadı."
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    onlineError = "Kamera tarayıcısı kullanılamıyor. Barkodu elle yazabilirsin."
+                                }
+                        }.onFailure {
+                            onlineError = "Tarayıcı başlatılamadı. Barkodu elle yazabilirsin."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("▣  Kamerayla barkod tara", color = NutritionMint,
+                        fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { searchOnline(query) },
                     enabled = query.trim().length >= 2 && !onlineLoading,
