@@ -4,6 +4,13 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -266,6 +273,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
 @Composable
 internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onGoalChanged: () -> Unit = {}) {
     var message by remember { mutableStateOf("") }
+    var scienceExpanded by remember { mutableStateOf(false) }
     val profilePrefs = remember(context) { context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE) }
     var goalInput by remember { mutableStateOf(profilePrefs.getString("goal_weight", "") ?: "") }
     val goalValue = goalInput.replace(',', '.').toFloatOrNull()
@@ -418,8 +426,17 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
         item {
             Column(Modifier.fillMaxWidth().background(SCard, RoundedCornerShape(24.dp)).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Bilimsel metabolizma profili", color = SText, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Row(Modifier.fillMaxWidth().clickable { scienceExpanded = !scienceExpanded },
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text("Metabolizma profilin", color = SText, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text(if (scienceExpanded) "−  Kapat" else "+  Düzenle", color = SMint, fontSize = 12.sp)
+                }
                 Text("Mifflin–St Jeor denklemi için gerekli bilgiler. Hesaplar tahmindir.", color = SMuted, fontSize = 12.sp)
+                AnimatedVisibility(visible = scienceExpanded,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(scienceAge, { scienceAge = it }, label = { Text("Yaş") },
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 OutlinedTextField(scienceHeight, { scienceHeight = it }, label = { Text("Boy (cm)") },
@@ -445,6 +462,8 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                     message = if (success) "Metabolizma profili kaydedildi." else "Profil kaydedilemedi."
                 }, enabled = scienceValid, modifier = Modifier.fillMaxWidth()) {
                     Text("Bilimsel profili kaydet")
+                }
+                    }
                 }
             }
         }
