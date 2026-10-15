@@ -143,6 +143,26 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         prefs.edit().putString("recent_foods", array.toString()).apply()
     }
     var pendingDeleteMeal by remember { mutableStateOf<MealEntry?>(null) }
+    var confirmCopyPrevious by remember { mutableStateOf(false) }
+    val previousDay = remember(selectedDay) {
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val calendar = Calendar.getInstance().apply {
+            time = fmt.parse(selectedDay) ?: Date()
+            add(Calendar.DATE, -1)
+        }
+        fmt.format(calendar.time)
+    }
+    val previousMeals = remember(previousDay, historyRevision) {
+        runCatching {
+            val array = JSONArray(prefs.getString("meals_$previousDay", "[]"))
+            (0 until array.length()).map { index ->
+                val item = array.getJSONObject(index)
+                MealEntry(item.getLong("id"), item.getString("name"),
+                    item.getInt("calories"), item.getDouble("protein"),
+                    item.getDouble("carbs"), item.getDouble("fat"))
+            }
+        }.getOrDefault(emptyList())
+    }
     var historyRevision by remember { mutableIntStateOf(0) }
     val lastSevenDays = remember(historyRevision, selectedDay) {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -260,8 +280,23 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("+   Manuel öğün ekle", color = NutritionMint, fontWeight = FontWeight.SemiBold)
             }
         }
+        if (previousMeals.isNotEmpty()) {
+            item {
+                Row(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(18.dp))
+                    .padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Dünkü öğünleri tekrar kullan", color = NutritionWhite,
+                            fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Text("$previousDay · ${previousMeals.size} kayıt", color = NutritionMuted, fontSize = 11.sp)
+                    }
+                    TextButton(onClick = { confirmCopyPrevious = true }) {
+                        Text("Kopyala", color = NutritionMint)
+                    }
+                }
+            }
+        }
         item {
-            Text("Besin arama çevrimdışı örnek katalog kullanır. Değerler yaklaşık ortalamadır; marka, pişirme ve yağ miktarına göre değişebilir.",
+            Text("Yerel katalog yaklaşık değerler içerir. Çevrimiçi ürün bilgilerini etiketle doğrula.",
                 color = NutritionMuted, fontSize = 11.sp)
         }
         item {
@@ -533,6 +568,36 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             },
             dismissButton = {
                 TextButton(onClick = { selectedFood = null }) { Text("Vazgeç", color = NutritionMuted) }
+            }
+        )
+    }
+
+    if (confirmCopyPrevious) {
+        AlertDialog(
+            onDismissRequest = { confirmCopyPrevious = false },
+            containerColor = NutritionPanel,
+            title = { Text("Önceki günün öğünlerini kopyala?", color = NutritionWhite) },
+            text = {
+                Text("$previousDay tarihindeki ${previousMeals.size} öğün, $selectedDay gününe eklenecek. Var olan öğünlerin silinmeyecek.",
+                    color = NutritionMuted)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val existing = meals.map { it.id }.toMutableSet()
+                    val copied = previousMeals.mapIndexed { index, meal ->
+                        var id = System.currentTimeMillis() + index
+                        while (id in existing) id++
+                        existing.add(id)
+                        meal.copy(id = id)
+                    }
+                    save(meals + copied)
+                    confirmCopyPrevious = false
+                }) { Text("Öğünleri ekle", color = NutritionMint) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmCopyPrevious = false }) {
+                    Text("Vazgeç", color = NutritionMuted)
+                }
             }
         )
     }
