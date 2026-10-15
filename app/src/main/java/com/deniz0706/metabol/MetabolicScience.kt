@@ -40,7 +40,9 @@ internal object MetabolicScience {
             weights.filter { !it.date.isBefore(end.minusDays(6)) }
                 .mapNotNull { it.weightKg }.takeIf { it.size >= 3 }?.let(::median)
         } ?: weights.lastOrNull()?.weightKg
-        val bmr = if (profile != null && lastWeight != null) bmr(profile, lastWeight) else null
+        // Old weigh-ins must not be presented as a current metabolic baseline.
+        val freshWeight = latestDate != null && !latestDate.isBefore(today.minusDays(14))
+        val bmr = if (profile != null && lastWeight != null && freshWeight) bmr(profile, lastWeight) else null
         val initial = bmr?.times(profile!!.activity)
         val windowStart = today.minusDays(27)
         val window = valid.filter { !it.date.isBefore(windowStart) }
@@ -75,7 +77,7 @@ internal object MetabolicScience {
         // Heuristic projection: expenditure relaxes toward new weight-dependent baseline;
         // bounded weight response and wide uncertainty, NOT Kevin Hall's validated model.
         var projected = lastWeight
-        if (projected != null && expenditure != null && average != null &&
+        if (freshWeight && projected != null && expenditure != null && average != null &&
             recorded.size >= 21 && recentWeights.size >= 8 && span >= 21) {
             val starting = projected
             for (day in 1..30) {
@@ -96,6 +98,7 @@ internal object MetabolicScience {
         val message = when {
             profile == null -> "Yaş, boy, biyolojik cinsiyet ve aktivite düzeyini Ayarlar'dan gir."
             lastWeight == null -> "Önce kilo ölçümü kaydet."
+            !freshWeight -> "Son kilo ölçümün 14 günden eski. Güncel metabolizma tahmini için yeni bir ölçüm kaydet."
             !sufficient -> "Kişisel enerji harcaması için son 28 günde en az 21 günlük beslenme ve 21 güne yayılan en az 8 kilo kaydı gerekli."
             inferred == null -> "Verilerden makul bir enerji harcaması tahmini çıkarılamadı; kayıtları kontrol et."
             else -> "Kişisel enerji harcaması yalnızca kayıtların eksiksiz olduğu varsayımıyla tahmin edilir."
