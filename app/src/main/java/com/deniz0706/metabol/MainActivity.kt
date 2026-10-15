@@ -93,6 +93,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Unit, onEdit: (WeightRecord, WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit) {
     var tab by remember { mutableIntStateOf(0) }
+    var nutritionRevision by remember { mutableIntStateOf(0) }
+    LaunchedEffect(tab) {
+        if (tab == 0) nutritionRevision++
+    }
     var addDialog by remember { mutableStateOf(false) }
     var goalRevision by remember { mutableIntStateOf(0) }
     var editing by remember { mutableStateOf<WeightRecord?>(null) }
@@ -237,7 +241,7 @@ private fun Dashboard(
         context.getSharedPreferences("metabol_profile", android.content.Context.MODE_PRIVATE)
             .getString("goal_weight", null)?.toFloatOrNull()
     }
-    val todayNutrition = remember {
+    val todayNutrition = remember(nutritionRevision) {
         val nutrition = context.getSharedPreferences("metabol_nutrition", android.content.Context.MODE_PRIVATE)
         val todayKey = "meals_" + SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         runCatching {
