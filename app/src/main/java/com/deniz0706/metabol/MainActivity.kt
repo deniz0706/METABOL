@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
 private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Unit, onEdit: (WeightRecord, WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit) {
     var tab by remember { mutableIntStateOf(0) }
     var addDialog by remember { mutableStateOf(false) }
+    var goalRevision by remember { mutableIntStateOf(0) }
     var editing by remember { mutableStateOf<WeightRecord?>(null) }
     Scaffold(
         containerColor = Bg,
@@ -108,7 +109,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         }
     ) { insets ->
         if (tab == 0) {
-            Dashboard(entries, tab, onAddClick = { editing = null; addDialog = true }, onEdit = { editing = it; addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
+            Dashboard(entries, tab, goalRevision, onAddClick = { editing = null; addDialog = true }, onEdit = { editing = it; addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
         } else if (tab == 2) {
             AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) }, Modifier.padding(insets))
         } else if (tab == 1) {
@@ -116,7 +117,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         } else if (tab == 3) {
             BodyCompositionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
         } else {
-            SettingsScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
+            SettingsScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets), onGoalChanged = { goalRevision++ })
         }
     }
     if (addDialog) {
@@ -180,12 +181,12 @@ private fun Header() {
 
 @Composable
 private fun Dashboard(
-    entries: List<WeightRecord>, tab: Int, onAddClick: () -> Unit,
+    entries: List<WeightRecord>, tab: Int, goalRevision: Int, onAddClick: () -> Unit,
     onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit, modifier: Modifier = Modifier
 ) {
     val latest = entries.lastOrNull()
     val context = androidx.compose.ui.platform.LocalContext.current
-    val goal = remember(entries) {
+    val goal = remember(goalRevision) {
         context.getSharedPreferences("metabol_profile", android.content.Context.MODE_PRIVATE)
             .getString("goal_weight", null)?.toFloatOrNull()
     }
