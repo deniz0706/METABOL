@@ -96,6 +96,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var waterMl by remember(waterKey) {
         mutableIntStateOf(prefs.getString(waterKey, "0")?.toIntOrNull()?.coerceIn(0, 10000) ?: 0)
     }
+    var customWaterMl by remember { mutableStateOf("") }
     fun updateWater(delta: Int) {
         val next = (waterMl + delta).coerceIn(0, 10000)
         waterMl = next
@@ -439,6 +440,28 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             )
                         ) { Text("+$amount", fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                     }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = customWaterMl,
+                        onValueChange = { customWaterMl = it.filter(Char::isDigit).take(5) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Özel miktar (ml)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    val amount = customWaterMl.toIntOrNull()
+                    Button(
+                        onClick = {
+                            if (amount != null && amount in 1..10000 && waterMl + amount <= 10000) {
+                                updateWater(amount)
+                                customWaterMl = ""
+                            }
+                        },
+                        enabled = amount != null && amount in 1..10000 && waterMl + amount <= 10000,
+                        shape = RoundedCornerShape(14.dp)
+                    ) { Text("Ekle") }
                 }
                 OutlinedButton(
                     onClick = { updateWater(-250) },
