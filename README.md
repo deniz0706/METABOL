@@ -50,3 +50,7 @@ The app includes a **small built-in reference catalog** of common foods, with ap
 ## Nutrition entry improvements
 
 Recent foods are stored locally and appear first in the offline catalog. Portion presets (50/100/150/200 g) speed up logging; arbitrary gram values remain available. Meal history cards visualize the relative **macro-derived energy** split (protein/carbohydrate/fat), not the share of the entered label calories. Reference values remain estimates and can be corrected through manual meal editing.
+
+## Opt-in product search (preview)
+
+The food picker now offers **online product search** via Open Food Facts. Enter a food name or an 8–14 digit barcode number, then explicitly tap the online-search button. A network connection is required. The query/barcode is sent to the third-party Open Food Facts service; local weight measurements and meal history are **not** transmitted. The offline catalog remains available if search fails. Only entries with numeric per-100-g kcal, protein, carbohydrate and fat values are displayed. Product data is community-maintained and can be inaccurate: check the package label before saving. Barcode **camera scanning is not implemented**; barcode numbers can be entered manually.
