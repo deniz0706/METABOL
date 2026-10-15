@@ -46,14 +46,14 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val Bg = Color(0xFF070B12)
-private val Surface = Color(0xFF121C28)
-private val Surface2 = Color(0xFF203140)
-private val Mint = Color(0xFF71E8C4)
-private val Violet = Color(0xFFA99BFF)
-private val Muted = Color(0xFF8B9CB2)
-private val White = Color(0xFFF4F8FC)
-private val Edge = Color(0xFF2A394B)
+private val Bg = Color(0xFF110F1B)
+private val Surface = Color(0xFF211C30)
+private val Surface2 = Color(0xFF352C43)
+private val Mint = Color(0xFFFFBE76)
+private val Violet = Color(0xFFEB91C6)
+private val Muted = Color(0xFFB9ACCA)
+private val White = Color(0xFFFFF7EE)
+private val Edge = Color(0xFF45364D)
 private val dateFormat get() = SimpleDateFormat("dd MMM", Locale("tr", "TR"))
 private val numberFormat get() = java.text.DecimalFormat("0.0")
 
@@ -264,21 +264,21 @@ private fun Dashboard(
             Column {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text("YOUR OVERVIEW", color = Mint, fontSize = 10.sp, letterSpacing = 1.8.sp)
+                    Text("METABOL / STUDIO EDITION", color = Mint, fontSize = 10.sp, letterSpacing = 1.8.sp)
                     Text(SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR")).format(Date()),
                         color = Muted, fontSize = 11.sp)
                 }
                 Spacer(Modifier.height(12.dp))
-                Text("Genel Bakış", color = White, fontSize = 36.sp,
+                Text("Bugün senin günün.", color = White, fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold)
                 Spacer(Modifier.height(4.dp))
-                Text("İlerlemen tek bir yerde.", color = Muted, fontSize = 13.sp)
+                Text("Kilon, beslenmen ve ritmin; sade bir bakışta.", color = Muted, fontSize = 13.sp)
             }
         }
         item {
             Column(
                 Modifier.fillMaxWidth().background(
-                    Brush.linearGradient(listOf(Color(0xFF21453F), Color(0xFF182D39), Surface)), RoundedCornerShape(28.dp)
+                    Brush.linearGradient(listOf(Color(0xFF70415B), Color(0xFF44304D), Surface)), RoundedCornerShape(28.dp)
                 ).border(1.dp, Edge, RoundedCornerShape(28.dp)).padding(22.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
