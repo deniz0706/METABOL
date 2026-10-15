@@ -74,6 +74,22 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
     var pendingDeleteRecord by remember { mutableStateOf<BodyRecord?>(null) }
     val latest = records.lastOrNull()
     val previous = records.dropLast(1).lastOrNull()
+    var comparisonStart by remember { mutableStateOf<Long?>(null) }
+    var comparisonEnd by remember { mutableStateOf<Long?>(null) }
+    val startRecord = records.firstOrNull { it.id == comparisonStart } ?: records.firstOrNull()
+    val endRecord = records.firstOrNull { it.id == comparisonEnd } ?: records.lastOrNull()
+    val comparisonFields = listOf(
+        Triple("Yağ oranı", startRecord?.fatPercent to endRecord?.fatPercent, "%"),
+        Triple("Kas kütlesi", startRecord?.muscleKg to endRecord?.muscleKg, "kg"),
+        Triple("Bel / göbek çevresi", startRecord?.waistCm to endRecord?.waistCm, "cm"),
+        Triple("Kemik kütlesi", startRecord?.boneKg to endRecord?.boneKg, "kg"),
+        Triple("Su oranı", startRecord?.waterPercent to endRecord?.waterPercent, "%"),
+        Triple("Göğüs çevresi", startRecord?.chestCm to endRecord?.chestCm, "cm"),
+        Triple("Göğüs altı", startRecord?.underChestCm to endRecord?.underChestCm, "cm"),
+        Triple("Metabolizma yaşı", startRecord?.metabolicAge to endRecord?.metabolicAge, "yaş"),
+        Triple("Visseral yağ", startRecord?.visceralFat to endRecord?.visceralFat, "")
+    )
+
     LazyColumn(modifier.fillMaxSize().background(BodyBg), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -129,6 +145,73 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                             }
                         }
                     }
+                }
+            }
+        }
+        if (records.size >= 2) {
+            item {
+                Column(
+                    Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text("İKİ TARİHİ KARŞILAŞTIR", color = BodyMint, fontSize = 11.sp,
+                        letterSpacing = 1.5.sp, fontWeight = FontWeight.Bold)
+                    var chooseStart by remember { mutableStateOf(false) }
+                    var chooseEnd by remember { mutableStateOf(false) }
+                    val dateLabel = remember {
+                        SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR"))
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.weight(1f)) {
+                            OutlinedButton(onClick = { chooseStart = true }, modifier = Modifier.fillMaxWidth()) {
+                                Text(startRecord?.let { dateLabel.format(Date(it.id)) } ?: "İlk tarih",
+                                    fontSize = 11.sp, maxLines = 1)
+                            }
+                            DropdownMenu(expanded = chooseStart, onDismissRequest = { chooseStart = false }) {
+                                records.forEach { record ->
+                                    DropdownMenuItem(text = { Text(dateLabel.format(Date(record.id))) },
+                                        onClick = { comparisonStart = record.id; chooseStart = false })
+                                }
+                            }
+                        }
+                        Box(Modifier.weight(1f)) {
+                            OutlinedButton(onClick = { chooseEnd = true }, modifier = Modifier.fillMaxWidth()) {
+                                Text(endRecord?.let { dateLabel.format(Date(it.id)) } ?: "Son tarih",
+                                    fontSize = 11.sp, maxLines = 1)
+                            }
+                            DropdownMenu(expanded = chooseEnd, onDismissRequest = { chooseEnd = false }) {
+                                records.forEach { record ->
+                                    DropdownMenuItem(text = { Text(dateLabel.format(Date(record.id))) },
+                                        onClick = { comparisonEnd = record.id; chooseEnd = false })
+                                }
+                            }
+                        }
+                    }
+                    if (startRecord?.id == endRecord?.id) {
+                        Text("Karşılaştırmak için farklı iki tarih seç.", color = BodyMuted, fontSize = 12.sp)
+                    } else {
+                        Text("İLK                 SON                 DEĞİŞİM",
+                            color = BodyMuted, fontSize = 10.sp)
+                        comparisonFields.forEach { (label, values, unit) ->
+                            val (first, last) = values
+                            if (first != null || last != null) {
+                                Text(label, color = BodyMuted, fontSize = 11.sp)
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(first?.let { String.format(Locale("tr", "TR"), "%.1f", it) } ?: "—",
+                                        color = BodyText, fontSize = 13.sp)
+                                    Text(last?.let { String.format(Locale("tr", "TR"), "%.1f", it) } ?: "—",
+                                        color = BodyText, fontSize = 13.sp)
+                                    Text(if (first != null && last != null)
+                                        String.format(Locale("tr", "TR"), "%+.1f %s", last - first, unit)
+                                        else "—", color = BodyMint, fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold)
+                                }
+                                HorizontalDivider(color = Color(0xFF2A394B))
+                            }
+                        }
+                    }
+                    Text("Yağ ve kas değerleri akıllı tartı tahminidir; su dengesi sonucu etkileyebilir.",
+                        color = BodyMuted, fontSize = 11.sp)
                 }
             }
         }
