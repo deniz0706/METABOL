@@ -72,7 +72,7 @@ internal object MeasurementImport {
                 .put("chest", optional("chestCm", 300.0))
                 .put("underChest", optional("underChestCm", 300.0))
                 .put("metabolicAge", optional("metabolicAge", 120.0))
-                .put("visceralFat", optional("visceralFat", 100.0)))
+                .put("visceralFat", optional("visceralFatIndex", 100.0) ?: optional("visceralFat", 100.0)))
             addedBodies++
         }
         // Keep the original import document, including extra body fields and uncertain
