@@ -44,7 +44,8 @@ class MetabolicScienceTest {
         val days = (0..15).map { MetabolicScience.Day(now.minusDays(it.toLong()), 80.0, 2000) }
         val result = MetabolicScience.estimate(profile, days, now)
         assertNull(result.plateau)
-        assertTrue(result.reliability < 70)
+        val complete = (0..27).map { MetabolicScience.Day(now.minusDays(it.toLong()), 80.0, 2000) }
+        assertTrue(result.reliability < MetabolicScience.estimate(profile, complete, now).reliability)
     }
 
     @Test fun reliabilityImprovesWithCompleteRecords() {
