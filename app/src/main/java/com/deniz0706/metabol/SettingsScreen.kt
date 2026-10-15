@@ -310,6 +310,20 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
             }.getOrElse { "Ölçüm aktarımı başarısız: ${it.message}" }
         }
     }
+    val nutritionImportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            message = runCatching {
+                val source = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use {
+                    it.readText()
+                } ?: error("Dosya okunamadı")
+                val (added, skipped) = MeasurementImport.importNutrition(context, source)
+                (context as? android.app.Activity)?.recreate()
+                "Beslenme geçmişi: $added gün eklendi, $skipped gün atlandı."
+            }.getOrElse { "Beslenme aktarımı başarısız: ${it.message}" }
+        }
+    }
     LazyColumn(modifier.fillMaxSize().background(SBack), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item {
@@ -458,6 +472,13 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                 }, modifier = Modifier.fillMaxWidth()) {
                     Text("Geçmiş ölçümleri JSON'dan ekle", color = SMint)
                 }
+                OutlinedButton(onClick = {
+                    nutritionImportLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Tahmini beslenme geçmişini JSON'dan ekle", color = SMint)
+                }
+                Text("Tahmini günlük toplamlar ayrı bir kayıt olarak eklenir. Mevcut beslenme günleri değiştirilmez; bu veriler gerçek öğün kaydı değildir.",
+                    color = SMuted, fontSize = 12.sp)
                 Text("Bu seçenek mevcut ölçümleri silmez; aynı tarihli kayıtları atlar. Kesin tarihi olmayan veriler yalnızca kaynak dosyada korunur. Aktarmadan önce yedek al.",
                     color = SMuted, fontSize = 12.sp)
                 Text("Geri yükleme mevcut kayıtların yerine geçer. Önce yedek alman önerilir.",
