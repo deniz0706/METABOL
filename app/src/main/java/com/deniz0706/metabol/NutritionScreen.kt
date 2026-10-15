@@ -125,6 +125,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var editingMeal by remember { mutableStateOf<MealEntry?>(null) }
     var catalogOpen by remember { mutableStateOf(false) }
     var compareOpen by remember { mutableStateOf(false) }
+    var recipeOpen by remember { mutableStateOf(false) }
     var onlineResults by remember { mutableStateOf<List<FoodReference>>(emptyList()) }
     var onlineLoading by remember { mutableStateOf(false) }
     var onlineError by remember { mutableStateOf<String?>(null) }
@@ -647,6 +648,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("Besin karşılaştır · 100 gram üzerinden", color = NutritionMint)
             }
         }
+        item {
+            OutlinedButton(onClick = { recipeOpen = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Tarif oluştur ve favori tarifleri kullan", color = NutritionMint)
+            }
+        }
         item { Text("SEÇİLİ GÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
         if (meals.isEmpty()) {
             item {
@@ -701,6 +707,15 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         item {
             Text("Besin değerleri kullanıcı girişidir; otomatik doğrulanmaz.", color = NutritionMuted, fontSize = 11.sp)
         }
+    }
+
+    if (recipeOpen) {
+        RecipeDialog(context, onClose = { recipeOpen = false }, onAdd = { name, portion ->
+            val id = generateSequence(System.currentTimeMillis()) { it + 1 }
+                .first { candidate -> meals.none { it.id == candidate } }
+            save(meals + MealEntry(id, name + " · 1 porsiyon", portion.calories,
+                portion.protein, portion.carbs, portion.fat))
+        })
     }
 
     if (compareOpen) {
