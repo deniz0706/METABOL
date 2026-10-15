@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -286,6 +287,7 @@ private fun MetricCard(title: String, value: String, caption: String, modifier: 
 @Composable
 private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifier) {
     var selected by remember(entries) { mutableIntStateOf(-1) }
+    var smoothLine by remember { mutableStateOf(true) }
     var chartPeriod by remember { mutableIntStateOf(0) }
     val today = System.currentTimeMillis()
     val records = entries.sortedBy { it.time }.filter {
@@ -317,7 +319,12 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                 )
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Yumuşatılmış eğri", color = Muted, fontSize = 11.sp)
+            Switch(checked = smoothLine, onCheckedChange = { smoothLine = it },
+                colors = SwitchDefaults.colors(checkedThumbColor = Bg, checkedTrackColor = Mint))
+        }
         if (records.isEmpty()) {
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                 Text("Grafik için ölçüm ekle", color = Muted)
@@ -364,7 +371,15 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                 if (points.size > 1) {
                     val path = Path().apply {
                         moveTo(points.first().x, points.first().y)
-                        points.drop(1).forEach { lineTo(it.x, it.y) }
+                        points.drop(1).forEachIndexed { index, point ->
+                            val previous = points[index]
+                            if (smoothLine) {
+                                val midX = (previous.x + point.x) / 2f
+                                cubicTo(midX, previous.y, midX, point.y, point.x, point.y)
+                            } else {
+                                lineTo(point.x, point.y)
+                            }
+                        }
                     }
                     val area = Path().apply {
                         addPath(path)
