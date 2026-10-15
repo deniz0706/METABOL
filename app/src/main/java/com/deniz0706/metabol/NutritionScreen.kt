@@ -736,7 +736,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             confirmButton = {
                 TextButton(enabled = portion != null, onClick = {
                     if (portion != null) {
-                        save(meals + MealEntry(System.currentTimeMillis(), food.name,
+                        save(meals + MealEntry(System.currentTimeMillis(),
+                            food.name + " · " + String.format(Locale.US, "%.0f g", grams!!),
                             portion.calories, portion.protein, portion.carbs, portion.fat))
                         rememberFood(food.name)
                         if (food.note.startsWith("Open Food Facts")) saveFoodReference(food)
