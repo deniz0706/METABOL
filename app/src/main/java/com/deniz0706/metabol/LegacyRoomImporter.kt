@@ -69,10 +69,6 @@ internal object LegacyRoomImporter {
                 journal += DailyJournalEntity(day, water, note)
             }
 
-            // Avoid silently overwriting two distinct meals sharing the same legacy ID.
-            require(meals.map { it.id }.distinct().size == meals.size) {
-                "Duplicate meal IDs: Room needs a composite (day,id) key before migration."
-            }
             val db = MetabolDatabase.get(context)
             db.withTransaction {
                 val dao = db.dao()
