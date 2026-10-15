@@ -57,8 +57,8 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
     val result = estimate
     Column(Modifier.fillMaxWidth().background(Color(0xFF121C28), RoundedCornerShape(24.dp)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("METABOL · BİLİMSEL ANALİZ", color = mint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        Text("Enerji dengesi ve kişisel tahminler", color = white, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("METABOL · METABOLİZMA REHBERİ", color = mint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text("Vücudunun yaklaşık enerji ihtiyacı", color = white, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         @Composable fun Metric(label: String, value: String) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(label, color = muted, fontSize = 12.sp)
@@ -69,9 +69,12 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         if (result == null) {
             Text("Bilimsel analiz hesaplanıyor…", color = muted, fontSize = 12.sp)
         } else {
-        Metric("BMR · Mifflin–St Jeor", kcal(result.bmr))
-        Metric("TDEE · Aktiviteye dayalı", kcal(result.initialTdee))
-        Metric("AME · Kayıtlardan tahmin", kcal(result.inferredTdee))
+        Metric("Dinlenirken harcadığın enerji (BMR)", kcal(result.bmr))
+        Text("Hiç egzersiz yapmasan bile vücudunun temel işlevleri için harcadığı yaklaşık enerji.", color = muted, fontSize = 11.sp)
+        Metric("Hareket dahil günlük ihtiyaç (TDEE)", kcal(result.initialTdee))
+        Text("Yaş, boy, kilo ve seçtiğin hareket düzeyine göre hesaplanır.", color = muted, fontSize = 11.sp)
+        Metric("Kayıtlarına göre günlük harcama (AME)", kcal(result.inferredTdee))
+        Text("Yemek ve tartı kayıtlarından çıkarılır; kayıtlar eksikse yanıltıcı olabilir.", color = muted, fontSize = 11.sp)
         val recentWeight = points.maxByOrNull { it.timestamp }?.kg?.toDouble()
             ?.takeIf { it in 20.0..500.0 &&
                 System.currentTimeMillis() - (points.maxOfOrNull { it.timestamp } ?: 0L) <= 14L * 86_400_000L }
@@ -88,24 +91,24 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             Text("Bu aralık genel bir referanstır; hedef kilo, yağsız kütle, aktivite ve sağlık durumuna göre uyarlanmalıdır.",
                 color = muted, fontSize = 11.sp)
         }
-        Metric("Kayıt düzenliliği", "${result.reliability}/100 · ${result.reliabilityLabel}")
+        Metric("Tahmin için veri yeterliliği", "${result.reliability}/100 · ${result.reliabilityLabel}")
         Text("Bu puan ölçüm doğruluğunu değil, kayıtların yeterliliğini gösterir.",
             color = muted, fontSize = 11.sp)
-        Metric("Kütleye bağlı harcama farkı", result.expectedTdeeChange?.let {
+        Metric("Kilo değişimine bağlı tahmini enerji farkı", result.expectedTdeeChange?.let {
             String.format(Locale.US, "%+.0f kcal/gün", it)
         } ?: "Veri yetersiz")
-        Metric("Geçmiş 14 gün tahmin hatası", result.forecastErrorKg?.let {
+        Metric("Son 14 gündeki tahmin sapması", result.forecastErrorKg?.let {
             String.format(Locale.US, "%.1f kg", it)
         } ?: "Geriye dönük veri yetersiz")
-        Metric("28 günlük beslenme kaydı", "${result.recordedDays}/28 gün")
-        Metric("28 günlük kilo kaydı", "${result.observedDays} gün")
-        Metric("Kayıtlı günlerde ort. enerji", kcal(result.dailyCalorieAverage))
+        Metric("Son 28 günde yemek kaydettiğin günler", "${result.recordedDays}/28 gün")
+        Metric("Son 28 günde tartıldığın günler", "${result.observedDays} gün")
+        Metric("Yemek kaydettiğin günlerin kalori ortalaması", kcal(result.dailyCalorieAverage))
         Text("Kilo trendi, ilk ve son haftanın medyan ölçümleriyle hesaplanır; tek günlük artışlar yağ kazanımı olarak değerlendirilmez.",
             color = muted, fontSize = 11.sp)
-        Metric("Kilo değişim hızı", result.trendKgPerWeek?.let {
+        Metric("Haftalık ortalama kilo değişimi", result.trendKgPerWeek?.let {
             String.format(Locale.US, "%+.2f kg/hafta", it)
         } ?: "Veri yetersiz")
-        Metric("Kilo duraklaması", when (result.plateau) {
+        Metric("Kilo kaybı yavaşlamış olabilir mi?", when (result.plateau) {
             true -> "Olası (en az 21 günlük trend)"
             false -> "Trend devam ediyor"
             null -> "Veri yetersiz"
@@ -113,14 +116,14 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         HorizontalDivider(color = Color(0xFF2A394B))
         Text("Aşağıdaki 30 günlük değer bir senaryodur; hedef veya gerçekleşeceği kesin bir sonuç değildir.",
             color = muted, fontSize = 11.sp)
-        Metric("30 gün sonrası · Senaryo", result.forecast30Kg?.let {
+        Metric("Bu hız sürerse 30 gün sonraki tahmin", result.forecast30Kg?.let {
             String.format(Locale.US, "%.1f kg", it)
         } ?: "Veri yetersiz")
-        Metric("Belirsizlik bandı", if (result.forecastLowKg != null && result.forecastHighKg != null)
+        Metric("Tahmini alt ve üst kilo aralığı", if (result.forecastLowKg != null && result.forecastHighKg != null)
             String.format(Locale.US, "%.1f–%.1f kg", result.forecastLowKg, result.forecastHighKg)
             else "—")
         Text(result.message, color = mint, fontSize = 12.sp)
-        Text("BMR bir denklem tahminidir; TDEE aktivite varsayımına dayanır. AME kayıtlı kaloriler ve kilo trendinden yaklaşık çıkarımdır. 30 günlük öngörü, enerji harcamasının kiloyla değişimini hesaba katan basitleştirilmiş senaryodur; Kevin Hall modelinin uygulaması veya klinik olarak kalibre edilmiş güven aralığı değildir. Veri puanı kayıt düzenliliğini gösterir, fizyolojik doğruluğu değil. Kütleye bağlı harcama farkı adaptif termogenez ölçümü değildir. Eksik öğün kayıtları sonucu bozabilir. Su değişimleri yağ değişimi sayılmaz.",
+        Text("BMR: Vücudunun dinlenirken harcadığı tahmini enerji. TDEE: Günlük hareketlerin dahil yaklaşık toplam enerji ihtiyacın. AME: Girdiğin yemek ve tartı kayıtlarından hesaplanan alternatif tahmin; eksik kayıtlar sonucu bozabilir. 30 günlük kilo değeri kesin sonuç değil, bugünkü eğilimin sürmesi durumunda bir örnektir. Tartıdaki su değişimleri yağ değişimi değildir. Bunlar tıbbi ölçüm değil, yaklaşık hesaplamalardır.",
             color = muted, fontSize = 11.sp)
         }
     }
