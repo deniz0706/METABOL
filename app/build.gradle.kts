@@ -13,6 +13,14 @@ android {
         versionCode = 2
         versionName = "0.2.0-dev"
     }
+    buildTypes {
+        getByName("release") {
+            // Test-only signing: installable performance comparison APK, not for distribution.
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            isMinifyEnabled = false
+        }
+    }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
