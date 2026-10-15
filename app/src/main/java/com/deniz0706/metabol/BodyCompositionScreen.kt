@@ -40,11 +40,11 @@ import java.text.ParsePosition
 import java.util.Date
 import java.util.Locale
 
-private val BodyBg = Color(0xFF110F1B)
-private val BodyCard = Color(0xFF211C30)
-private val BodyMint = Color(0xFFFFBE76)
-private val BodyText = Color(0xFFFFF7EE)
-private val BodyMuted = Color(0xFFB9ACCA)
+private val BodyBg = Color(0xFF0B1220)
+private val BodyCard = Color(0xFF172337)
+private val BodyMint = Color(0xFF57D6C1)
+private val BodyText = Color(0xFFF3F8FF)
+private val BodyMuted = Color(0xFF9AAFC5)
 
 private data class BodyRecord(
     val id: Long, val fatPercent: Double?, val muscleKg: Double?, val waistCm: Double?,
