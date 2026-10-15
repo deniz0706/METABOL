@@ -659,10 +659,12 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(10.dp))
                 OutlinedButton(
                     onClick = {
+                        onlineError = null
                         val options = GmsBarcodeScannerOptions.Builder()
                             .setBarcodeFormats(
                                 Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
-                                Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E
+                                Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E,
+                                Barcode.FORMAT_CODE_128, Barcode.FORMAT_ITF
                             ).enableAutoZoom().build()
                         runCatching {
                             GmsBarcodeScanning.getClient(context, options).startScan()
@@ -675,8 +677,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                         onlineError = "Geçerli bir ürün barkodu okunamadı."
                                     }
                                 }
-                                .addOnFailureListener {
-                                    onlineError = "Kamera tarayıcısı kullanılamıyor. Barkodu elle yazabilirsin."
+                                .addOnCanceledListener {
+                                    onlineError = "Barkod taraması iptal edildi."
+                                }
+                                .addOnFailureListener { error ->
+                                    onlineError = "Tarayıcı açılamadı: ${error.localizedMessage ?: "Google Play Hizmetlerini kontrol et."}"
                                 }
                         }.onFailure {
                             onlineError = "Tarayıcı başlatılamadı. Barkodu elle yazabilirsin."
