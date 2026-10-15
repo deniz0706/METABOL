@@ -57,10 +57,12 @@ internal object FoodCatalog {
             .replace(Regex("\\p{M}+"), "")
             .replace('ı', 'i')
 
+    private val indexedFoods by lazy { foods.map { it to normalize(it.name) } }
+
     fun search(query: String): List<FoodReference> {
         val normalized = normalize(query.trim())
         if (normalized.isEmpty()) return foods
-        return foods.filter { normalize(it.name).contains(normalized) }
+        return indexedFoods.filter { it.second.contains(normalized) }.map { it.first }
     }
 
     fun calculate(food: FoodReference, grams: Double): FoodPortion {
