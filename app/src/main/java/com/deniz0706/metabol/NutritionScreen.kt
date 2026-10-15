@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedVisibility
@@ -329,6 +330,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val carbs = meals.sumOf { it.carbs }
     val fat = meals.sumOf { it.fat }
     val macroCalories = protein * 4.0 + carbs * 4.0 + fat * 9.0
+    val animatedCalories by animateIntAsState(calories, tween(700), label = "calorie-count")
+    val animatedWater by animateIntAsState(waterMl, tween(700), label = "water-count")
     val animatedWaterProgress by animateFloatAsState(
         (waterMl / 2000f).coerceIn(0f, 1f), tween(650), label = "water-fill"
     )
@@ -349,7 +352,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         fontSize = 10.sp, letterSpacing = 1.2.sp)
                 }
                 Box(Modifier.size(46.dp)
-                    .background(Brush.linearGradient(listOf(Color(0xFF274E4D), Color(0xFF172D39))),
+                    .background(Brush.linearGradient(listOf(Color(0xFF66415C), Color(0xFF35273E))),
                         CircleShape), contentAlignment = Alignment.Center) {
                     Text("N", color = NutritionMint, fontSize = 22.sp, fontWeight = FontWeight.Black)
                 }
@@ -398,7 +401,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("TOPLAM ENERJİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text("$calories", color = NutritionWhite, fontSize = 49.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("$animatedCalories", color = NutritionWhite, fontSize = 49.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.width(8.dp))
                     Text("kcal", color = NutritionMint, fontSize = 17.sp,
                         modifier = Modifier.padding(bottom = 10.dp))
@@ -474,7 +477,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                         Spacer(Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text(String.format(Locale.US, "%.2f", waterMl / 1000.0),
+                            Text(String.format(Locale.US, "%.2f", animatedWater / 1000.0),
                                 color = NutritionWhite, fontSize = 36.sp,
                                 fontWeight = FontWeight.ExtraBold)
                             Spacer(Modifier.width(7.dp))
@@ -497,7 +500,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     trackColor = Color(0xFF29445A)
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("$waterMl ml kaydedildi", color = NutritionWhite, fontSize = 12.sp)
+                    Text("$animatedWater ml kaydedildi", color = NutritionWhite, fontSize = 12.sp)
                     Text("2 L görsel referans", color = NutritionMuted, fontSize = 11.sp)
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
