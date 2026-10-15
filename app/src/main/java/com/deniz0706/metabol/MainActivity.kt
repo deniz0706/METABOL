@@ -518,6 +518,30 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                     }
                 }
             }
+            if (selected in records.indices) {
+                val chosen = records[selected]
+                Surface(
+                    color = Surface2,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            SimpleDateFormat("dd MMMM yyyy", Locale("tr", "TR"))
+                                .format(Date(chosen.time)),
+                            color = White, fontSize = 13.sp
+                        )
+                        Text(
+                            "${numberFormat.format(chosen.kg)} kg",
+                            color = Mint, fontWeight = FontWeight.Bold, fontSize = 20.sp
+                        )
+                    }
+                }
+            }
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(dateFormat.format(Date(records.first().time)), color = Muted, fontSize = 11.sp)
