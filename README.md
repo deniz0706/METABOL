@@ -8,10 +8,10 @@
 
 | Screen | Capabilities |
 | --- | --- |
-| Overview | Weight log, backdated entries, edit/delete, touch-selectable line chart, 7/30/90-day chart filters, personal weight goal |
-| Nutrition | Daily calorie and macronutrient totals, add/edit/delete meals, navigate between dates, seven-day calorie comparison |
+| Overview | Weight log, backdated entries, edit existing records, edit/delete, touch-selectable smooth/straight line chart, 7/30/90-day chart filters, personal weight goal |
+| Nutrition | Daily calorie and macronutrient totals, add/edit/delete meals, navigate between dates, seven-day calorie comparison, macro-derived calorie estimate |
 | Analysis | Time-range filters, minimum/maximum, mean, total change, weekly rate, last-seven-measurements mean |
-| Body | Body-fat %, muscle mass and waist circumference, edit/delete records, change since previous measurement |
+| Body | Body-fat %, muscle mass and waist circumference, edit/delete records, change since previous measurement, trend charts for fat/muscle/waist |
 | Settings | Optional weight goal, offline JSON backup and restore, privacy information |
 
 ### Data and privacy
@@ -35,7 +35,7 @@ gradle --no-daemon :app:testDebugUnitTest
 gradle --no-daemon :app:assembleDebug
 ```
 
-The `Android Debug APK` GitHub Actions workflow runs tests and assembles an APK on branch updates. Download the `METABOL-debug-apk` artifact from a **successful** run.
+The `Android Debug APK` GitHub Actions workflow runs tests and assembles an APK on branch updates; superseded branch runs are cancelled. Download the `METABOL-debug-apk` artifact from a **successful** run.
 
 ### Project status
 
