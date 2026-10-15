@@ -280,7 +280,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                 Text("+  Vücut ölçümü ekle", fontWeight = FontWeight.Bold)
             }
         }
-        if (records.size >= 2) {
+        if (records.isNotEmpty()) {
             item {
                 var chartMode by remember { mutableIntStateOf(0) }
                 var selectedChartTime by remember { mutableStateOf<Long?>(null) }
@@ -315,8 +315,8 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                         }
                         value?.let { record.id to it }
                     }
-                    if (data.size < 2) {
-                        Text("Grafik için bu alanda en az iki ölçüm gerekli.",
+                    if (data.isEmpty()) {
+                        Text("Bu alan için henüz ölçüm yok.",
                             color = BodyMuted, fontSize = 12.sp)
                     } else {
                         val minimum = data.minOf { it.second }
@@ -361,15 +361,17 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                             }
                             val points = data.map { (time, value) ->
                                 Offset(
-                                    left + (time - firstTime).toFloat() / timeSpan * (right - left),
+                                    left + (if (data.size == 1) 0.5f else (time - firstTime).toFloat() / timeSpan) * (right - left),
                                     top + ((high - value) / (high - low)).toFloat() * (bottom - top)
                                 )
                             }
-                            val path = Path().apply {
-                                moveTo(points.first().x, points.first().y)
-                                points.drop(1).forEach { lineTo(it.x, it.y) }
+                            if (points.size > 1) {
+                                val path = Path().apply {
+                                    moveTo(points.first().x, points.first().y)
+                                    points.drop(1).forEach { lineTo(it.x, it.y) }
+                                }
+                                drawPath(path, BodyMint, style = Stroke(2.5.dp.toPx()))
                             }
-                            drawPath(path, BodyMint, style = Stroke(2.5.dp.toPx()))
                             points.forEachIndexed { index, point ->
                                 val active = data[index].first == selectedChartTime
                                 drawCircle(if (active) Color.White else BodyMint,
