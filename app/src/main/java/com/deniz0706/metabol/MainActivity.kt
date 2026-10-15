@@ -261,69 +261,97 @@ private fun Dashboard(
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item { Header() }
         item {
-            Column {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("METABOL / STUDIO EDITION", color = Mint, fontSize = 10.sp, letterSpacing = 1.8.sp)
-                    Text(SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR")).format(Date()),
-                        color = Muted, fontSize = 11.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text("METABOL / GÜNLÜK PANEL", color = Mint, fontSize = 11.sp,
+                        letterSpacing = 1.3.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(7.dp))
+                    Text("Bugün nasılsın?", color = White, fontSize = 32.sp,
+                        fontWeight = FontWeight.ExtraBold)
+                    Text(SimpleDateFormat("dd MMMM yyyy", Locale("tr", "TR")).format(Date()),
+                        color = Muted, fontSize = 12.sp)
                 }
-                Spacer(Modifier.height(12.dp))
-                Text("Bugün senin günün.", color = White, fontSize = 36.sp,
-                    fontWeight = FontWeight.ExtraBold)
-                Spacer(Modifier.height(4.dp))
-                Text("Kilon, beslenmen ve ritmin; sade bir bakışta.", color = Muted, fontSize = 13.sp)
+                Box(Modifier.size(54.dp).background(Color(0xFF53374D), CircleShape),
+                    contentAlignment = Alignment.Center) {
+                    Text("M", color = Mint, fontSize = 27.sp, fontWeight = FontWeight.Black)
+                }
             }
         }
         item {
             Column(
-                Modifier.fillMaxWidth().background(
-                    Brush.linearGradient(listOf(Color(0xFF70415B), Color(0xFF44304D), Surface)), RoundedCornerShape(28.dp)
-                ).border(1.dp, Edge, RoundedCornerShape(28.dp)).padding(22.dp),
+                Modifier.fillMaxWidth()
+                    .background(Brush.linearGradient(listOf(Color(0xFF70415B), Color(0xFF3B2945))),
+                        RoundedCornerShape(30.dp))
+                    .padding(23.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("GÜNCEL AĞIRLIK", color = Muted, fontSize = 11.sp, letterSpacing = 2.sp)
-                    Text("●  CİHAZINDA", color = Mint, fontSize = 10.sp)
-                }
+                Text("SON KİLO ÖLÇÜMÜ", color = Color(0xFFFFD6B0),
+                    fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text(latest?.let { numberFormat.format(it.kg) } ?: "—", color = White, fontSize = 62.sp, fontWeight = FontWeight.ExtraBold)
-                    Spacer(Modifier.width(8.dp))
-                    Text("kg", color = Muted, fontSize = 22.sp, modifier = Modifier.padding(bottom = 10.dp))
+                    Text(latest?.let { numberFormat.format(it.kg) } ?: "—",
+                        color = White, fontSize = 65.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.width(7.dp))
+                    Text("kg", color = Color(0xFFFFD6B0), fontSize = 20.sp,
+                        modifier = Modifier.padding(bottom = 12.dp))
                 }
-                if (change != null) {
-                    Text((if (change > 0) "+" else "") + numberFormat.format(change) + " kg  ·  ilk ölçümden beri",
-                        color = if (change <= 0f) Mint else Violet, fontSize = 13.sp)
-                } else Text("İlk ölçümünü ekleyerek başla.", color = Muted, fontSize = 13.sp)
+                Text(change?.let {
+                    (if (it > 0) "+" else "") + numberFormat.format(it) +
+                        " kg · ilk ölçümden bu yana"
+                } ?: "İlk tartı kaydını ekleyerek başla.",
+                    color = White, fontSize = 13.sp)
                 if (goal != null && latest != null) {
-                    HorizontalDivider(color = Edge)
+                    HorizontalDivider(color = Color(0x55FFFFFF))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("KİŞİSEL HEDEF", color = Muted, fontSize = 11.sp)
-                        Text(numberFormat.format(goal) + " kg", color = Mint, fontWeight = FontWeight.Bold)
+                        Text("Hedefin: ${numberFormat.format(goal)} kg", color = White, fontSize = 12.sp)
+                        Text("Kalan: ${numberFormat.format(abs(latest.kg - goal))} kg",
+                            color = White, fontSize = 12.sp)
                     }
-                    Text(
-                        "Hedefe fark: " + numberFormat.format(abs(latest.kg - goal)) + " kg",
-                        color = White, fontSize = 13.sp
-                    )
                     if (first != null && abs(first.kg - goal) > 0.05f) {
-                        val progress = (1f - abs(latest.kg - goal) / abs(first.kg - goal)).coerceIn(0f, 1f)
-                        LinearProgressIndicator(
-                            progress = { progress },
+                        val progress = (1f - abs(latest.kg - goal) /
+                            abs(first.kg - goal)).coerceIn(0f, 1f)
+                        LinearProgressIndicator(progress = { progress },
                             modifier = Modifier.fillMaxWidth().height(8.dp),
-                            color = Mint,
-                            trackColor = Surface2
-                        )
-                        Text("İlk ölçüme göre hedef ilerlemesi: " + (progress * 100).roundToInt() + "%",
-                            color = Muted, fontSize = 11.sp)
+                            color = Mint, trackColor = Color(0x66553344))
                     }
                 }
-                HorizontalDivider(color = Edge)
-                WeightChart(entries, Modifier.fillMaxWidth().height(340.dp))
-                Button(onClick = onAddClick, modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(15.dp),
+                Button(onClick = onAddClick, modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = Bg)) {
-                    Text("+   Kilo ölçümü ekle", fontWeight = FontWeight.Bold)
+                    Text("+  Yeni tartı kaydı", fontWeight = FontWeight.ExtraBold)
                 }
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f)
+                    .background(Surface, RoundedCornerShape(22.dp))
+                    .clickable(onClick = onNutritionClick).padding(18.dp)) {
+                    Text("BESLENME  ↗", color = Mint, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(9.dp))
+                    Text("${todayNutrition.second} kcal", color = White, fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold)
+                    Text("${todayNutrition.first} öğün kaydı", color = Muted, fontSize = 11.sp)
+                }
+                Column(Modifier.weight(1f).background(Surface, RoundedCornerShape(22.dp))
+                    .padding(18.dp)) {
+                    Text("PROTEİN", color = Violet, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(9.dp))
+                    Text(String.format(Locale.US, "%.1f g", todayNutrition.third),
+                        color = White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("bugün kaydedilen", color = Muted, fontSize = 11.sp)
+                }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(Surface, RoundedCornerShape(26.dp))
+                .padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Kilo yolculuğun", color = White, fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold)
+                    Text("${entries.size} ölçüm", color = Muted, fontSize = 12.sp)
+                }
+                WeightChart(entries, Modifier.fillMaxWidth().height(260.dp))
             }
         }
         item {
@@ -331,42 +359,6 @@ private fun Dashboard(
                 MetricCard("ÖLÇÜM SAYISI", entries.size.toString(), "toplam kayıt", Modifier.weight(1f))
                 MetricCard("DEĞİŞİM", change?.let { (if (it > 0) "+" else "") + numberFormat.format(it) } ?: "—",
                     "kilogram", Modifier.weight(1f))
-            }
-        }
-        item {
-            Column(
-                Modifier.fillMaxWidth()
-                    .background(Brush.linearGradient(listOf(Color(0xFF1B2E3B), Surface)),
-                        RoundedCornerShape(24.dp))
-                    .border(1.dp, Edge, RoundedCornerShape(24.dp))
-                    .clickable(onClick = onNutritionClick).padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("BUGÜNKÜ BESLENME", color = Mint, fontSize = 11.sp, letterSpacing = 1.5.sp)
-                    Text("Günlüğe git  ›", color = Mint, fontSize = 12.sp)
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column {
-                        Text("${todayNutrition.second}", color = White,
-                            fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-                        Text("kayıtlı kcal", color = Muted, fontSize = 11.sp)
-                    }
-                    Column {
-                        Text(String.format(Locale.US, "%.1f g", todayNutrition.third),
-                            color = White, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                        Text("protein", color = Muted, fontSize = 11.sp)
-                    }
-                    Column {
-                        Text("${todayNutrition.first}", color = White,
-                            fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                        Text("öğün", color = Muted, fontSize = 11.sp)
-                    }
-                }
-                if (todayNutrition.first == 0) {
-                    Text("Bugün henüz öğün kaydı yok.", color = Muted, fontSize = 12.sp)
-                }
             }
         }
         item {
