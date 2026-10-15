@@ -3,6 +3,8 @@ package com.deniz0706.metabol
 import android.content.Context
 import android.app.DatePickerDialog
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Handler
 import android.os.Looper
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -132,6 +134,15 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 }
             }
         }.start()
+    }
+    val barcodeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val code = result.data?.getStringExtra(BarcodeScannerActivity.EXTRA_BARCODE)
+            if (code != null && code.matches(Regex("[0-9]{8,14}"))) {
+                query = code
+                searchOnline(code)
+            } else onlineError = "Barkod numarası alınamadı."
+        }
     }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     fun initialGrams(food: FoodReference): String =
@@ -660,32 +671,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 OutlinedButton(
                     onClick = {
                         onlineError = null
-                        val options = GmsBarcodeScannerOptions.Builder()
-                            .setBarcodeFormats(
-                                Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
-                                Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E,
-                                Barcode.FORMAT_CODE_128, Barcode.FORMAT_ITF
-                            ).enableAutoZoom().build()
-                        runCatching {
-                            GmsBarcodeScanning.getClient(context, options).startScan()
-                                .addOnSuccessListener { barcode ->
-                                    val code = barcode.rawValue.orEmpty()
-                                    if (code.matches(Regex("[0-9]{8,14}"))) {
-                                        query = code
-                                        searchOnline(code)
-                                    } else {
-                                        onlineError = "Geçerli bir ürün barkodu okunamadı."
-                                    }
-                                }
-                                .addOnCanceledListener {
-                                    onlineError = "Barkod taraması iptal edildi."
-                                }
-                                .addOnFailureListener { error ->
-                                    onlineError = "Tarayıcı açılamadı: ${error.localizedMessage ?: "Google Play Hizmetlerini kontrol et."}"
-                                }
-                        }.onFailure {
-                            onlineError = "Tarayıcı başlatılamadı. Barkodu elle yazabilirsin."
-                        }
+                        barcodeLauncher.launch(Intent(context, BarcodeScannerActivity::class.java))
                     },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(16.dp)
