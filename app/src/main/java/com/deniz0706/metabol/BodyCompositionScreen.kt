@@ -59,6 +59,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
     }
     var showAdd by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<BodyRecord?>(null) }
+    var pendingDeleteRecord by remember { mutableStateOf<BodyRecord?>(null) }
     val latest = records.lastOrNull()
     val previous = records.dropLast(1).lastOrNull()
     LazyColumn(modifier.fillMaxSize().background(BodyBg), contentPadding = PaddingValues(20.dp),
@@ -192,7 +193,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                     TextButton(onClick = { editingRecord = r; showAdd = true }) {
                         Text("Düzenle", color = BodyMint)
                     }
-                    TextButton(onClick = { save(records.filterNot { it.id == r.id }) }) {
+                    TextButton(onClick = { pendingDeleteRecord = r }) {
                         Text("Sil", color = Color(0xFFFF879A))
                     }
                 }
@@ -202,6 +203,24 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             Text("Akıllı tartı ölçümleri tahminidir; özellikle kas ve yağ oranı günlük dalgalanabilir.",
                 color = BodyMuted, fontSize = 11.sp)
         }
+    }
+    if (pendingDeleteRecord != null) {
+        AlertDialog(
+            onDismissRequest = { pendingDeleteRecord = null },
+            title = { Text("Vücut ölçümünü sil?") },
+            text = { Text("Bu ölçüm kalıcı olarak silinecek.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingDeleteRecord?.let { target ->
+                        save(records.filterNot { it.id == target.id })
+                    }
+                    pendingDeleteRecord = null
+                }) { Text("Sil", color = Color(0xFFFF879A)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteRecord = null }) { Text("Vazgeç") }
+            }
+        )
     }
     if (showAdd) {
         var dateText by remember(editingRecord) {
