@@ -411,6 +411,12 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
             days == null || (it.time >= today - days * 86_400_000L && it.time <= today)
         }
     }
+    val axisPaint = remember {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(139, 156, 178)
+            textAlign = android.graphics.Paint.Align.LEFT
+        }
+    }
     val min = (records.minOfOrNull { it.kg } ?: 80f) - 2f
     val max = (records.maxOfOrNull { it.kg } ?: 120f) + 2f
     val range = (max - min).coerceAtLeast(1f)
@@ -470,11 +476,7 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                     val x = if (records.size == 1) 0.5f else (record.time - start).toFloat() / span
                     return Offset(left + x * width, top + (max - record.kg) / range * height)
                 }
-                val axisPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                    color = android.graphics.Color.rgb(139, 156, 178)
-                    textSize = 10.sp.toPx()
-                    textAlign = android.graphics.Paint.Align.LEFT
-                }
+                axisPaint.textSize = 10.sp.toPx()
                 repeat(4) { index ->
                     val y = top + index * height / 3f
                     drawLine(Edge, Offset(left, y), Offset(right, y), 1.dp.toPx())
