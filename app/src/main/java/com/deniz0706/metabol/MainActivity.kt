@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -287,9 +288,19 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                     val x = if (records.size == 1) 0.5f else (record.time - start).toFloat() / span
                     return Offset(left + x * width, top + (max - record.kg) / range * height)
                 }
+                val axisPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.rgb(139, 156, 178)
+                    textSize = 10.sp.toPx()
+                    textAlign = android.graphics.Paint.Align.LEFT
+                }
                 repeat(4) { index ->
                     val y = top + index * height / 3f
                     drawLine(Edge, Offset(left, y), Offset(right, y), 1.dp.toPx())
+                    val tickValue = max - range * index / 3f
+                    drawContext.canvas.nativeCanvas.drawText(
+                        numberFormat.format(tickValue), right + 6.dp.toPx(),
+                        y + 4.dp.toPx(), axisPaint
+                    )
                 }
                 val points = records.map(::point)
                 if (points.size > 1) {
