@@ -498,6 +498,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     Text("${insights.longestRecordingStreak} gün", color = NutritionWhite,
                         fontWeight = FontWeight.Bold)
                 }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Seçili güne kadar kayıt serisi", color = NutritionMuted, fontSize = 12.sp)
+                    Text("${insights.currentRecordingStreak} gün", color = NutritionMint,
+                        fontWeight = FontWeight.Bold)
+                }
                 Text("Ortalama yalnızca kayıt bulunan günlerden hesaplanır. Kayıt olmayan günler sıfır tüketim sayılmaz.",
                     color = NutritionMuted, fontSize = 11.sp)
             }
