@@ -3,6 +3,8 @@ package com.deniz0706.metabol
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -190,14 +192,15 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         var p by remember(editingMeal) { mutableStateOf(editingMeal?.protein?.toString() ?: "") }
         var c by remember(editingMeal) { mutableStateOf(editingMeal?.carbs?.toString() ?: "") }
         var f by remember(editingMeal) { mutableStateOf(editingMeal?.fat?.toString() ?: "") }
-        val valid = name.isNotBlank() && (kcal.toIntOrNull() ?: -1) in 0..10000 &&
+        val valid = name.isNotBlank() && name.length <= 120 && (kcal.toIntOrNull() ?: -1) in 0..10000 &&
             listOf(p, c, f).all { (it.replace(',', '.').toDoubleOrNull() ?: -1.0) in 0.0..1000.0 }
         AlertDialog(
             onDismissRequest = { dialogOpen = false },
             containerColor = NutritionPanel,
             title = { Text(if (editingMeal == null) "Öğün ekle" else "Öğünü düzenle", color = NutritionWhite) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(name, { name = it }, label = { Text("Besin / öğün adı") }, singleLine = true)
                     OutlinedTextField(kcal, { kcal = it }, label = { Text("Kalori (kcal)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
