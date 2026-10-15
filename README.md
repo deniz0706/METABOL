@@ -9,7 +9,7 @@
 | Screen | Capabilities |
 | --- | --- |
 | Overview | Weight log, backdated entries, edit existing records, edit/delete, touch-selectable smooth/straight line chart, 7/30/90-day chart filters, personal weight goal |
-| Nutrition | Daily calorie and macronutrient totals, add/edit/delete meals, navigate between dates, seven-day calorie comparison, macro-derived calorie estimate |
+| Nutrition | Daily calorie and macronutrient totals, searchable offline starter food catalog with gram-based portions, manual add/edit/delete meals, navigate between dates, seven-day calorie comparison, macro-derived calorie estimate |
 | Analysis | Time-range filters, minimum/maximum, mean, total change, weekly rate, last-seven-measurements mean |
 | Body | Body-fat %, muscle mass and waist circumference, edit/delete records, change since previous measurement, trend charts for fat/muscle/waist |
 | Settings | Optional weight goal, offline JSON backup and restore, CSV export, privacy information |
@@ -42,3 +42,7 @@ The `Android Debug APK` GitHub Actions workflow runs tests and assembles an APK 
 This is a preview. Current persistence uses JSON strings in preferences, not Room. There is no cloud backup, barcode scanner, verified food database, or medical-grade body composition measurement. UI and device testing are ongoing.
 
 Developed by Deniz.
+
+## Offline food lookup (preview)
+
+The app includes a **small built-in reference catalog** of common foods, with approximate values per 100 g. Search by name, choose a food, enter grams, and the app calculates kcal, protein, carbohydrate and fat before adding the entry. This works offline and requires no API key. **It is not a verified nutrition database**; numbers are approximate reference values and are not suitable for precise medical dietary management. Prepared food and packaged product values depend on brand, recipe, cooking fat, and serving size. Prefer the package label or manually corrected entries when available. A verified external database and barcode scanning are not implemented yet.
