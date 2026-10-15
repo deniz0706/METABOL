@@ -585,12 +585,13 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 
     if (catalogOpen) {
         var query by remember { mutableStateOf("") }
+        var category by remember { mutableStateOf("Yemekler") }
         val savedResults = remember(query, savedFoods) {
             val needle = query.trim()
             savedFoods.filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }
         }
-        val localResults = remember(query, recentFoodNames) {
-            FoodCatalog.search(query).sortedWith(
+        val localResults = remember(query, category, recentFoodNames) {
+            FoodCatalog.search(query).filter { category == "Tümü" || FoodCatalog.categoryOf(it) == category }.sortedWith(
                 compareBy<FoodReference> {
                     if (query.isBlank()) {
                         val index = recentFoodNames.indexOf(it.name)
@@ -638,6 +639,22 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(17.dp)
                 )
+                Spacer(Modifier.height(10.dp))
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    items(FoodCatalog.categories) { option ->
+                        FilterChip(
+                            selected = category == option,
+                            onClick = { category = option },
+                            label = { Text(option, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = NutritionMint,
+                                selectedLabelColor = NutritionBg
+                            )
+                        )
+                    }
+                }
                 Spacer(Modifier.height(10.dp))
                 OutlinedButton(
                     onClick = {
