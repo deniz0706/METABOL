@@ -6,59 +6,72 @@ import java.net.URL
 import java.net.URLEncoder
 
 internal object OpenFoodFacts {
+    private const val MAX_RESPONSE_BYTES = 1_500_000
+    private const val CACHE_TTL_MS = 10 * 60 * 1000L
+    private data class Cached(val savedAt: Long, val foods: List<FoodReference>)
+    private val cache = object : LinkedHashMap<String, Cached>(32, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Cached>?) =
+            size > 32
+    }
+
+    private fun cached(key: String, fetch: () -> List<FoodReference>): List<FoodReference> {
+        val now = System.currentTimeMillis()
+        synchronized(cache) {
+            cache[key]?.takeIf { now - it.savedAt in 0 until CACHE_TTL_MS }?.let {
+                return it.foods
+            }
+        }
+        val foods = fetch()
+        synchronized(cache) { cache[key] = Cached(System.currentTimeMillis(), foods) }
+        return foods
+    }
+
     fun search(query: String): List<FoodReference> {
         val term = query.trim().take(80)
         require(term.length >= 2)
-        val address = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" +
-            URLEncoder.encode(term, "UTF-8") +
-            "&search_simple=1&action=process&json=1&page_size=20&fields=product_name,product_name_tr,brands,nutriments"
-        val connection = URL(address).openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 8000
-            connection.readTimeout = 8000
-            connection.setRequestProperty("User-Agent", "METABOL Android nutrition tracker")
-            if (connection.responseCode !in 200..299) error("Service unavailable")
-            val data = connection.inputStream.use { stream ->
-                val output = java.io.ByteArrayOutputStream()
-                val buffer = ByteArray(8192)
-                while (true) {
-                    val count = stream.read(buffer)
-                    if (count < 0) break
-                    if (output.size() + count > 1_500_000) error("Response too large")
-                    output.write(buffer, 0, count)
-                }
-                output.toString("UTF-8")
-            }
-            return parse(data)
-        } finally {
-            connection.disconnect()
+        return cached("search:${term.lowercase(java.util.Locale.ROOT)}") {
+            val address = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" +
+                URLEncoder.encode(term, "UTF-8") +
+                "&search_simple=1&action=process&json=1&page_size=20&" +
+                "fields=product_name,product_name_tr,brands,nutriments"
+            parse(request(address))
         }
     }
 
     fun lookupBarcode(code: String): List<FoodReference> {
         require(code.matches(Regex("[0-9]{8,14}")))
-        val address = "https://world.openfoodfacts.org/api/v2/product/$code.json?fields=product_name,product_name_tr,brands,nutriments"
+        return cached("barcode:$code") {
+            val address = "https://world.openfoodfacts.org/api/v2/product/$code.json?" +
+                "fields=product_name,product_name_tr,brands,nutriments"
+            val root = JSONObject(request(address))
+            if (root.optInt("status") != 1) emptyList()
+            else {
+                val product = root.optJSONObject("product")
+                val wrapper = JSONObject().put("products", org.json.JSONArray().put(product))
+                parse(wrapper.toString())
+            }
+        }
+    }
+
+    private fun request(address: String): String {
         val connection = URL(address).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             connection.setRequestProperty("User-Agent", "METABOL Android nutrition tracker")
+            connection.setRequestProperty("Accept", "application/json")
             if (connection.responseCode !in 200..299) error("Service unavailable")
-            val data = connection.inputStream.use { stream ->
+            return connection.inputStream.use { stream ->
                 val output = java.io.ByteArrayOutputStream()
                 val buffer = ByteArray(8192)
                 while (true) {
                     val count = stream.read(buffer)
                     if (count < 0) break
-                    if (output.size() + count > 1_500_000) error("Response too large")
+                    if (output.size() + count > MAX_RESPONSE_BYTES) error("Response too large")
                     output.write(buffer, 0, count)
                 }
                 output.toString("UTF-8")
             }
-            val root = JSONObject(data)
-            if (root.optInt("status") != 1) return emptyList()
-            val products = JSONObject().put("products", org.json.JSONArray().put(root.optJSONObject("product")))
-            return parse(products.toString())
         } finally {
             connection.disconnect()
         }
