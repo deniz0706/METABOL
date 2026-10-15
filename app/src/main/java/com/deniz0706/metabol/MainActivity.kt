@@ -232,6 +232,17 @@ private fun Dashboard(
                         "Hedefe fark: " + numberFormat.format(abs(latest.kg - goal)) + " kg",
                         color = White, fontSize = 13.sp
                     )
+                    if (first != null && abs(first.kg - goal) > 0.05f) {
+                        val progress = (1f - abs(latest.kg - goal) / abs(first.kg - goal)).coerceIn(0f, 1f)
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth().height(8.dp),
+                            color = Mint,
+                            trackColor = Surface2
+                        )
+                        Text("İlk ölçüme göre hedef ilerlemesi: " + (progress * 100).roundToInt() + "%",
+                            color = Muted, fontSize = 11.sp)
+                    }
                 }
                 HorizontalDivider(color = Edge)
                 WeightChart(entries, Modifier.fillMaxWidth().height(248.dp))
