@@ -28,7 +28,7 @@ internal object FoodCatalog {
     private val coreFoods = listOf(
         FoodReference("Muz", 89.0, 1.1, 22.8, 0.3),
         FoodReference("Elma", 52.0, 0.3, 13.8, 0.2),
-        FoodReference("Yumurta (bütün)", 143.0, 12.6, 0.7, 9.5),
+        FoodReference("Yumurta - bütün, çiğ", 143.0, 12.6, 0.7, 9.5),
         FoodReference("Tavuk göğsü (pişmiş)", 165.0, 31.0, 0.0, 3.6),
         FoodReference("Pirinç (pişmiş, sade)", 130.0, 2.7, 28.2, 0.3),
         FoodReference("Bulgur (pişmiş)", 83.0, 3.1, 18.6, 0.2),
@@ -48,7 +48,7 @@ internal object FoodCatalog {
         FoodReference("Portakal", 47.0, 0.9, 11.8, 0.1)
     )
 
-    val foods: List<FoodReference> = (coreFoods + ExtendedFoodCatalog.foods)
+    val foods: List<FoodReference> = (coreFoods + ExtendedFoodCatalog.foods + MealCatalog.foods)
         .distinctBy { it.name }
         .sortedBy { it.name }
 
