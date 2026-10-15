@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -74,6 +73,19 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var catalogOpen by remember { mutableStateOf(false) }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     var selectedGrams by remember { mutableStateOf("100") }
+    var recentFoodNames by remember {
+        mutableStateOf(runCatching {
+            val saved = JSONArray(prefs.getString("recent_foods", "[]"))
+            (0 until saved.length()).map { saved.getString(it) }
+        }.getOrDefault(emptyList()))
+    }
+    fun rememberFood(name: String) {
+        val updated = (listOf(name) + recentFoodNames.filterNot { it == name }).take(8)
+        recentFoodNames = updated
+        val array = JSONArray()
+        updated.forEach { array.put(it) }
+        prefs.edit().putString("recent_foods", array.toString()).apply()
+    }
     var pendingDeleteMeal by remember { mutableStateOf<MealEntry?>(null) }
     var historyRevision by remember { mutableIntStateOf(0) }
     val lastSevenDays = remember(historyRevision, selectedDay) {
@@ -271,7 +283,17 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     Text("Yaklaşık değerler · 100 gram başına", color = NutritionMuted, fontSize = 11.sp)
                     Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        val results = FoodCatalog.search(query)
+                        val results = FoodCatalog.search(query).sortedWith(
+                            compareBy<FoodReference> {
+                                if (query.isBlank()) {
+                                    val position = recentFoodNames.indexOf(it.name)
+                                    if (position < 0) Int.MAX_VALUE else position
+                                } else 0
+                            }.thenBy { it.name }
+                        )
+                        if (query.isBlank() && recentFoodNames.isNotEmpty()) {
+                            Text("Son kullanılanlar üstte", color = NutritionMuted, fontSize = 11.sp)
+                        }
                         Text("${results.size} besin bulundu", color = NutritionMint, fontSize = 11.sp)
                         if (results.isEmpty()) Text("Sonuç bulunamadı. Manuel giriş yapabilirsin.", color = NutritionMuted)
                         results.forEach { food ->
@@ -339,6 +361,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     if (portion != null) {
                         save(meals + MealEntry(System.currentTimeMillis(), food.name,
                             portion.calories, portion.protein, portion.carbs, portion.fat))
+                        rememberFood(food.name)
                         selectedFood = null
                     }
                 }) { Text("Günlüğe ekle", color = NutritionMint) }
