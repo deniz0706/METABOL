@@ -16,6 +16,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
@@ -31,7 +33,8 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             MetabolicScience.Profile(age!!, height, sex == "male", activity)
         else null
     }
-    val estimate = remember(points) {
+    val estimate by produceState<MetabolicScience.Estimate?>(initialValue = null, key1 = points, key2 = profile) {
+        value = withContext(Dispatchers.Default) {
         val zone = ZoneId.systemDefault()
         val weights = points.groupBy {
             Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate()
@@ -46,10 +49,12 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             MetabolicScience.Day(day, weights[day], calories)
         }
         MetabolicScience.estimate(profile, data, LocalDate.now())
+        }
     }
     val mint = Color(0xFF71E8C4)
     val muted = Color(0xFF8B9CB2)
     val white = Color(0xFFF4F8FC)
+    val result = estimate
     Column(Modifier.fillMaxWidth().background(Color(0xFF121C28), RoundedCornerShape(24.dp)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("METABOL · BİLİMSEL ANALİZ", color = mint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -61,36 +66,40 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             }
         }
         fun kcal(value: Double?) = value?.let { String.format(Locale.US, "%.0f kcal/gün", it) } ?: "Veri yetersiz"
-        Metric("BMR · Mifflin–St Jeor", kcal(estimate.bmr))
-        Metric("TDEE · Aktiviteye dayalı", kcal(estimate.initialTdee))
-        Metric("AME · Kayıtlardan tahmin", kcal(estimate.inferredTdee))
-        Metric("Veri güvenilirliği", "${estimate.reliability}/100 · ${estimate.reliabilityLabel}")
-        Metric("Kütleye bağlı harcama farkı", estimate.expectedTdeeChange?.let {
+        if (result == null) {
+            Text("Bilimsel analiz hesaplanıyor…", color = muted, fontSize = 12.sp)
+        } else {
+        Metric("BMR · Mifflin–St Jeor", kcal(result.bmr))
+        Metric("TDEE · Aktiviteye dayalı", kcal(result.initialTdee))
+        Metric("AME · Kayıtlardan tahmin", kcal(result.inferredTdee))
+        Metric("Veri güvenilirliği", "${result.reliability}/100 · ${result.reliabilityLabel}")
+        Metric("Kütleye bağlı harcama farkı", result.expectedTdeeChange?.let {
             String.format(Locale.US, "%+.0f kcal/gün", it)
         } ?: "Veri yetersiz")
-        Metric("Geçmiş 14 gün tahmin hatası", estimate.forecastErrorKg?.let {
+        Metric("Geçmiş 14 gün tahmin hatası", result.forecastErrorKg?.let {
             String.format(Locale.US, "%.1f kg", it)
         } ?: "Geriye dönük veri yetersiz")
-        Metric("28 günlük beslenme kaydı", "${estimate.recordedDays}/28 gün")
-        Metric("28 günlük kilo kaydı", "${estimate.observedDays} gün")
-        Metric("Kayıtlı günlerde ort. enerji", kcal(estimate.dailyCalorieAverage))
-        Metric("Kilo değişim hızı", estimate.trendKgPerWeek?.let {
+        Metric("28 günlük beslenme kaydı", "${result.recordedDays}/28 gün")
+        Metric("28 günlük kilo kaydı", "${result.observedDays} gün")
+        Metric("Kayıtlı günlerde ort. enerji", kcal(result.dailyCalorieAverage))
+        Metric("Kilo değişim hızı", result.trendKgPerWeek?.let {
             String.format(Locale.US, "%+.2f kg/hafta", it)
         } ?: "Veri yetersiz")
-        Metric("Kilo duraklaması", when (estimate.plateau) {
+        Metric("Kilo duraklaması", when (result.plateau) {
             true -> "Olası (en az 21 günlük trend)"
             false -> "Trend devam ediyor"
             null -> "Veri yetersiz"
         })
         HorizontalDivider(color = Color(0xFF2A394B))
-        Metric("30 gün sonrası · Senaryo", estimate.forecast30Kg?.let {
+        Metric("30 gün sonrası · Senaryo", result.forecast30Kg?.let {
             String.format(Locale.US, "%.1f kg", it)
         } ?: "Veri yetersiz")
-        Metric("Belirsizlik bandı", if (estimate.forecastLowKg != null && estimate.forecastHighKg != null)
-            String.format(Locale.US, "%.1f–%.1f kg", estimate.forecastLowKg, estimate.forecastHighKg)
+        Metric("Belirsizlik bandı", if (result.forecastLowKg != null && result.forecastHighKg != null)
+            String.format(Locale.US, "%.1f–%.1f kg", result.forecastLowKg, result.forecastHighKg)
             else "—")
-        Text(estimate.message, color = mint, fontSize = 12.sp)
+        Text(result.message, color = mint, fontSize = 12.sp)
         Text("BMR bir denklem tahminidir; TDEE aktivite varsayımına dayanır. AME kayıtlı kaloriler ve kilo trendinden yaklaşık çıkarımdır. 30 günlük öngörü, enerji harcamasının kiloyla değişimini hesaba katan basitleştirilmiş senaryodur; Kevin Hall modelinin uygulaması veya klinik olarak kalibre edilmiş güven aralığı değildir. Veri puanı kayıt düzenliliğini gösterir, fizyolojik doğruluğu değil. Kütleye bağlı harcama farkı adaptif termogenez ölçümü değildir. Eksik öğün kayıtları sonucu bozabilir. Su değişimleri yağ değişimi sayılmaz.",
             color = muted, fontSize = 11.sp)
+        }
     }
 }
