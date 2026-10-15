@@ -2,6 +2,9 @@ package com.deniz0706.metabol
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -83,6 +86,7 @@ internal fun summarizeWeights(points: List<WeightPoint>): TrendSummary {
 @Composable
 internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modifier) {
     var period by remember { mutableIntStateOf(0) }
+    var summaryExpanded by remember { mutableStateOf(false) }
     val now = System.currentTimeMillis()
     val filtered = remember(points, period, now / 86_400_000L) {
         val days = when (period) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
@@ -150,7 +154,16 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         item {
             Column(Modifier.fillMaxWidth().background(APanel, RoundedCornerShape(24.dp))
                 .border(1.dp, AEdge, RoundedCornerShape(24.dp)).padding(20.dp)) {
-                Text("TARTI KAYITLARININ ÖZETİ", color = AMuted, fontSize = 11.sp, letterSpacing = 2.sp)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("TARTI KAYITLARININ ÖZETİ", color = AMuted, fontSize = 11.sp, letterSpacing = 1.sp)
+                    TextButton(onClick = { summaryExpanded = !summaryExpanded }) {
+                        Text(if (summaryExpanded) "Kapat −" else "Detay +", color = AMint)
+                    }
+                }
+                AnimatedVisibility(visible = summaryExpanded,
+                    enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                    Column {
                 Spacer(Modifier.height(16.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     AnalysisValue("İlk ölçüm", stats.first?.let { fmt.format(it) + " kg" } ?: "—", Modifier.weight(1f))
@@ -162,6 +175,8 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     AnalysisValue("En düşük", stats.min?.let { fmt.format(it) + " kg" } ?: "—", Modifier.weight(1f))
                     AnalysisValue("En yüksek", stats.max?.let { fmt.format(it) + " kg" } ?: "—", Modifier.weight(1f))
+                }
+                    }
                 }
             }
         }
