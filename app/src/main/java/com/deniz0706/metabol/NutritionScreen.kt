@@ -381,19 +381,74 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }
         item {
-            Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(24.dp))
-                .padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("SU TAKİBİ", color = NutritionMint, fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                Text("$waterMl ml · seçilen gün", color = NutritionWhite,
-                    fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { updateWater(-250) }, enabled = waterMl >= 250,
-                        modifier = Modifier.weight(1f)) { Text("−250 ml") }
-                    Button(onClick = { updateWater(250) }, enabled = waterMl <= 9750,
-                        modifier = Modifier.weight(1f)) { Text("+250 ml") }
+            val waterReference = 2000
+            val waterProgress = (waterMl.toFloat() / waterReference).coerceIn(0f, 1f)
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(listOf(Color(0xFF172E41), Color(0xFF101B2A))),
+                        RoundedCornerShape(26.dp)
+                    )
+                    .border(1.dp, Color(0xFF29475C), RoundedCornerShape(26.dp))
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("GÜNLÜK SU", color = Color(0xFF8CDCF9),
+                            fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        Spacer(Modifier.height(6.dp))
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(String.format(Locale.US, "%.2f", waterMl / 1000.0),
+                                color = NutritionWhite, fontSize = 36.sp,
+                                fontWeight = FontWeight.ExtraBold)
+                            Spacer(Modifier.width(7.dp))
+                            Text("litre", color = NutritionMuted, fontSize = 15.sp,
+                                modifier = Modifier.padding(bottom = 6.dp))
+                        }
+                    }
+                    Box(
+                        Modifier.size(58.dp)
+                            .background(Color(0xFF214E64), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("💧", fontSize = 27.sp)
+                    }
                 }
-                Text("Yalnızca kaydedilen su miktarıdır; kişisel su ihtiyacı tahmini değildir.",
+                LinearProgressIndicator(
+                    progress = { waterProgress },
+                    modifier = Modifier.fillMaxWidth().height(9.dp),
+                    color = Color(0xFF72D6FA),
+                    trackColor = Color(0xFF29445A)
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("$waterMl ml kaydedildi", color = NutritionWhite, fontSize = 12.sp)
+                    Text("2 L görsel referans", color = NutritionMuted, fontSize = 11.sp)
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(150, 250, 500).forEach { amount ->
+                        Button(
+                            onClick = { updateWater(amount) },
+                            enabled = waterMl + amount <= 10000,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 5.dp, vertical = 12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF29546B),
+                                contentColor = NutritionWhite
+                            )
+                        ) { Text("+$amount", fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                    }
+                }
+                OutlinedButton(
+                    onClick = { updateWater(-250) },
+                    enabled = waterMl >= 250,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Son 250 ml'yi geri al", color = Color(0xFFB6DDEB))
+                }
+                Text("2 litre yalnızca ilerleme çubuğunun referansıdır; kişisel su ihtiyacı veya zorunlu hedef değildir.",
                     color = NutritionMuted, fontSize = 11.sp)
             }
         }
