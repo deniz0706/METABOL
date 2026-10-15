@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,8 +24,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val SBack = Color(0xFF080D15)
-private val SCard = Color(0xFF131C2A)
+private val SBack = Color(0xFF070B12)
+private val SCard = Color(0xFF121C28)
 private val SMint = Color(0xFF71E8C4)
 private val SText = Color(0xFFF4F8FC)
 private val SMuted = Color(0xFF8B9CB2)
@@ -226,11 +227,22 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
     LazyColumn(modifier.fillMaxSize().background(SBack), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item {
-            Text("M E T A B O L", color = SMint, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Text("M E T A B O L", color = SMint, fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 3.sp, fontSize = 13.sp)
             Spacer(Modifier.height(24.dp))
-            Text("AYARLAR", color = SMuted, fontSize = 11.sp, letterSpacing = 2.sp)
-            Spacer(Modifier.height(8.dp))
-            Text("Verilerin kontrolü sende.", color = SText, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text("Ayarlar", color = SText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(5.dp))
+            Text("Uygulamanı kendi ihtiyaçlarına göre düzenle.", color = SMuted, fontSize = 13.sp)
+            Spacer(Modifier.height(20.dp))
+            Column(Modifier.fillMaxWidth()
+                .background(Brush.linearGradient(listOf(Color(0xFF21473F), Color(0xFF172C37), SCard)),
+                    RoundedCornerShape(26.dp)).padding(21.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("VERİLERİNİN KONTROLÜ SENDE", color = SMint, fontSize = 10.sp, letterSpacing = 1.5.sp)
+                Text("Önce gizlilik.", color = SText, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                Text("Kayıtlar cihazında saklanır. Yedeklerini istediğin zaman dışa aktarabilirsin.",
+                    color = SMuted, fontSize = 12.sp)
+            }
         }
         item {
             Column(Modifier.fillMaxWidth().background(SCard, RoundedCornerShape(24.dp)).padding(20.dp),
