@@ -78,3 +78,7 @@ Users can optionally set daily energy (500–10000 kcal) and protein (1–500 g)
 ## Explicit summary sharing
 
 Nutrition's 7/30/90-day recorded-day summary can be shared as plain text through the Android system share sheet. Nothing is shared automatically: the user must press the share button and select a destination. The summary contains only aggregate meal-record statistics, not body measurements or raw meal history.
+
+## Expanded offline food library
+
+The bundled catalog now contains **195 distinct food references** (20 original items and 175 new entries) across produce, grains, meats, seafood, dairy, legumes, snacks, and familiar Turkish dishes. Each entry includes approximate per-100-gram energy and macronutrients. These values are broad estimates, not verified product labels; mixed dishes such as döner, pilav, soup and pastry vary substantially by recipe and portion. For packaged goods, use the barcode/online product search and verify the label. Online search now requests up to 60 candidate products per query, with incomplete nutrition entries excluded.
