@@ -166,7 +166,14 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         Text("$total", color = NutritionWhite, fontSize = 12.sp, modifier = Modifier.width(45.dp))
                     }
                 }
-                Text("Kaydedilen enerji toplamı; günlük enerji ihtiyacı veya hedef değildir.",
+                val recordedDays = lastSevenDays.count { (day, _) ->
+                    prefs.contains("meals_$day")
+                }
+                val sevenDayTotal = lastSevenDays.sumOf { it.second }
+                HorizontalDivider(color = Color(0xFF2A394B))
+                Text("7 günlük kayıt toplamı: $sevenDayTotal kcal", color = NutritionWhite, fontSize = 13.sp)
+                Text("Kayıt bulunan gün: $recordedDays / 7", color = NutritionMuted, fontSize = 12.sp)
+                Text("Boş günler sıfır tüketim anlamına gelmez. Grafik kaydedilen enerjiyi gösterir.",
                     color = NutritionMuted, fontSize = 11.sp)
             }
         }
