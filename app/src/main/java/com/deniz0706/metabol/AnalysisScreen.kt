@@ -2,6 +2,8 @@ package com.deniz0706.metabol
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,8 +18,8 @@ import java.text.DecimalFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private val ABack = Color(0xFF080D15)
-private val APanel = Color(0xFF131C2A)
+private val ABack = Color(0xFF070B12)
+private val APanel = Color(0xFF121C28)
 private val AText = Color(0xFFF4F8FC)
 private val AMuted = Color(0xFF8B9CB2)
 private val AMint = Color(0xFF71E8C4)
@@ -67,11 +69,16 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
     LazyColumn(modifier.fillMaxSize().background(ABack),
         contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text("M E T A B O L", color = AMint, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("M E T A B O L", color = AMint, fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 3.sp, fontSize = 13.sp)
+                Text("INSIGHTS  /  02", color = AMuted, fontSize = 10.sp, letterSpacing = 1.sp)
+            }
             Spacer(Modifier.height(24.dp))
-            Text("ANALİZ MERKEZİ", color = AMuted, fontSize = 11.sp, letterSpacing = 2.sp)
-            Spacer(Modifier.height(8.dp))
-            Text("Sayıların ardındaki değişim.", color = AText, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text("Analiz", color = AText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(4.dp))
+            Text("Sayıların ardındaki değişimi keşfet.", color = AMuted, fontSize = 13.sp)
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -85,6 +92,32 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                         ),
                         modifier = Modifier.weight(1f)
                     )
+                }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth()
+                .background(Brush.linearGradient(listOf(Color(0xFF21473F), Color(0xFF172C37), APanel)),
+                    RoundedCornerShape(28.dp))
+                .border(1.dp, Color(0xFF2C554F), RoundedCornerShape(28.dp))
+                .padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("NET KİLO DEĞİŞİMİ", color = AMint, fontSize = 10.sp, letterSpacing = 1.8.sp)
+                Text(stats.change?.let { (if (it > 0f) "+" else "") + fmt.format(it) + " kg" } ?: "—",
+                    color = AText, fontSize = 43.sp, fontWeight = FontWeight.ExtraBold)
+                Text("${stats.count} kayıt · ${listOf("Tüm zamanlar", "Son 7 gün", "Son 30 gün", "Son 90 gün")[period]}",
+                    color = AMuted, fontSize = 12.sp)
+                HorizontalDivider(color = Color(0xFF315047))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text("İLK ÖLÇÜM", color = AMuted, fontSize = 10.sp)
+                        Text(stats.first?.let { fmt.format(it) + " kg" } ?: "—",
+                            color = AText, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("SON ÖLÇÜM", color = AMuted, fontSize = 10.sp)
+                        Text(stats.last?.let { fmt.format(it) + " kg" } ?: "—",
+                            color = AMint, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
