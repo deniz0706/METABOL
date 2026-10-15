@@ -120,7 +120,10 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var selectedGrams by remember { mutableStateOf("100") }
     val searchExecutor = remember { Executors.newSingleThreadExecutor() }
     DisposableEffect(searchExecutor) {
-        onDispose { searchExecutor.shutdownNow() }
+        onDispose {
+            searchGeneration++
+            searchExecutor.shutdownNow()
+        }
     }
     fun searchOnline(query: String) {
         if (query.trim().length < 2) return
@@ -135,7 +138,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 else OpenFoodFacts.search(query)
             }
             Handler(Looper.getMainLooper()).post {
-                if (generation == searchGeneration) {
+                if (generation == searchGeneration && catalogOpen) {
                     onlineLoading = false
                     result.onSuccess { foods ->
                         onlineResults = foods
