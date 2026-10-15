@@ -37,6 +37,7 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 import java.time.LocalDate
+import java.util.concurrent.Executors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -117,6 +118,10 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     fun initialGrams(food: FoodReference): String =
         Regex("""Paket: (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
     var selectedGrams by remember { mutableStateOf("100") }
+    val searchExecutor = remember { Executors.newSingleThreadExecutor() }
+    DisposableEffect(searchExecutor) {
+        onDispose { searchExecutor.shutdownNow() }
+    }
     fun searchOnline(query: String) {
         if (query.trim().length < 2) return
         onlineLoading = true
@@ -124,7 +129,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         onlineResults = emptyList()
         onlineSearched = true
         val generation = ++searchGeneration
-        Thread {
+        searchExecutor.execute {
             val result = runCatching {
                 if (query.trim().matches(Regex("[0-9]{8,14}"))) OpenFoodFacts.lookupBarcode(query.trim())
                 else OpenFoodFacts.search(query)
@@ -143,7 +148,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         .onFailure { onlineError = "Bağlantı kurulamadı. Tekrar dene veya çevrimdışı kataloğu kullan." }
                 }
             }
-        }.start()
+        }
     }
     var savedFoods by remember {
         mutableStateOf(runCatching {
