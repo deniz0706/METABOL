@@ -86,6 +86,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val prefs = remember(context) { context.getSharedPreferences("metabol_nutrition", Context.MODE_PRIVATE) }
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var selectedDay by remember { mutableStateOf(today) }
+    val noteKey = "note_$selectedDay"
+    var dailyNote by remember(noteKey) {
+        mutableStateOf(prefs.getString(noteKey, "") ?: "")
+    }
+    var noteSaved by remember(noteKey) { mutableStateOf(false) }
     val storageKey = "meals_$selectedDay"
     val waterKey = "water_$selectedDay"
     var waterMl by remember(waterKey) {
@@ -368,6 +373,28 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 }
                 Text("Yalnızca kaydedilen su miktarıdır; kişisel su ihtiyacı tahmini değildir.",
                     color = NutritionMuted, fontSize = 11.sp)
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(24.dp))
+                .padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("GÜNLÜK NOT", color = NutritionMint, fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                OutlinedTextField(
+                    value = dailyNote,
+                    onValueChange = { dailyNote = it.take(2000); noteSaved = false },
+                    label = { Text("Açlık, tokluk, egzersiz veya gününle ilgili not") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 5
+                )
+                Button(onClick = {
+                    if (dailyNote.isBlank()) prefs.edit().remove(noteKey).apply()
+                    else prefs.edit().putString(noteKey, dailyNote.trim()).apply()
+                    noteSaved = true
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (noteSaved) "Kaydedildi" else "Notu kaydet")
+                }
             }
         }
         item {
