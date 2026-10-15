@@ -117,7 +117,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
 }
 
 @Composable
-internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier) {
+internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onGoalChanged: () -> Unit = {}) {
     var message by remember { mutableStateOf("") }
     val profilePrefs = remember(context) { context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE) }
     var goalInput by remember { mutableStateOf(profilePrefs.getString("goal_weight", "") ?: "") }
@@ -177,6 +177,7 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier) {
                     if (goalValid) {
                         profilePrefs.edit().putString("goal_weight", goalValue.toString()).apply()
                         message = "Hedef kaydedildi."
+                        onGoalChanged()
                     }
                 }, enabled = goalValid, modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = SMint, contentColor = SBack)) {
@@ -186,6 +187,7 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier) {
                     goalInput = ""
                     profilePrefs.edit().remove("goal_weight").apply()
                     message = "Hedef kaldırıldı."
+                    onGoalChanged()
                 }) { Text("Hedefi kaldır", color = SMuted) }
             }
         }
@@ -230,7 +232,7 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier) {
             confirmButton = {
                 TextButton(onClick = {
                     message = runCatching {
-                        if (restoreBackup(context, pendingImport!!)) "Yedek geri yüklendi. Uygulamayı kapatıp yeniden aç."
+                        if (restoreBackup(context, pendingImport!!)) { onGoalChanged(); "Yedek geri yüklendi. Uygulamayı kapatıp yeniden aç." }
                         else "Geçersiz yedek dosyası."
                     }.getOrElse { "Geri yükleme başarısız: ${it.message}" }
                     pendingImport = null
