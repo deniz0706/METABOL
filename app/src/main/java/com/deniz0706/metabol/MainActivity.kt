@@ -58,14 +58,14 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val Bg = Color(0xFF110F1B)
-private val Surface = Color(0xFF211C30)
-private val Surface2 = Color(0xFF352C43)
-private val Mint = Color(0xFFFFBE76)
-private val Violet = Color(0xFFEB91C6)
-private val Muted = Color(0xFFB9ACCA)
-private val White = Color(0xFFFFF7EE)
-private val Edge = Color(0xFF45364D)
+private val Bg = Color(0xFF0B1220)
+private val Surface = Color(0xFF172337)
+private val Surface2 = Color(0xFF22334A)
+private val Mint = Color(0xFF57D6C1)
+private val Violet = Color(0xFF80A9FF)
+private val Muted = Color(0xFF9AAFC5)
+private val White = Color(0xFFF3F8FF)
+private val Edge = Color(0xFF30445C)
 private val dateFormat get() = SimpleDateFormat("dd MMM", Locale("tr", "TR"))
 private val numberFormat get() = java.text.DecimalFormat("0.0")
 
@@ -134,7 +134,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
                     labels.forEachIndexed { index, title ->
                         val active = tab == index
                         val pillColor by animateColorAsState(
-                            if (active) Color(0xFFFFBE76) else Color.Transparent,
+                            if (active) Color(0xFF57D6C1) else Color.Transparent,
                             animationSpec = tween(280), label = "navigation-pill"
                         )
                         val symbolColor by animateColorAsState(
@@ -310,7 +310,7 @@ private fun Dashboard(
                     Text(SimpleDateFormat("dd MMMM yyyy", Locale("tr", "TR")).format(Date()),
                         color = Muted, fontSize = 12.sp)
                 }
-                Box(Modifier.size(54.dp).background(Color(0xFF53374D), CircleShape),
+                Box(Modifier.size(54.dp).background(Color(0xFF22475A), CircleShape),
                     contentAlignment = Alignment.Center) {
                     Text("M", color = Mint, fontSize = 27.sp, fontWeight = FontWeight.Black)
                 }
@@ -320,23 +320,23 @@ private fun Dashboard(
             AnimatedVisibility(visible = revealed, enter = fadeIn(tween(550)) + scaleIn(initialScale = 0.94f, animationSpec = tween(550))) {
             Column(
                 Modifier.fillMaxWidth()
-                    .background(Brush.linearGradient(listOf(Color(0xFF70415B), Color(0xFF3B2945))),
+                    .background(Brush.linearGradient(listOf(Color(0xFF23445A), Color(0xFF10243B))),
                         RoundedCornerShape(30.dp))
                     .padding(23.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("SON KİLO ÖLÇÜMÜ", color = Color(0xFFFFD6B0),
+                Text("SON KİLO ÖLÇÜMÜ", color = Color(0xFFB2E9E2),
                     fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(latest?.let { numberFormat.format(it.kg) } ?: "—",
                         color = White, fontSize = 65.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.width(7.dp))
-                    Text("kg", color = Color(0xFFFFD6B0), fontSize = 20.sp,
+                    Text("kg", color = Color(0xFFB2E9E2), fontSize = 20.sp,
                         modifier = Modifier.padding(bottom = 12.dp))
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.background(Color(0x44321B37), RoundedCornerShape(12.dp))
+                    Box(Modifier.background(Color(0x44304759), RoundedCornerShape(12.dp))
                         .padding(horizontal = 12.dp, vertical = 8.dp)) {
                         Text(change?.let {
                             (if (it > 0) "+" else "") + numberFormat.format(it) + " kg"
@@ -352,12 +352,12 @@ private fun Dashboard(
                     val low = recent.minOf { it.kg }
                     val high = recent.maxOf { it.kg }
                     val spread = (high - low).coerceAtLeast(0.5f)
-                    Column(Modifier.fillMaxWidth().background(Color(0x33201630),
+                    Column(Modifier.fillMaxWidth().background(Color(0x3320374C),
                         RoundedCornerShape(18.dp)).padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("SON ${recent.size} ÖLÇÜM", color = Color(0xFFFFD6B0),
+                            Text("SON ${recent.size} ÖLÇÜM", color = Color(0xFFB2E9E2),
                                 fontSize = 10.sp, letterSpacing = 1.sp)
                             Text("${numberFormat.format(low)} – ${numberFormat.format(high)} kg",
                                 color = White, fontSize = 11.sp)
@@ -406,7 +406,7 @@ private fun Dashboard(
                                     modifier = Modifier.fillMaxSize(),
                                     strokeWidth = 8.dp,
                                     color = Mint,
-                                    trackColor = Color(0x66553344),
+                                    trackColor = Color(0x6630465D),
                                     strokeCap = StrokeCap.Round
                                 )
                                 Text("${(animatedProgress * 100).roundToInt()}%",
@@ -414,7 +414,7 @@ private fun Dashboard(
                                     fontWeight = FontWeight.ExtraBold)
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                                Text("HEDEFE İLERLEME", color = Color(0xFFFFD6B0),
+                                Text("HEDEFE İLERLEME", color = Color(0xFFB2E9E2),
                                     fontSize = 10.sp, letterSpacing = 1.sp)
                                 Text("İlk tartıdan bugüne", color = White,
                                     fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
