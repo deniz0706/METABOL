@@ -109,12 +109,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         } else if (tab == 3) {
             BodyCompositionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
         } else {
-            Column(Modifier.fillMaxSize().padding(insets).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Header()
-                Text(if (tab == 1) "BESLENME" else "AYARLAR", color = Muted, letterSpacing = 3.sp)
-                Text("Bu modül geliştirme aşamasında.", color = White, fontSize = 21.sp)
-                Text("Henüz çalışmayan özellikler tamamlanmış gibi gösterilmiyor.", color = Muted)
-            }
+            SettingsScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
         }
     }
     if (addDialog) {
