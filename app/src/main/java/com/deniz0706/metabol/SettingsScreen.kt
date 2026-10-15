@@ -52,7 +52,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
     val data = root.getJSONObject("data")
     // Validate all groups and their JSON payloads before modifying any stored data.
     val prepared = preferenceNames.associateWith { name ->
-        val group = data.getJSONObject(name)
+        val group = data.optJSONObject(name) ?: if (name == "metabol_profile") JSONObject() else return false
         val entries = mutableMapOf<String, String>()
         val iterator = group.keys()
         while (iterator.hasNext()) {
