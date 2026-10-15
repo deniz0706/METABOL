@@ -2,7 +2,7 @@ name: Android APK Builds
 
 on:
   push:
-    branches: [main, feature/metabol-foundation]
+    branches: [main, feature/metabol-foundation, experiment/fresh-ui]
   pull_request:
     branches: [main]
   workflow_dispatch:
