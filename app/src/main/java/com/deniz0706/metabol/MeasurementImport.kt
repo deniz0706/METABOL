@@ -66,7 +66,13 @@ internal object MeasurementImport {
             val waist = optional("abdomenCm", 300.0)
             if (!bodyDates.add(date)) { skipped++; continue }
             existingBodies.put(JSONObject().put("id", time).put("fat", fat)
-                .put("muscle", muscle).put("waist", waist))
+                .put("muscle", muscle).put("waist", waist)
+                .put("bone", optional("boneKg", 20.0))
+                .put("water", optional("waterPercent", 100.0))
+                .put("chest", optional("chestCm", 300.0))
+                .put("underChest", optional("underChestCm", 300.0))
+                .put("metabolicAge", optional("metabolicAge", 120.0))
+                .put("visceralFat", optional("visceralFat", 100.0)))
             addedBodies++
         }
         // Keep the original import document, including extra body fields and uncertain
