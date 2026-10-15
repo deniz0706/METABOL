@@ -1,6 +1,7 @@
 package com.deniz0706.metabol
 
 import android.content.Context
+import android.app.DatePickerDialog
 import android.os.Handler
 import android.os.Looper
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -274,6 +275,20 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             Text("Beslenme", color = NutritionWhite, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
             Text("Kayıtların, alışkanlıkların, ilerlemen.", color = NutritionMuted, fontSize = 13.sp)
             Spacer(Modifier.height(20.dp))
+            OutlinedButton(
+                onClick = {
+                    val parsed = runCatching { LocalDate.parse(selectedDay) }
+                        .getOrDefault(LocalDate.now())
+                    DatePickerDialog(context, { _, year, month, day ->
+                        selectedDay = LocalDate.of(year, month + 1, day).toString()
+                    }, parsed.year, parsed.monthValue - 1, parsed.dayOfMonth).apply {
+                        datePicker.maxDate = System.currentTimeMillis()
+                    }.show()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp)
+            ) { Text("▦  Takvimden tarih seç", color = NutritionMint) }
+            Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(18.dp))
                 .padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
