@@ -120,7 +120,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                 "metabol_body" -> key == "records"
                 "metabol_profile" -> key in listOf("goal_weight", "calorie_target", "protein_target", "science_age", "science_height", "science_sex", "science_activity")
                 "metabol_nutrition" -> key.startsWith("meals_") || key.startsWith("water_") || key.startsWith("note_") ||
-                    key == "recent_foods" || key == "saved_foods"
+                    key == "recent_foods" || key == "saved_foods" || key == "meal_templates"
                 else -> false
             }
             if (!allowed) return false
@@ -130,6 +130,19 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                     if (array.length() > 8) return false
                     for (i in 0 until array.length()) {
                         if (array.getString(i).length !in 1..120) return false
+                    }
+                }
+                name == "metabol_nutrition" && key == "meal_templates" -> {
+                    val array = JSONArray(value)
+                    if (array.length() > 30) return false
+                    for (i in 0 until array.length()) {
+                        val item = array.getJSONObject(i)
+                        if (item.getString("name").length !in 1..300 ||
+                            item.getInt("calories") !in 0..10000) return false
+                        for (field in listOf("protein", "carbs", "fat")) {
+                            val amount = item.getDouble(field)
+                            if (!amount.isFinite() || amount !in 0.0..1000.0) return false
+                        }
                     }
                 }
                 name == "metabol_nutrition" && key == "saved_foods" -> {
