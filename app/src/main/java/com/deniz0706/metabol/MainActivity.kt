@@ -405,9 +405,11 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
     var smoothLine by remember { mutableStateOf(true) }
     var chartPeriod by remember { mutableIntStateOf(0) }
     val today = System.currentTimeMillis()
-    val records = entries.sortedBy { it.time }.filter {
-        val days = when (chartPeriod) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
-        days == null || (it.time >= today - days * 86_400_000L && it.time <= today)
+    val records = remember(entries, chartPeriod) {
+        entries.sortedBy { it.time }.filter {
+            val days = when (chartPeriod) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
+            days == null || (it.time >= today - days * 86_400_000L && it.time <= today)
+        }
     }
     val min = (records.minOfOrNull { it.kg } ?: 80f) - 2f
     val max = (records.maxOfOrNull { it.kg } ?: 120f) + 2f
