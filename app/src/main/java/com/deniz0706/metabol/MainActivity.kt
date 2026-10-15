@@ -270,7 +270,12 @@ private fun MetricCard(title: String, value: String, caption: String, modifier: 
 @Composable
 private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifier) {
     var selected by remember(entries) { mutableIntStateOf(-1) }
-    val records = entries.sortedBy { it.time }
+    var chartPeriod by remember { mutableIntStateOf(0) }
+    val today = System.currentTimeMillis()
+    val records = entries.sortedBy { it.time }.filter {
+        val days = when (chartPeriod) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
+        days == null || (it.time >= today - days * 86_400_000L && it.time <= today)
+    }
     val min = (records.minOfOrNull { it.kg } ?: 80f) - 2f
     val max = (records.maxOfOrNull { it.kg } ?: 120f) + 2f
     val range = (max - min).coerceAtLeast(1f)
@@ -281,7 +286,22 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                 dateFormat.format(Date(records[selected].time)) + "  ·  " + numberFormat.format(records[selected].kg) + " kg"
                 else "Grafiğe dokun", color = Mint, fontSize = 11.sp)
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("Tümü", "7G", "30G", "90G").forEachIndexed { index, label ->
+                FilterChip(
+                    selected = chartPeriod == index,
+                    onClick = { chartPeriod = index; selected = -1 },
+                    label = { Text(label, fontSize = 10.sp) },
+                    modifier = Modifier.weight(1f),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Mint, selectedLabelColor = Bg,
+                        containerColor = Surface2, labelColor = Muted
+                    )
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
         if (records.isEmpty()) {
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                 Text("Grafik için ölçüm ekle", color = Muted)
