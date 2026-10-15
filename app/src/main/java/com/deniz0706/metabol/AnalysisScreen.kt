@@ -18,12 +18,12 @@ import java.text.DecimalFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private val ABack = Color(0xFF070B12)
-private val APanel = Color(0xFF121C28)
-private val AText = Color(0xFFF4F8FC)
-private val AMuted = Color(0xFF8B9CB2)
-private val AMint = Color(0xFF71E8C4)
-private val AEdge = Color(0xFF2A394B)
+private val ABack = Color(0xFF110F1B)
+private val APanel = Color(0xFF211C30)
+private val AText = Color(0xFFFFF7EE)
+private val AMuted = Color(0xFFB9ACCA)
+private val AMint = Color(0xFFFFBE76)
+private val AEdge = Color(0xFF45364D)
 private val fmt = DecimalFormat("0.0")
 
 internal data class WeightPoint(val timestamp: Long, val kg: Float)
@@ -96,7 +96,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                 Text("KİLO TAKİBİ  /  02", color = AMuted, fontSize = 10.sp, letterSpacing = 1.sp)
             }
             Spacer(Modifier.height(24.dp))
-            Text("Analiz", color = AText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Değişimin hikâyesi", color = AText, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(4.dp))
             Text("Kilonun zaman içinde nasıl değiştiğini gör.", color = AMuted, fontSize = 13.sp)
         }
