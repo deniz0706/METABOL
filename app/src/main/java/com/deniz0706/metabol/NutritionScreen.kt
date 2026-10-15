@@ -759,45 +759,61 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         } else {
             items(meals, key = { it.id }) { meal ->
-                Row(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(18.dp)).padding(16.dp)) {
-                    Column(Modifier.weight(1f)) {
-                        Text(meal.name, color = NutritionWhite, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.height(6.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("${meal.calories} kcal", color = NutritionMint,
-                                fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.width(10.dp))
-                            Text("P ${meal.protein.toInt()} · K ${meal.carbs.toInt()} · Y ${meal.fat.toInt()} g",
-                                color = NutritionMuted, fontSize = 10.sp)
+                Column(
+                    Modifier.fillMaxWidth()
+                        .background(NutritionPanel, RoundedCornerShape(18.dp))
+                        .border(1.dp, Color(0xFF30445C), RoundedCornerShape(18.dp))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top) {
+                        Text(meal.name, color = NutritionWhite,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f))
+                        Spacer(Modifier.width(12.dp))
+                        Text("${meal.calories} kcal", color = NutritionMint,
+                            fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("P ${meal.protein.toInt()} g", color = NutritionMint, fontSize = 11.sp)
+                        Text("K ${meal.carbs.toInt()} g", color = Color(0xFF80A9FF), fontSize = 11.sp)
+                        Text("Y ${meal.fat.toInt()} g", color = Color(0xFFFFC483), fontSize = 11.sp)
+                    }
+                    val proteinEnergy = (meal.protein * 4).coerceAtLeast(0.0)
+                    val carbEnergy = (meal.carbs * 4).coerceAtLeast(0.0)
+                    val fatEnergy = (meal.fat * 9).coerceAtLeast(0.0)
+                    val macroEnergy = proteinEnergy + carbEnergy + fatEnergy
+                    if (macroEnergy > 0.0) {
+                        Row(Modifier.fillMaxWidth().height(5.dp)
+                            .background(Color(0xFF263544), RoundedCornerShape(4.dp))) {
+                            if (proteinEnergy > 0.0) Box(Modifier.fillMaxHeight()
+                                .weight(proteinEnergy.toFloat()).background(NutritionMint))
+                            if (carbEnergy > 0.0) Box(Modifier.fillMaxHeight()
+                                .weight(carbEnergy.toFloat()).background(Color(0xFF80A9FF)))
+                            if (fatEnergy > 0.0) Box(Modifier.fillMaxHeight()
+                                .weight(fatEnergy.toFloat()).background(Color(0xFFFFC483)))
                         }
-                        Spacer(Modifier.height(10.dp))
-                        val macroEnergy = meal.protein * 4 + meal.carbs * 4 + meal.fat * 9
-                        if (macroEnergy > 0) {
-                            Row(Modifier.fillMaxWidth().height(4.dp)
-                                .background(Color(0xFF263544), RoundedCornerShape(4.dp))) {
-                                Box(Modifier.fillMaxHeight()
-                                    .weight((meal.protein * 4 / macroEnergy).toFloat().coerceAtLeast(0.001f))
-                                    .background(Color(0xFF57D6C1)))
-                                Box(Modifier.fillMaxHeight()
-                                    .weight((meal.carbs * 4 / macroEnergy).toFloat().coerceAtLeast(0.001f))
-                                    .background(Color(0xFF80A9FF)))
-                                Box(Modifier.fillMaxHeight()
-                                    .weight((meal.fat * 9 / macroEnergy).toFloat().coerceAtLeast(0.001f))
-                                    .background(Color(0xFFFFC483)))
+                    }
+                    HorizontalDivider(color = Color(0xFF30445C))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = {
+                            if (templates.none { it.name == meal.name &&
+                                    it.calories == meal.calories &&
+                                    it.protein == meal.protein &&
+                                    it.carbs == meal.carbs && it.fat == meal.fat }) {
+                                storeTemplates(templates + meal)
                             }
+                        }, enabled = templates.size < 30) {
+                            Text("Şablon", color = NutritionMint, fontSize = 12.sp)
                         }
-                    }
-                    TextButton(onClick = {
-                        if (templates.none { it.name == meal.name && it.calories == meal.calories &&
-                                it.protein == meal.protein && it.carbs == meal.carbs && it.fat == meal.fat }) {
-                            storeTemplates(templates + meal)
+                        TextButton(onClick = { editingMeal = meal; dialogOpen = true }) {
+                            Text("Düzenle", color = NutritionMint, fontSize = 12.sp)
                         }
-                    }, enabled = templates.size < 30) { Text("Şablon", color = NutritionMint) }
-                    TextButton(onClick = { editingMeal = meal; dialogOpen = true }) {
-                        Text("Düzenle", color = NutritionMint)
-                    }
-                    TextButton(onClick = { pendingDeleteMeal = meal }) {
-                        Text("Sil", color = Color(0xFFFF879A))
+                        TextButton(onClick = { pendingDeleteMeal = meal }) {
+                            Text("Sil", color = Color(0xFFFF879A), fontSize = 12.sp)
+                        }
                     }
                 }
             }
