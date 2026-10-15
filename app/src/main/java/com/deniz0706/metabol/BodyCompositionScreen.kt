@@ -1,6 +1,7 @@
 package com.deniz0706.metabol
 
 import android.content.Context
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -103,6 +107,71 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BodyMint, contentColor = BodyBg)) {
                 Text("+  Vücut ölçümü ekle", fontWeight = FontWeight.Bold)
+            }
+        }
+        if (records.size >= 2) {
+            item {
+                var chartMode by remember { mutableIntStateOf(0) }
+                Column(Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("VÜCUT ÖLÇÜM EĞİLİMİ", color = BodyMuted, fontSize = 11.sp, letterSpacing = 1.5.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("Yağ %", "Kas kg", "Bel cm").forEachIndexed { index, title ->
+                            FilterChip(
+                                selected = chartMode == index, onClick = { chartMode = index },
+                                label = { Text(title, fontSize = 11.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = BodyMint,
+                                    selectedLabelColor = BodyBg
+                                )
+                            )
+                        }
+                    }
+                    val data = records.mapNotNull { record ->
+                        val value = when (chartMode) {
+                            0 -> record.fatPercent
+                            1 -> record.muscleKg
+                            else -> record.waistCm
+                        }
+                        value?.let { record.id to it }
+                    }
+                    if (data.size < 2) {
+                        Text("Grafik için bu alanda en az iki ölçüm gerekli.",
+                            color = BodyMuted, fontSize = 12.sp)
+                    } else {
+                        val minimum = data.minOf { it.second }
+                        val maximum = data.maxOf { it.second }
+                        val padding = ((maximum - minimum) * 0.12).coerceAtLeast(0.5)
+                        val low = minimum - padding
+                        val high = maximum + padding
+                        val firstTime = data.first().first
+                        val timeSpan = (data.last().first - firstTime).coerceAtLeast(1L)
+                        Text(String.format(Locale.US, "Min %.1f    Maks %.1f", minimum, maximum),
+                            color = BodyMint, fontSize = 12.sp)
+                        Canvas(Modifier.fillMaxWidth().height(160.dp)) {
+                            val left = 8.dp.toPx()
+                            val right = size.width - 8.dp.toPx()
+                            val top = 8.dp.toPx()
+                            val bottom = size.height - 8.dp.toPx()
+                            repeat(4) { row ->
+                                val y = top + row * (bottom - top) / 3f
+                                drawLine(Color(0xFF2A394B), Offset(left, y), Offset(right, y), 1.dp.toPx())
+                            }
+                            val points = data.map { (time, value) ->
+                                Offset(
+                                    left + (time - firstTime).toFloat() / timeSpan * (right - left),
+                                    top + ((high - value) / (high - low)).toFloat() * (bottom - top)
+                                )
+                            }
+                            val path = Path().apply {
+                                moveTo(points.first().x, points.first().y)
+                                points.drop(1).forEach { lineTo(it.x, it.y) }
+                            }
+                            drawPath(path, BodyMint, style = Stroke(2.5.dp.toPx()))
+                            points.forEach { drawCircle(BodyMint, 3.5.dp.toPx(), it) }
+                        }
+                    }
+                }
             }
         }
         item { Text("ÖLÇÜM GEÇMİŞİ", color = BodyMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
