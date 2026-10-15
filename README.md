@@ -46,3 +46,7 @@ Developed by Deniz.
 ## Offline food lookup (preview)
 
 The app includes a **small built-in reference catalog** of common foods, with approximate values per 100 g. Search by name, choose a food, enter grams, and the app calculates kcal, protein, carbohydrate and fat before adding the entry. This works offline and requires no API key. **It is not a verified nutrition database**; numbers are approximate reference values and are not suitable for precise medical dietary management. Prepared food and packaged product values depend on brand, recipe, cooking fat, and serving size. Prefer the package label or manually corrected entries when available. A verified external database and barcode scanning are not implemented yet.
+
+## Nutrition entry improvements
+
+Recent foods are stored locally and appear first in the offline catalog. Portion presets (50/100/150/200 g) speed up logging; arbitrary gram values remain available. Meal history cards visualize the relative **macro-derived energy** split (protein/carbohydrate/fat), not the share of the entered label calories. Reference values remain estimates and can be corrected through manual meal editing.
