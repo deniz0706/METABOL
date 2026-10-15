@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -403,6 +405,13 @@ private fun MetricCard(title: String, value: String, caption: String, modifier: 
 private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifier) {
     var selected by remember(entries) { mutableIntStateOf(-1) }
     var smoothLine by remember { mutableStateOf(true) }
+    var showDots by remember { mutableStateOf(false) }
+    var reveal by remember { mutableStateOf(false) }
+    val revealProgress by animateFloatAsState(
+        targetValue = if (reveal) 1f else 0f,
+        animationSpec = tween(durationMillis = 950, easing = FastOutSlowInEasing),
+        label = "Kilo grafiği çizim animasyonu"
+    )
     var chartPeriod by remember { mutableIntStateOf(0) }
     val today = System.currentTimeMillis()
     val records = remember(entries, chartPeriod) {
@@ -410,6 +419,11 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
             val days = when (chartPeriod) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
             days == null || (it.time >= today - days * 86_400_000L && it.time <= today)
         }
+    }
+    LaunchedEffect(records) {
+        reveal = false
+        withFrameNanos { }
+        reveal = true
     }
     val axisPaint = remember {
         android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
@@ -444,8 +458,12 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Yumuşatılmış eğri", color = Muted, fontSize = 11.sp)
+            Text("Yumuşak çizgi", color = Muted, fontSize = 11.sp)
             Switch(checked = smoothLine, onCheckedChange = { smoothLine = it },
+                colors = SwitchDefaults.colors(checkedThumbColor = Bg, checkedTrackColor = Mint))
+            Spacer(Modifier.width(8.dp))
+            Text("Noktalar", color = Muted, fontSize = 11.sp)
+            Switch(checked = showDots, onCheckedChange = { showDots = it },
                 colors = SwitchDefaults.colors(checkedThumbColor = Bg, checkedTrackColor = Mint))
         }
         if (records.isEmpty()) {
@@ -506,15 +524,22 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                         lineTo(points.first().x, bottom)
                         close()
                     }
-                    drawPath(area, Brush.verticalGradient(listOf(Mint.copy(alpha = .24f), Mint.copy(alpha = 0f))))
-                    drawPath(path, Mint, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+                    clipRect(left = left, top = top, right = left + width * revealProgress, bottom = bottom + 1.dp.toPx()) {
+                        drawPath(area, Brush.verticalGradient(listOf(Mint.copy(alpha = .22f), Mint.copy(alpha = 0f))))
+                        drawPath(path, Mint, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+                    }
                 }
                 points.forEachIndexed { index, point ->
+                    if (point.x > left + width * revealProgress + 1.dp.toPx()) return@forEachIndexed
                     val active = index == selected
-                    drawCircle(if (active) Bg else Mint, if (active) 7.dp.toPx() else 3.dp.toPx(), point)
                     if (active) {
-                        drawLine(Violet.copy(alpha = .75f), Offset(point.x, top), Offset(point.x, bottom), 1.dp.toPx())
-                        drawCircle(Mint, 5.dp.toPx(), point)
+                        drawLine(Violet.copy(alpha = .65f), Offset(point.x, top), Offset(point.x, bottom), 1.dp.toPx())
+                        drawCircle(Mint.copy(alpha = .20f), 11.dp.toPx(), point)
+                        drawCircle(Bg, 6.dp.toPx(), point)
+                        drawCircle(Mint, 4.dp.toPx(), point)
+                    } else if (showDots) {
+                        drawCircle(Surface, 4.dp.toPx(), point)
+                        drawCircle(Mint, 2.5.dp.toPx(), point)
                     }
                 }
             }
