@@ -124,6 +124,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var dialogOpen by remember { mutableStateOf(false) }
     var editingMeal by remember { mutableStateOf<MealEntry?>(null) }
     var catalogOpen by remember { mutableStateOf(false) }
+    var compareOpen by remember { mutableStateOf(false) }
     var onlineResults by remember { mutableStateOf<List<FoodReference>>(emptyList()) }
     var onlineLoading by remember { mutableStateOf(false) }
     var onlineError by remember { mutableStateOf<String?>(null) }
@@ -641,6 +642,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("Öğün şablonundan ekle (${templates.size})", color = NutritionMint)
             }
         }
+        item {
+            OutlinedButton(onClick = { compareOpen = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Besin karşılaştır · 100 gram üzerinden", color = NutritionMint)
+            }
+        }
         item { Text("SEÇİLİ GÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
         if (meals.isEmpty()) {
             item {
@@ -695,6 +701,45 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         item {
             Text("Besin değerleri kullanıcı girişidir; otomatik doğrulanmaz.", color = NutritionMuted, fontSize = 11.sp)
         }
+    }
+
+    if (compareOpen) {
+        var queryA by remember { mutableStateOf("") }
+        var queryB by remember { mutableStateOf("") }
+        val first = remember(queryA, savedFoods) {
+            (savedFoods + FoodCatalog.search(queryA)).firstOrNull {
+                it.name.equals(queryA.trim(), ignoreCase = true)
+            }
+        }
+        val second = remember(queryB, savedFoods) {
+            (savedFoods + FoodCatalog.search(queryB)).firstOrNull {
+                it.name.equals(queryB.trim(), ignoreCase = true)
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { compareOpen = false },
+            title = { Text("Besin karşılaştırma") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(value = queryA, onValueChange = { queryA = it.take(120) },
+                        label = { Text("Birinci besin · tam ad") }, singleLine = true)
+                    OutlinedTextField(value = queryB, onValueChange = { queryB = it.take(120) },
+                        label = { Text("İkinci besin · tam ad") }, singleLine = true)
+                    Text("Katalogda veya kayıtlı ürünlerinde bulunan tam besin adını yaz.",
+                        fontSize = 11.sp)
+                    if (first != null && second != null) {
+                        Text("100 gram için", fontWeight = FontWeight.Bold)
+                        Text("Enerji: ${first.kcal100.toInt()} / ${second.kcal100.toInt()} kcal")
+                        Text("Protein: ${first.protein100} / ${second.protein100} g")
+                        Text("Karbonhidrat: ${first.carbs100} / ${second.carbs100} g")
+                        Text("Yağ: ${first.fat100} / ${second.fat100} g")
+                    } else Text("Karşılaştırma için iki besini de eşleştir.", fontSize = 12.sp)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { compareOpen = false }) { Text("Kapat") }
+            }
+        )
     }
 
     if (catalogOpen) {
