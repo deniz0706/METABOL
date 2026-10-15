@@ -14,6 +14,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -25,8 +27,8 @@ import java.text.ParsePosition
 import java.util.Date
 import java.util.Locale
 
-private val BodyBg = Color(0xFF080D15)
-private val BodyCard = Color(0xFF131C2A)
+private val BodyBg = Color(0xFF070B12)
+private val BodyCard = Color(0xFF121C28)
 private val BodyMint = Color(0xFF71E8C4)
 private val BodyText = Color(0xFFF4F8FC)
 private val BodyMuted = Color(0xFF8B9CB2)
@@ -65,11 +67,28 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
     LazyColumn(modifier.fillMaxSize().background(BodyBg), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text("M E T A B O L", color = BodyMint, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("M E T A B O L", color = BodyMint, fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 3.sp, fontSize = 13.sp)
+                Text("BODY / 03", color = BodyMuted, fontSize = 10.sp, letterSpacing = 1.sp)
+            }
             Spacer(Modifier.height(24.dp))
-            Text("VÜCUT KOMPOZİSYONU", color = BodyMuted, fontSize = 11.sp, letterSpacing = 2.sp)
-            Spacer(Modifier.height(8.dp))
-            Text("Ölçümlerini takip et.", color = BodyText, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+            Text("Vücut", color = BodyText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(4.dp))
+            Text("Ölçümlerindeki değişimi takip et.", color = BodyMuted, fontSize = 13.sp)
+            Spacer(Modifier.height(18.dp))
+            Column(Modifier.fillMaxWidth()
+                .background(Brush.linearGradient(listOf(Color(0xFF20463E), Color(0xFF172B35), BodyCard)),
+                    RoundedCornerShape(28.dp)).padding(23.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("SON VÜCUT ANALİZİ", color = BodyMint, fontSize = 11.sp, letterSpacing = 1.5.sp)
+                Text(latest?.let {
+                    SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR")).format(Date(it.id))
+                } ?: "Henüz ölçüm yok", color = BodyText, fontSize = 25.sp,
+                    fontWeight = FontWeight.ExtraBold)
+                Text("${records.size} kayıt · Yağ, kas ve bel çevresi", color = BodyMuted, fontSize = 12.sp)
+            }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
