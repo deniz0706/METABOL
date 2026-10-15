@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Calendar
 import java.util.Locale
+import java.time.LocalDate
 
 private val NutritionBg = Color(0xFF070B12)
 private val NutritionPanel = Color(0xFF121C28)
@@ -217,6 +218,30 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         prefs.edit().putString(storageKey, json.toString()).apply()
         historyRevision++
     }
+    var insightsWindow by remember { mutableIntStateOf(30) }
+    val insights = remember(selectedDay, historyRevision, insightsWindow) {
+        val anchor = runCatching { LocalDate.parse(selectedDay) }.getOrDefault(LocalDate.now())
+        val recorded = (0 until insightsWindow).mapNotNull { offset ->
+            val date = anchor.minusDays(offset.toLong())
+            val key = "meals_$date"
+            if (!prefs.contains(key)) return@mapNotNull null
+            val array = runCatching { JSONArray(prefs.getString(key, "[]")) }.getOrNull()
+                ?: return@mapNotNull null
+            var kcal = 0
+            var proteinSum = 0.0
+            var carbSum = 0.0
+            var fatSum = 0.0
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                kcal += item.optInt("calories", 0).coerceAtLeast(0)
+                proteinSum += item.optDouble("protein", 0.0).coerceAtLeast(0.0)
+                carbSum += item.optDouble("carbs", 0.0).coerceAtLeast(0.0)
+                fatSum += item.optDouble("fat", 0.0).coerceAtLeast(0.0)
+            }
+            NutritionDay(date, kcal, proteinSum, carbSum, fatSum, array.length())
+        }
+        NutritionInsights.summarize(recorded, insightsWindow, anchor)
+    }
     val calories = meals.sumOf { it.calories }
     val protein = meals.sumOf { it.protein }
     val carbs = meals.sumOf { it.carbs }
@@ -354,6 +379,65 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Text("7 günlük kayıt toplamı: $sevenDayTotal kcal", color = NutritionWhite, fontSize = 13.sp)
                 Text("Kayıt bulunan gün: $recordedDays / 7", color = NutritionMuted, fontSize = 12.sp)
                 Text("Boş günler sıfır tüketim anlamına gelmez. Grafik kaydedilen enerjiyi gösterir.",
+                    color = NutritionMuted, fontSize = 11.sp)
+            }
+        }
+        item {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.linearGradient(listOf(Color(0xFF1C3340), NutritionPanel)),
+                        RoundedCornerShape(24.dp))
+                    .border(1.dp, Color(0xFF2B4650), RoundedCornerShape(24.dp))
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("KAYIT ANALİZİ", color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.6.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        listOf(7, 30, 90).forEach { window ->
+                            FilterChip(
+                                selected = insightsWindow == window,
+                                onClick = { insightsWindow = window },
+                                label = { Text("$window G", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = NutritionMint,
+                                    selectedLabelColor = NutritionBg)
+                            )
+                        }
+                    }
+                }
+                Text("${insights.recordedDays} / ${insights.windowDays} gün kayıtlı",
+                    color = NutritionWhite, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                LinearProgressIndicator(
+                    progress = { insights.recordedDays.toFloat() / insights.windowDays },
+                    modifier = Modifier.fillMaxWidth().height(7.dp),
+                    color = NutritionMint, trackColor = Color(0xFF2A394B)
+                )
+                HorizontalDivider(color = Color(0xFF2A394B))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text("KAYITLI GÜN ORT.", color = NutritionMuted, fontSize = 10.sp)
+                        Text(insights.averageRecordedCalories?.let { "$it kcal" } ?: "—",
+                            color = NutritionWhite, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column {
+                        Text("PROTEİN ORT.", color = NutritionMuted, fontSize = 10.sp)
+                        Text(insights.averageRecordedProtein?.let {
+                            String.format(Locale.US, "%.1f g", it)
+                        } ?: "—", color = NutritionMint, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Toplam kaydedilen öğün", color = NutritionMuted, fontSize = 12.sp)
+                    Text("${insights.totalMeals}", color = NutritionWhite, fontWeight = FontWeight.Bold)
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("En uzun kayıt serisi", color = NutritionMuted, fontSize = 12.sp)
+                    Text("${insights.longestRecordingStreak} gün", color = NutritionWhite,
+                        fontWeight = FontWeight.Bold)
+                }
+                Text("Ortalama yalnızca kayıt bulunan günlerden hesaplanır. Kayıt olmayan günler sıfır tüketim sayılmaz.",
                     color = NutritionMuted, fontSize = 11.sp)
             }
         }
