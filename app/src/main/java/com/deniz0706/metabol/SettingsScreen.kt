@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import org.json.JSONObject
+import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -44,6 +45,51 @@ internal fun createBackup(context: Context): String {
     }
     root.put("data", data)
     return root.toString(2)
+}
+
+private fun csvCell(value: String): String =
+    "\"" + value.replace("\"", "\"\"").replace("\r", " ").replace("\n", " ") + "\""
+
+internal fun exportMeasurementsCsv(context: Context): String {
+    val lines = mutableListOf("category,date,value,unit,detail")
+    val weightPrefs = context.getSharedPreferences("metabol_local", Context.MODE_PRIVATE)
+    val weights = runCatching { JSONArray(weightPrefs.getString("weights", "[]")) }.getOrDefault(JSONArray())
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    for (i in 0 until weights.length()) {
+        val item = weights.getJSONObject(i)
+        lines += listOf("weight", formatter.format(Date(item.getLong("time"))),
+            item.getDouble("kg").toString(), "kg", "").joinToString(",") { csvCell(it) }
+    }
+    val bodyPrefs = context.getSharedPreferences("metabol_body", Context.MODE_PRIVATE)
+    val body = runCatching { JSONArray(bodyPrefs.getString("records", "[]")) }.getOrDefault(JSONArray())
+    for (i in 0 until body.length()) {
+        val item = body.getJSONObject(i)
+        val date = formatter.format(Date(item.getLong("id")))
+        for ((field, unit) in listOf("fat" to "percent", "muscle" to "kg", "waist" to "cm")) {
+            if (!item.isNull(field)) {
+                lines += listOf("body", date, item.getDouble(field).toString(), unit, field)
+                    .joinToString(",") { csvCell(it) }
+            }
+        }
+    }
+    val nutrition = context.getSharedPreferences("metabol_nutrition", Context.MODE_PRIVATE)
+    nutrition.all.toSortedMap().forEach { (key, raw) ->
+        if (key.startsWith("meals_") && raw is String) {
+            val day = key.removePrefix("meals_")
+            val meals = runCatching { JSONArray(raw) }.getOrDefault(JSONArray())
+            for (i in 0 until meals.length()) {
+                val meal = meals.getJSONObject(i)
+                val name = meal.getString("name")
+                lines += listOf("nutrition", day, meal.getInt("calories").toString(), "kcal", name)
+                    .joinToString(",") { csvCell(it) }
+                for ((field, unit) in listOf("protein" to "g", "carbs" to "g", "fat" to "g")) {
+                    lines += listOf("nutrition", day, meal.getDouble(field).toString(), unit, "$name / $field")
+                        .joinToString(",") { csvCell(it) }
+                }
+            }
+        }
+    }
+    return "\uFEFF" + lines.joinToString("\n") + "\n"
 }
 
 internal fun restoreBackup(context: Context, source: String): Boolean {
@@ -136,6 +182,18 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
             }.getOrElse { "Dışa aktarma başarısız: ${it.message}" }
         }
     }
+    val csvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            message = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(exportMeasurementsCsv(context).toByteArray(Charsets.UTF_8))
+                } ?: error("Dosya açılamadı")
+                "CSV dışa aktarıldı."
+            }.getOrElse { "CSV dışa aktarılamadı: ${it.message}" }
+        }
+    }
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -203,6 +261,12 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                 }, modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = SMint, contentColor = SBack)) {
                     Text("Yedeği dışa aktar")
+                }
+                OutlinedButton(onClick = {
+                    val name = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+                    csvLauncher.launch("metabol-measurements-$name.csv")
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Ölçümleri CSV olarak dışa aktar", color = SMint)
                 }
                 OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
                     modifier = Modifier.fillMaxWidth()) { Text("Yedekten geri yükle", color = SMint) }
