@@ -33,7 +33,7 @@ internal object OpenFoodFacts {
             val address = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" +
                 URLEncoder.encode(term, "UTF-8") +
                 "&search_simple=1&action=process&json=1&page_size=60&" +
-                "fields=product_name,product_name_tr,brands,nutriments"
+                "fields=product_name,product_name_tr,brands,quantity,product_quantity,product_quantity_unit,nutriments"
             parse(request(address))
         }
     }
@@ -93,7 +93,16 @@ internal object OpenFoodFacts {
             val brand = product.optString("brands").trim().take(32)
             val displayName = if (brand.isBlank() || name.contains(brand, ignoreCase = true)) name
                 else "$brand · $name"
-            FoodReference(displayName.take(120),kcal,p,c,f,"Open Food Facts · Etiketten doğrula")
+            val quantity = product.optString("quantity")
+            val quantityNumber = product.optDouble("product_quantity", Double.NaN)
+            val quantityUnit = product.optString("product_quantity_unit")
+            val packageGrams = if (quantityNumber.isFinite() && quantityNumber in 1.0..5000.0 &&
+                quantityUnit.lowercase() in listOf("g", "gram", "grams")) quantityNumber.toInt()
+                else Regex("""(?i)(\\d{1,4})\\s*(?:g|gr|gram)\\b""").find(quantity)
+                    ?.groupValues?.get(1)?.toIntOrNull()
+            val note = if (packageGrams != null) "Open Food Facts · Paket: ${packageGrams} g · Etiketten doğrula"
+                else "Open Food Facts · Etiketten doğrula"
+            FoodReference(displayName.take(120),kcal,p,c,f,note)
         }.distinctBy { it.name }.take(60)
     }
 }
