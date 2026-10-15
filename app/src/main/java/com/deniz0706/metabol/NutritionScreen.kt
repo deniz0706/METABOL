@@ -2,6 +2,7 @@ package com.deniz0706.metabol
 
 import android.content.Context
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -505,6 +506,29 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 }
                 Text("Ortalama yalnızca kayıt bulunan günlerden hesaplanır. Kayıt olmayan günler sıfır tüketim sayılmaz.",
                     color = NutritionMuted, fontSize = 11.sp)
+                OutlinedButton(
+                    onClick = {
+                        val report = buildString {
+                            appendLine("METABOL · Beslenme kayıt özeti")
+                            appendLine("Bitiş: $selectedDay · Son ${insights.windowDays} gün")
+                            appendLine("Kayıtlı gün: ${insights.recordedDays}/${insights.windowDays}")
+                            appendLine("Kaydedilen öğün: ${insights.totalMeals}")
+                            appendLine("Kayıtlı gün ortalaması: ${insights.averageRecordedCalories?.toString() ?: "—"} kcal")
+                            appendLine("Ortalama protein: " +
+                                (insights.averageRecordedProtein?.let {
+                                    String.format(Locale.US, "%.1f g", it)
+                                } ?: "—"))
+                            appendLine("Kayıt olmayan günler hesaplamaya dahil edilmedi.")
+                        }
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, report)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Beslenme özetini paylaş"))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(13.dp)
+                ) { Text("↗  Bu özeti paylaş", color = NutritionMint) }
             }
         }
         item { Text("SEÇİLİ GÜNÜN KAYITLARI", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp) }
