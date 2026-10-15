@@ -1,6 +1,11 @@
 package com.deniz0706.metabol
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -226,8 +231,19 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                     Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text("İKİ TARİHİ KARŞILAŞTIR", color = BodyMint, fontSize = 11.sp,
-                        letterSpacing = 1.5.sp, fontWeight = FontWeight.Bold)
+                    var comparisonExpanded by remember { mutableStateOf(false) }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("ÖLÇÜMLERİ KARŞILAŞTIR", color = BodyMint, fontSize = 11.sp,
+                            letterSpacing = 1.5.sp, fontWeight = FontWeight.Bold)
+                        TextButton(onClick = { comparisonExpanded = !comparisonExpanded }) {
+                            Text(if (comparisonExpanded) "Kapat −" else "Aç +", color = BodyMint)
+                        }
+                    }
+                    AnimatedVisibility(visible = comparisonExpanded,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     var chooseStart by remember { mutableStateOf(false) }
                     var chooseEnd by remember { mutableStateOf(false) }
                     val dateLabel = remember {
@@ -284,6 +300,8 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                     }
                     Text("Yağ ve kas değerleri akıllı tartı tahminidir; su dengesi sonucu etkileyebilir.",
                         color = BodyMuted, fontSize = 11.sp)
+                        }
+                    }
                 }
             }
         }
