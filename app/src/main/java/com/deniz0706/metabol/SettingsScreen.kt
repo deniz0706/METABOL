@@ -70,7 +70,9 @@ internal fun exportMeasurementsCsv(context: Context): String {
     for (i in 0 until body.length()) {
         val item = body.getJSONObject(i)
         val date = formatter.format(Date(item.getLong("id")))
-        for ((field, unit) in listOf("fat" to "percent", "muscle" to "kg", "waist" to "cm")) {
+        for ((field, unit) in listOf("fat" to "percent", "muscle" to "kg", "waist" to "cm",
+            "bone" to "kg", "water" to "percent", "chest" to "cm",
+            "underChest" to "cm", "metabolicAge" to "years", "visceralFat" to "index")) {
             if (!item.isNull(field)) {
                 lines += listOf("body", date, item.getDouble(field).toString(), unit, field)
                     .joinToString(",") { csvCell(it) }
@@ -159,7 +161,9 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                     for (i in 0 until array.length()) {
                         val item = array.getJSONObject(i)
                         if (item.getLong("id") < 0) return false
-                        for ((field, limit) in listOf("fat" to 75.0, "muscle" to 300.0, "waist" to 300.0)) {
+                        for ((field, limit) in listOf("fat" to 75.0, "muscle" to 300.0, "waist" to 300.0,
+                            "bone" to 20.0, "water" to 100.0, "chest" to 300.0,
+                            "underChest" to 300.0, "metabolicAge" to 120.0, "visceralFat" to 100.0)) {
                             if (!item.isNull(field)) {
                                 val measurement = item.getDouble(field)
                                 if (!measurement.isFinite() || measurement < 0.0 || measurement > limit) return false
