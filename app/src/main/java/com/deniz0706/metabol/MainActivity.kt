@@ -293,6 +293,8 @@ private fun Dashboard(
     }
     val first = entries.firstOrNull()
     val change = if (latest != null && first != null) latest.kg - first.kg else null
+    var revealed by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { revealed = true }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item { Header() }
         item {
@@ -314,6 +316,7 @@ private fun Dashboard(
             }
         }
         item {
+            AnimatedVisibility(visible = revealed, enter = fadeIn(tween(550)) + scaleIn(initialScale = 0.94f, animationSpec = tween(550))) {
             Column(
                 Modifier.fillMaxWidth()
                     .background(Brush.linearGradient(listOf(Color(0xFF70415B), Color(0xFF3B2945))),
@@ -357,6 +360,7 @@ private fun Dashboard(
                 }
             }
         }
+            }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f)
