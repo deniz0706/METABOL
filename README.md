@@ -12,11 +12,11 @@
 | Nutrition | Daily calorie and macronutrient totals, add/edit/delete meals, navigate between dates, seven-day calorie comparison, macro-derived calorie estimate |
 | Analysis | Time-range filters, minimum/maximum, mean, total change, weekly rate, last-seven-measurements mean |
 | Body | Body-fat %, muscle mass and waist circumference, edit/delete records, change since previous measurement, trend charts for fat/muscle/waist |
-| Settings | Optional weight goal, offline JSON backup and restore, privacy information |
+| Settings | Optional weight goal, offline JSON backup and restore, CSV export, privacy information |
 
 ### Data and privacy
 
-The app stores its records locally in Android `SharedPreferences`; it does **not** have account sync or a server. Exported JSON backups contain personal body and nutrition measurements; store them securely. Restoring a backup replaces the existing local records and currently requires restarting the app to refresh every screen.
+The app stores its records locally in Android `SharedPreferences`; it does **not** have account sync or a server. Exported JSON backups and CSV files contain personal body and nutrition measurements; store them securely. Restoring a backup replaces the existing local records and currently requires restarting the app to refresh every screen.
 
 ### Calculations
 
