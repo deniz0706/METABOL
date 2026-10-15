@@ -183,6 +183,11 @@ private fun Dashboard(
     onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit, modifier: Modifier = Modifier
 ) {
     val latest = entries.lastOrNull()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val goal = remember(entries) {
+        context.getSharedPreferences("metabol_profile", android.content.Context.MODE_PRIVATE)
+            .getString("goal_weight", null)?.toFloatOrNull()
+    }
     val first = entries.firstOrNull()
     val change = if (latest != null && first != null) latest.kg - first.kg else null
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -215,6 +220,17 @@ private fun Dashboard(
                     Text((if (change > 0) "+" else "") + numberFormat.format(change) + " kg  ·  ilk ölçümden beri",
                         color = if (change <= 0f) Mint else Violet, fontSize = 13.sp)
                 } else Text("İlk ölçümünü ekleyerek başla.", color = Muted, fontSize = 13.sp)
+                if (goal != null && latest != null) {
+                    HorizontalDivider(color = Edge)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("KİŞİSEL HEDEF", color = Muted, fontSize = 11.sp)
+                        Text(numberFormat.format(goal) + " kg", color = Mint, fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        "Hedefe fark: " + numberFormat.format(abs(latest.kg - goal)) + " kg",
+                        color = White, fontSize = 13.sp
+                    )
+                }
                 HorizontalDivider(color = Edge)
                 WeightChart(entries, Modifier.fillMaxWidth().height(248.dp))
                 Button(onClick = onAddClick, modifier = Modifier.fillMaxWidth().height(48.dp),
