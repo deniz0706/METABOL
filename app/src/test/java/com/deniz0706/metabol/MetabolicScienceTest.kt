@@ -92,4 +92,17 @@ class MetabolicScienceTest {
         assertEquals(80.0, result.forecast30Kg!!, 0.01)
     }
 
+    @Test fun staleWeightCannotProduceCurrentMetabolicBaseline() {
+        val now = LocalDate.of(2026, 10, 15)
+        val days = (0..27).map { offset ->
+            val date = now.minusDays(offset.toLong())
+            MetabolicScience.Day(date, if (offset >= 18) 80.0 else null, 2200)
+        }
+        val result = MetabolicScience.estimate(profile, days, now)
+        assertNull(result.bmr)
+        assertNull(result.initialTdee)
+        assertNull(result.forecast30Kg)
+        assertTrue(result.message.contains("14 günden eski"))
+    }
+
 }
