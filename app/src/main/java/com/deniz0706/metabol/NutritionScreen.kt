@@ -272,6 +272,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         val results = FoodCatalog.search(query)
+                        Text("${results.size} besin bulundu", color = NutritionMint, fontSize = 11.sp)
                         if (results.isEmpty()) Text("Sonuç bulunamadı. Manuel giriş yapabilirsin.", color = NutritionMuted)
                         results.forEach { food ->
                             Row(
@@ -329,7 +330,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             Text(String.format(Locale.US, "Yağ %.1f g", portion.fat), color = NutritionWhite)
                         }
                     }
-                    Text("Tahmini ortalama · Etiket ve tarif farklı olabilir.", color = NutritionMuted,
+                    Text("Tahmini ortalama · Etiket ve tarif farklı olabilir. Kaydettikten sonra öğünü düzenleyebilirsin.", color = NutritionMuted,
                         fontSize = 11.sp)
                 }
             },
