@@ -53,6 +53,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         prefs.edit().putString("records", array.toString()).apply()
     }
     var showAdd by remember { mutableStateOf(false) }
+    var editingRecord by remember { mutableStateOf<BodyRecord?>(null) }
     val latest = records.lastOrNull()
     val previous = records.dropLast(1).lastOrNull()
     LazyColumn(modifier.fillMaxSize().background(BodyBg), contentPadding = PaddingValues(20.dp),
@@ -97,7 +98,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             }
         }
         item {
-            Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
+            Button(onClick = { editingRecord = null; showAdd = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = BodyMint, contentColor = BodyBg)) {
                 Text("+  Vücut ölçümü ekle", fontWeight = FontWeight.Bold)
@@ -118,6 +119,9 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                             r.muscleKg?.let { "Kas $it kg" }, r.waistCm?.let { "Bel $it cm" })
                         Text(values.joinToString("  ·  "), color = BodyMuted, fontSize = 12.sp)
                     }
+                    TextButton(onClick = { editingRecord = r; showAdd = true }) {
+                        Text("Düzenle", color = BodyMint)
+                    }
                     TextButton(onClick = { save(records.filterNot { it.id == r.id }) }) {
                         Text("Sil", color = Color(0xFFFF879A))
                     }
@@ -130,9 +134,9 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         }
     }
     if (showAdd) {
-        var fat by remember { mutableStateOf("") }
-        var muscle by remember { mutableStateOf("") }
-        var waist by remember { mutableStateOf("") }
+        var fat by remember(editingRecord) { mutableStateOf(editingRecord?.fatPercent?.toString() ?: "") }
+        var muscle by remember(editingRecord) { mutableStateOf(editingRecord?.muscleKg?.toString() ?: "") }
+        var waist by remember(editingRecord) { mutableStateOf(editingRecord?.waistCm?.toString() ?: "") }
         fun parse(value: String) = value.replace(',', '.').toDoubleOrNull()
         val valid = listOf(fat, muscle, waist).any { it.isNotBlank() } &&
             (fat.isBlank() || (parse(fat) ?: -1.0) in 0.0..75.0) &&
@@ -141,7 +145,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
         AlertDialog(
             onDismissRequest = { showAdd = false },
             containerColor = BodyCard,
-            title = { Text("Yeni vücut ölçümü", color = BodyText) },
+            title = { Text(if (editingRecord == null) "Yeni vücut ölçümü" else "Ölçümü düzenle", color = BodyText) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Bilmediğin alanları boş bırakabilirsin.", color = BodyMuted, fontSize = 12.sp)
@@ -156,7 +160,11 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             confirmButton = {
                 TextButton(enabled = valid, onClick = {
                     if (valid) {
-                        save(records + BodyRecord(System.currentTimeMillis(), parse(fat), parse(muscle), parse(waist)))
+                        val updated = BodyRecord(editingRecord?.id ?: System.currentTimeMillis(),
+                            parse(fat), parse(muscle), parse(waist))
+                        save(if (editingRecord == null) records + updated else records.map {
+                            if (it.id == editingRecord!!.id) updated else it
+                        })
                         showAdd = false
                     }
                 }) { Text("Kaydet") }
