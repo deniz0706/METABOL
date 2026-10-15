@@ -1,6 +1,8 @@
 package com.deniz0706.metabol
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
@@ -71,6 +73,29 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var dialogOpen by remember { mutableStateOf(false) }
     var editingMeal by remember { mutableStateOf<MealEntry?>(null) }
     var catalogOpen by remember { mutableStateOf(false) }
+    var onlineResults by remember { mutableStateOf<List<FoodReference>>(emptyList()) }
+    var onlineLoading by remember { mutableStateOf(false) }
+    var onlineError by remember { mutableStateOf<String?>(null) }
+    var onlineSearched by remember { mutableStateOf(false) }
+    var searchGeneration by remember { mutableIntStateOf(0) }
+    fun searchOnline(query: String) {
+        if (query.trim().length < 2 || onlineLoading) return
+        onlineLoading = true
+        onlineError = null
+        onlineResults = emptyList()
+        onlineSearched = true
+        val generation = ++searchGeneration
+        Thread {
+            val result = runCatching { OpenFoodFacts.search(query) }
+            Handler(Looper.getMainLooper()).post {
+                if (generation == searchGeneration) {
+                    onlineLoading = false
+                    result.onSuccess { onlineResults = it }
+                        .onFailure { onlineError = "Bağlantı kurulamadı. Tekrar dene veya çevrimdışı kataloğu kullan." }
+                }
+            }
+        }.start()
+    }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     var selectedGrams by remember { mutableStateOf("100") }
     var recentFoodNames by remember {
@@ -301,7 +326,41 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         label = { Text("Besin ara: muz, tavuk, pilav...") },
                         singleLine = true, modifier = Modifier.fillMaxWidth()
                     )
-                    Text("Yaklaşık değerler · 100 gram başına", color = NutritionMuted, fontSize = 11.sp)
+                    Button(
+                        onClick = { searchOnline(query) },
+                        enabled = query.trim().length >= 2 && !onlineLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)
+                    ) { Text(if (onlineLoading) "Aranıyor..." else "İnternette ürün ara", fontSize = 12.sp) }
+                    Text("Çevrimiçi arama isteğe bağlıdır. Arama metni Open Food Facts'e gönderilir.",
+                        color = NutritionMuted, fontSize = 10.sp)
+                    if (onlineLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = NutritionMint)
+                    onlineError?.let { Text(it, color = Color(0xFFFF879A), fontSize = 11.sp) }
+                    if (onlineResults.isNotEmpty()) {
+                        Text("OPEN FOOD FACTS · ÜRÜNLER", color = NutritionMint, fontSize = 11.sp)
+                        Column(Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            onlineResults.forEach { food ->
+                                Row(Modifier.fillMaxWidth()
+                                    .background(Color(0xFF213345), RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        selectedFood = food
+                                        selectedGrams = "100"
+                                        catalogOpen = false
+                                    }.padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    Text(food.name, color = NutritionWhite, fontSize = 12.sp,
+                                        modifier = Modifier.weight(1f))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("${food.kcal100.toInt()} kcal", color = NutritionMint, fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    } else if (onlineSearched && !onlineLoading && onlineError == null) {
+                        Text("Ürün bulunamadı. Yerel kataloğu kullanabilirsin.", color = NutritionMuted, fontSize = 11.sp)
+                    }
+                    Text("ÇEVRİMDIŞI KATALOG · 100 gram başına", color = NutritionMuted, fontSize = 11.sp)
                     Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         val results = FoodCatalog.search(query).sortedWith(
@@ -389,7 +448,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             Text(String.format(Locale.US, "Yağ %.1f g", portion.fat), color = NutritionWhite)
                         }
                     }
-                    Text("Tahmini ortalama · Etiket ve tarif farklı olabilir. Kaydettikten sonra öğünü düzenleyebilirsin.", color = NutritionMuted,
+                    Text(food.note + " · Etiket ve tarif farklı olabilir. Kaydettikten sonra öğünü düzenleyebilirsin.", color = NutritionMuted,
                         fontSize = 11.sp)
                 }
             },
