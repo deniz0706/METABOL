@@ -42,7 +42,7 @@ internal object OpenFoodFacts {
         require(code.matches(Regex("[0-9]{8,14}")))
         return cached("barcode:$code") {
             val address = "https://world.openfoodfacts.org/api/v2/product/$code.json?" +
-                "fields=product_name,product_name_tr,brands,nutriments"
+                "fields=product_name,product_name_tr,brands,quantity,product_quantity,product_quantity_unit,nutriments"
             val root = JSONObject(request(address))
             if (root.optInt("status") != 1) emptyList()
             else {
@@ -97,9 +97,9 @@ internal object OpenFoodFacts {
             val quantityNumber = product.optDouble("product_quantity", Double.NaN)
             val quantityUnit = product.optString("product_quantity_unit")
             val packageGrams = if (quantityNumber.isFinite() && quantityNumber in 1.0..5000.0 &&
-                quantityUnit.lowercase() in listOf("g", "gram", "grams")) quantityNumber.toInt()
-                else Regex("""(?i)(\\d{1,4})\\s*(?:g|gr|gram)\\b""").find(quantity)
-                    ?.groupValues?.get(1)?.toIntOrNull()
+                quantityUnit.lowercase() in listOf("g", "gr", "gram", "grams")) quantityNumber.toInt()
+                else Regex("""(?i)(\d{1,4}(?:[.,]\d+)?)\s*(?:g|gr|gram|grams)\b""").find(quantity)
+                    ?.groupValues?.get(1)?.replace(",", ".")?.toDoubleOrNull()?.toInt()
             val note = if (packageGrams != null) "Open Food Facts · Paket: ${packageGrams} g · Etiketten doğrula"
                 else "Open Food Facts · Etiketten doğrula"
             FoodReference(displayName.take(120),kcal,p,c,f,note)
