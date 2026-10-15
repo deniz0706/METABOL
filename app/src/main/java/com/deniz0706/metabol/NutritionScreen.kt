@@ -428,7 +428,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(16.dp))
                 HorizontalDivider(color = Color(0xFF30445C))
                 Spacer(Modifier.height(16.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top) {
                     MacroValue("Protein", protein, NutritionMint, macroCalories, 4.0)
                     MacroValue("Karbonhidrat", carbs, Color(0xFF80A9FF), macroCalories, 4.0)
                     MacroValue("Yağ", fat, Color(0xFFFFC483), macroCalories, 9.0)
@@ -444,7 +445,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     LinearProgressIndicator(
                         progress = { (protein / proteinTarget).toFloat().coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth().height(7.dp),
-                        color = Color(0xFF80A9FF), trackColor = Color(0xFF30445C)
+                        color = NutritionMint, trackColor = Color(0xFF30445C)
                     )
                 }
                 if (meals.isNotEmpty()) {
@@ -1256,23 +1257,37 @@ private fun MacroValue(label: String, value: Double, color: Color, totalMacroCal
         targetValue = value.toFloat(), animationSpec = tween(650),
         label = "macro-${label}"
     )
-    Column(horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.size(70.dp), contentAlignment = Alignment.Center) {
+    val share = if (totalMacroCalories > 0.0)
+        ((value * caloriesPerGram / totalMacroCalories) * 100.0).coerceIn(0.0, 100.0)
+    else 0.0
+    Column(
+        modifier = Modifier.width(96.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
-                progress = { if (totalMacroCalories > 0.0)
-                    ((animatedValue * caloriesPerGram) / totalMacroCalories).toFloat().coerceIn(0f, 1f)
-                else 0f },
+                progress = {
+                    if (totalMacroCalories > 0.0)
+                        ((animatedValue * caloriesPerGram) / totalMacroCalories)
+                            .toFloat().coerceIn(0f, 1f)
+                    else 0f
+                },
                 modifier = Modifier.fillMaxSize(),
                 color = color,
                 trackColor = Color(0xFF30445C),
                 strokeWidth = 6.dp
             )
-            Text(String.format(Locale("tr", "TR"), "%.0f", animatedValue),
-                color = NutritionWhite, fontSize = 17.sp,
-                fontWeight = FontWeight.ExtraBold)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(String.format(Locale("tr", "TR"), "%.0f", animatedValue),
+                    color = NutritionWhite, fontSize = 17.sp,
+                    fontWeight = FontWeight.ExtraBold)
+                Text("gram", color = NutritionMuted, fontSize = 9.sp)
+            }
         }
-        Text(label, color = NutritionMuted, fontSize = 11.sp)
-        Text("g · enerji payı", color = color, fontSize = 10.sp)
+        Text(label, color = NutritionWhite, fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(String.format(Locale("tr", "TR"), "%%%1.0f enerji", share),
+            color = color, fontSize = 10.sp)
     }
 }
