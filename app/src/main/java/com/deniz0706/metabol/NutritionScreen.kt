@@ -28,8 +28,8 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private val NutritionBg = Color(0xFF080D15)
-private val NutritionPanel = Color(0xFF131C2A)
+private val NutritionBg = Color(0xFF070B12)
+private val NutritionPanel = Color(0xFF121C28)
 private val NutritionMint = Color(0xFF71E8C4)
 private val NutritionMuted = Color(0xFF8B9CB2)
 private val NutritionWhite = Color(0xFFF4F8FC)
@@ -107,26 +107,57 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     LazyColumn(modifier.fillMaxSize().background(NutritionBg), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text("M E T A B O L", color = NutritionMint, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-            Spacer(Modifier.height(24.dp))
-            Text("BESLENME GÜNLÜĞÜ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
-            Spacer(Modifier.height(8.dp))
-            Text("Beslenme kayıtların.", color = NutritionWhite, fontSize = 29.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(14.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                OutlinedButton(onClick = { shiftDay(-1) }) { Text("‹  Önceki", color = NutritionMint) }
-                Text(selectedDay, color = NutritionWhite, fontWeight = FontWeight.SemiBold)
-                OutlinedButton(onClick = { shiftDay(1) }, enabled = selectedDay < today) {
-                    Text("Sonraki  ›", color = NutritionMint)
+                verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text("M E T A B O L", color = NutritionMint,
+                        fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, letterSpacing = 3.sp)
+                    Spacer(Modifier.height(7.dp))
+                    Text("NUTRITION / GÜNLÜK TAKİP", color = NutritionMuted,
+                        fontSize = 10.sp, letterSpacing = 1.2.sp)
+                }
+                Box(Modifier.size(46.dp)
+                    .background(Brush.linearGradient(listOf(Color(0xFF274E4D), Color(0xFF172D39))),
+                        CircleShape), contentAlignment = Alignment.Center) {
+                    Text("N", color = NutritionMint, fontSize = 22.sp, fontWeight = FontWeight.Black)
+                }
+            }
+            Spacer(Modifier.height(22.dp))
+            Text("Beslenme", color = NutritionWhite, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Kayıtların, alışkanlıkların, ilerlemen.", color = NutritionMuted, fontSize = 13.sp)
+            Spacer(Modifier.height(20.dp))
+            Row(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(18.dp))
+                .padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                FilledTonalIconButton(onClick = { shiftDay(-1) },
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = Color(0xFF213345), contentColor = NutritionMint)) {
+                    Text("‹", fontSize = 25.sp)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(if (selectedDay == today) "BUGÜN" else "SEÇİLEN GÜN",
+                        color = NutritionMint, fontSize = 10.sp, letterSpacing = 1.4.sp)
+                    Text(selectedDay, color = NutritionWhite,
+                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                }
+                FilledTonalIconButton(onClick = { shiftDay(1) }, enabled = selectedDay < today,
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = Color(0xFF213345), contentColor = NutritionMint)) {
+                    Text("›", fontSize = 25.sp)
                 }
             }
         }
         item {
-            Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(24.dp)).padding(22.dp)) {
+            Column(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF1C3740), Color(0xFF172535), NutritionPanel)), RoundedCornerShape(28.dp)).border(1.dp, Color(0xFF2B4850), RoundedCornerShape(28.dp)).padding(23.dp)) {
                 Text("TOPLAM ENERJİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
                 Spacer(Modifier.height(12.dp))
-                Text("$calories kcal", color = NutritionWhite, fontSize = 39.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("$calories", color = NutritionWhite, fontSize = 49.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.width(8.dp))
+                    Text("kcal", color = NutritionMint, fontSize = 17.sp,
+                        modifier = Modifier.padding(bottom = 10.dp))
+                }
+                Text("${meals.size} öğün kaydedildi", color = NutritionMuted, fontSize = 12.sp)
                 Spacer(Modifier.height(16.dp))
                 HorizontalDivider(color = Color(0xFF2A394B))
                 Spacer(Modifier.height(16.dp))
