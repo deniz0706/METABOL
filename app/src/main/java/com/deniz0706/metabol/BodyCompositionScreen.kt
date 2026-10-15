@@ -54,6 +54,7 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
     }
     var showAdd by remember { mutableStateOf(false) }
     val latest = records.lastOrNull()
+    val previous = records.dropLast(1).lastOrNull()
     LazyColumn(modifier.fillMaxSize().background(BodyBg), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -70,6 +71,31 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             }
         }
         item { BodyMetric("BEL ÇEVRESİ", latest?.waistCm, "cm", Modifier.fillMaxWidth()) }
+        if (previous != null && latest != null) {
+            item {
+                Column(Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Text("SON İKİ ÖLÇÜM ARASINDAKİ FARK", color = BodyMuted,
+                        fontSize = 10.sp, letterSpacing = 1.5.sp)
+                    listOf(
+                        Triple("Yağ oranı", latest.fatPercent, previous.fatPercent),
+                        Triple("Kas kütlesi", latest.muscleKg, previous.muscleKg),
+                        Triple("Bel çevresi", latest.waistCm, previous.waistCm)
+                    ).forEach { (label, current, prior) ->
+                        if (current != null && prior != null) {
+                            val delta = current - prior
+                            val unit = if (label == "Yağ oranı") "puan" else if (label == "Kas kütlesi") "kg" else "cm"
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(label, color = BodyMuted, fontSize = 13.sp)
+                                Text(String.format(Locale.US, "%+.1f %s", delta, unit),
+                                    color = if (delta <= 0.0) BodyMint else BodyText,
+                                    fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
         item {
             Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(14.dp),
