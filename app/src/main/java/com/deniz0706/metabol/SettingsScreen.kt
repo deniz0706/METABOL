@@ -47,29 +47,71 @@ internal fun createBackup(context: Context): String {
 }
 
 internal fun restoreBackup(context: Context, source: String): Boolean {
+    if (source.length > 5_000_000) return false
     val root = JSONObject(source)
     if (root.optString("format") != "METABOL-backup" || root.optInt("version") != 1) return false
     val data = root.getJSONObject("data")
-    // Validate all groups and their JSON payloads before modifying any stored data.
+    // Fully parse and validate before touching existing preferences.
     val prepared = preferenceNames.associateWith { name ->
         val group = data.optJSONObject(name) ?: if (name == "metabol_profile") JSONObject() else return false
         val entries = mutableMapOf<String, String>()
         val iterator = group.keys()
         while (iterator.hasNext()) {
             val key = iterator.next()
+            if (key.length > 100 || !group.has(key) || group.isNull(key)) return false
             val value = group.getString(key)
             if (value.length > 2_000_000) return false
-            if (key == "weights" || key == "records" || key.startsWith("meals_")) {
-                org.json.JSONArray(value)
+            when {
+                name == "metabol_local" && key == "weights" -> {
+                    val array = org.json.JSONArray(value)
+                    if (array.length() > 100_000) return false
+                    for (i in 0 until array.length()) {
+                        val item = array.getJSONObject(i)
+                        val kg = item.getDouble("kg")
+                        if (item.getLong("time") < 0 || !kg.isFinite() || kg !in 20.0..500.0) return false
+                    }
+                }
+                name == "metabol_body" && key == "records" -> {
+                    val array = org.json.JSONArray(value)
+                    if (array.length() > 100_000) return false
+                    for (i in 0 until array.length()) {
+                        val item = array.getJSONObject(i)
+                        if (item.getLong("id") < 0) return false
+                        for ((field, limit) in listOf("fat" to 75.0, "muscle" to 300.0, "waist" to 300.0)) {
+                            if (!item.isNull(field)) {
+                                val measurement = item.getDouble(field)
+                                if (!measurement.isFinite() || measurement < 0.0 || measurement > limit) return false
+                            }
+                        }
+                    }
+                }
+                name == "metabol_nutrition" && key.startsWith("meals_") -> {
+                    if (!key.matches(Regex("meals_\\d{4}-\\d{2}-\\d{2}"))) return false
+                    val array = org.json.JSONArray(value)
+                    if (array.length() > 100_000) return false
+                    for (i in 0 until array.length()) {
+                        val item = array.getJSONObject(i)
+                        if (item.getLong("id") < 0 || item.getString("name").length > 300 ||
+                            item.getInt("calories") !in 0..10000) return false
+                        for (field in listOf("protein", "carbs", "fat")) {
+                            val macro = item.getDouble(field)
+                            if (!macro.isFinite() || macro !in 0.0..1000.0) return false
+                        }
+                    }
+                }
+                name == "metabol_profile" && key == "goal_weight" -> {
+                    if ((value.toFloatOrNull() ?: -1f) !in 20f..500f) return false
+                }
             }
             entries[key] = value
         }
         entries
     }
+    // Commit synchronously so callers can report a write failure.
     prepared.forEach { (name, entries) ->
         val editor = context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear()
         entries.forEach { (key, value) -> editor.putString(key, value) }
-        editor.commit()
+        if (!editor.commit()) return false
     }
     return true
 }
