@@ -116,7 +116,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
             val allowed = when (name) {
                 "metabol_local" -> key == "weights"
                 "metabol_body" -> key == "records"
-                "metabol_profile" -> key in listOf("goal_weight", "calorie_target", "protein_target")
+                "metabol_profile" -> key in listOf("goal_weight", "calorie_target", "protein_target", "science_age", "science_height", "science_sex", "science_activity")
                 "metabol_nutrition" -> key.startsWith("meals_") ||
                     key == "recent_foods" || key == "saved_foods"
                 else -> false
@@ -188,6 +188,18 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                     val target = value.toDoubleOrNull() ?: return false
                     if (!target.isFinite() || target !in 1.0..500.0) return false
                 }
+                name == "metabol_profile" && key == "science_age" -> {
+                    if ((value.toIntOrNull() ?: -1) !in 18..100) return false
+                }
+                name == "metabol_profile" && key == "science_height" -> {
+                    if ((value.toDoubleOrNull() ?: -1.0) !in 100.0..250.0) return false
+                }
+                name == "metabol_profile" && key == "science_sex" -> {
+                    if (value !in listOf("male", "female")) return false
+                }
+                name == "metabol_profile" && key == "science_activity" -> {
+                    if (value !in listOf("1.2", "1.375", "1.55", "1.725", "1.9")) return false
+                }
                 name == "metabol_profile" && key == "goal_weight" -> {
                     if ((value.toFloatOrNull() ?: -1f) !in 20f..500f) return false
                 }
@@ -224,6 +236,12 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
         (calorieTarget != null && calorieTarget in 500..10000)
     val proteinTargetValid = proteinTargetInput.isBlank() ||
         (proteinTarget != null && proteinTarget.isFinite() && proteinTarget in 1.0..500.0)
+    var scienceAge by remember { mutableStateOf(profilePrefs.getString("science_age", "") ?: "") }
+    var scienceHeight by remember { mutableStateOf(profilePrefs.getString("science_height", "") ?: "") }
+    var scienceSex by remember { mutableStateOf(profilePrefs.getString("science_sex", "male") ?: "male") }
+    var scienceActivity by remember { mutableStateOf(profilePrefs.getString("science_activity", "1.375") ?: "1.375") }
+    val scienceValid = (scienceAge.toIntOrNull() ?: 0) in 18..100 &&
+        (scienceHeight.replace(',', '.').toDoubleOrNull() ?: 0.0) in 100.0..250.0
     var pendingImport by remember { mutableStateOf<String?>(null) }
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -321,6 +339,39 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                     message = "Hedef kaldırıldı."
                     onGoalChanged()
                 }) { Text("Hedefi kaldır", color = SMuted) }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(SCard, RoundedCornerShape(24.dp)).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Bilimsel metabolizma profili", color = SText, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text("Mifflin–St Jeor denklemi için gerekli bilgiler. Hesaplar tahmindir.", color = SMuted, fontSize = 12.sp)
+                OutlinedTextField(scienceAge, { scienceAge = it }, label = { Text("Yaş") },
+                    singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(scienceHeight, { scienceHeight = it }, label = { Text("Boy (cm)") },
+                    singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                Text("Denklemde kullanılan biyolojik cinsiyet", color = SMuted, fontSize = 12.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("male" to "Erkek", "female" to "Kadın").forEach { (value, label) ->
+                        FilterChip(selected = scienceSex == value, onClick = { scienceSex = value }, label = { Text(label) })
+                    }
+                }
+                Text("Aktivite katsayısı", color = SMuted, fontSize = 12.sp)
+                listOf("1.2" to "Hareketsiz", "1.375" to "Hafif aktif",
+                    "1.55" to "Orta aktif", "1.725" to "Çok aktif", "1.9" to "Aşırı aktif").forEach { (value, label) ->
+                    FilterChip(selected = scienceActivity == value,
+                        onClick = { scienceActivity = value }, label = { Text(label) })
+                }
+                Button(onClick = {
+                    val success = profilePrefs.edit()
+                        .putString("science_age", scienceAge)
+                        .putString("science_height", scienceHeight.replace(',', '.'))
+                        .putString("science_sex", scienceSex)
+                        .putString("science_activity", scienceActivity).commit()
+                    message = if (success) "Metabolizma profili kaydedildi." else "Profil kaydedilemedi."
+                }, enabled = scienceValid, modifier = Modifier.fillMaxWidth()) {
+                    Text("Bilimsel profili kaydet")
+                }
             }
         }
         item {
