@@ -3,6 +3,7 @@ package com.deniz0706.metabol
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -293,6 +294,7 @@ private fun Dashboard(
     }
     val first = entries.firstOrNull()
     val change = if (latest != null && first != null) latest.kg - first.kg else null
+    val animatedMealCalories by animateIntAsState(todayNutrition.second, tween(700), label = "home-calories")
     var revealed by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { revealed = true }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -368,7 +370,7 @@ private fun Dashboard(
                     .clickable(onClick = onNutritionClick).padding(18.dp)) {
                     Text("BESLENME  ↗", color = Mint, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(9.dp))
-                    Text("${todayNutrition.second} kcal", color = White, fontSize = 22.sp,
+                    Text("$animatedMealCalories kcal", color = White, fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold)
                     Text("${todayNutrition.first} öğün kaydı", color = Muted, fontSize = 11.sp)
                 }
