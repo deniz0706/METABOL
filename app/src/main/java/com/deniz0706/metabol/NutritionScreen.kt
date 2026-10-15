@@ -518,10 +518,25 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
                         }
                         items(savedResults) { food ->
-                            FoodSearchRow(food, true) {
-                                selectedFood = food
-                                selectedGrams = "100"
-                                catalogOpen = false
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.weight(1f)) {
+                                    FoodSearchRow(food, true) {
+                                        selectedFood = food
+                                        selectedGrams = "100"
+                                        catalogOpen = false
+                                    }
+                                }
+                                TextButton(onClick = {
+                                    val updated = savedFoods.filterNot { it.name == food.name }
+                                    savedFoods = updated
+                                    val array = JSONArray()
+                                    updated.forEach { item ->
+                                        array.put(JSONObject().put("name", item.name)
+                                            .put("kcal", item.kcal100).put("protein", item.protein100)
+                                            .put("carbs", item.carbs100).put("fat", item.fat100))
+                                    }
+                                    prefs.edit().putString("saved_foods", array.toString()).apply()
+                                }) { Text("Sil", color = Color(0xFFFF879A), fontSize = 11.sp) }
                             }
                         }
                     }
