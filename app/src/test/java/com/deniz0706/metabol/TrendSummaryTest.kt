@@ -38,6 +38,23 @@ class TrendSummaryTest {
         assertNull(result.weeklyRate)
     }
 
+    @Test fun sameDayMeasurementsDoNotProduceArtificialWeeklyRate() {
+        val result = summarizeWeights(listOf(
+            WeightPoint(10_000L, 103f),
+            WeightPoint(10_000L, 101f)
+        ))
+        assertNull(result.weeklyRate)
+        assertEquals(-2f, result.change!!, 0.001f)
+    }
+
+    @Test fun longRangeWeeklyRateIsNormalizedByElapsedDays() {
+        val result = summarizeWeights(listOf(
+            WeightPoint(0L, 100f),
+            WeightPoint(28 * day, 96f)
+        ))
+        assertEquals(-1.0, result.weeklyRate!!, 0.001)
+    }
+
     @Test fun smoothingUsesLastSevenMeasurements() {
         val entries = (0..9).map { WeightPoint(it * day, (90 + it).toFloat()) }
         val result = summarizeWeights(entries)
