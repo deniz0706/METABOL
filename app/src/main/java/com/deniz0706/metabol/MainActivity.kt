@@ -334,11 +334,55 @@ private fun Dashboard(
                     Text("kg", color = Color(0xFFFFD6B0), fontSize = 20.sp,
                         modifier = Modifier.padding(bottom = 12.dp))
                 }
-                Text(change?.let {
-                    (if (it > 0) "+" else "") + numberFormat.format(it) +
-                        " kg · ilk ölçümden bu yana"
-                } ?: "İlk tartı kaydını ekleyerek başla.",
-                    color = White, fontSize = 13.sp)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.background(Color(0x44321B37), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp)) {
+                        Text(change?.let {
+                            (if (it > 0) "+" else "") + numberFormat.format(it) + " kg"
+                        } ?: "İlk kayıt", color = Mint, fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold)
+                    }
+                    Text(if (change == null) "İlk tartı kaydını ekleyerek başla."
+                        else "İlk ölçümünden bugüne değişim",
+                        color = White, fontSize = 12.sp)
+                }
+                if (entries.size >= 2) {
+                    val recent = entries.takeLast(12)
+                    val low = recent.minOf { it.kg }
+                    val high = recent.maxOf { it.kg }
+                    val spread = (high - low).coerceAtLeast(0.5f)
+                    Column(Modifier.fillMaxWidth().background(Color(0x33201630),
+                        RoundedCornerShape(18.dp)).padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("SON ${recent.size} ÖLÇÜM", color = Color(0xFFFFD6B0),
+                                fontSize = 10.sp, letterSpacing = 1.sp)
+                            Text("${numberFormat.format(low)} – ${numberFormat.format(high)} kg",
+                                color = White, fontSize = 11.sp)
+                        }
+                        Canvas(Modifier.fillMaxWidth().height(82.dp)) {
+                            val values = recent.mapIndexed { index, record ->
+                                Offset(
+                                    x = size.width * index / (recent.size - 1).toFloat(),
+                                    y = size.height * (1f - (record.kg - low) / spread)
+                                )
+                            }
+                            val chartPath = Path().apply {
+                                moveTo(values.first().x, values.first().y)
+                                values.drop(1).forEach { lineTo(it.x, it.y) }
+                            }
+                            drawLine(Color(0x44FFFFFF), Offset(0f, size.height),
+                                Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+                            drawPath(chartPath, color = Mint, style = Stroke(
+                                width = 3.dp.toPx(), cap = StrokeCap.Round
+                            ))
+                            drawCircle(Mint, radius = 5.dp.toPx(), center = values.last())
+                            drawCircle(White, radius = 2.dp.toPx(), center = values.last())
+                        }
+                    }
+                }
                 if (goal != null && latest != null) {
                     HorizontalDivider(color = Color(0x55FFFFFF))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
