@@ -119,7 +119,7 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                 "metabol_local" -> key == "weights"
                 "metabol_body" -> key == "records"
                 "metabol_profile" -> key in listOf("goal_weight", "calorie_target", "protein_target", "science_age", "science_height", "science_sex", "science_activity")
-                "metabol_nutrition" -> key.startsWith("meals_") || key.startsWith("water_") ||
+                "metabol_nutrition" -> key.startsWith("meals_") || key.startsWith("water_") || key.startsWith("note_") ||
                     key == "recent_foods" || key == "saved_foods"
                 else -> false
             }
@@ -170,6 +170,10 @@ internal fun restoreBackup(context: Context, source: String): Boolean {
                             }
                         }
                     }
+                }
+                name == "metabol_nutrition" && key.startsWith("note_") -> {
+                    if (!key.matches(Regex("note_\\d{4}-\\d{2}-\\d{2}"))) return false
+                    if (value.length > 2000) return false
                 }
                 name == "metabol_nutrition" && key.startsWith("water_") -> {
                     if (!key.matches(Regex("water_\\d{4}-\\d{2}-\\d{2}"))) return false
