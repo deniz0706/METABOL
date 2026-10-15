@@ -98,7 +98,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
     Scaffold(
         containerColor = Bg,
         bottomBar = {
-            Surface(color = Bg, shadowElevation = 16.dp) {
+            Surface(color = Bg) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)
                     .background(Surface, RoundedCornerShape(25.dp))
                     .border(1.dp, Edge, RoundedCornerShape(25.dp))
