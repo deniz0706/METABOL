@@ -47,11 +47,11 @@ import java.util.concurrent.Executors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private val NutritionBg = Color(0xFF110F1B)
-private val NutritionPanel = Color(0xFF211C30)
-private val NutritionMint = Color(0xFFFFBE76)
-private val NutritionMuted = Color(0xFFB9ACCA)
-private val NutritionWhite = Color(0xFFFFF7EE)
+private val NutritionBg = Color(0xFF0B1220)
+private val NutritionPanel = Color(0xFF172337)
+private val NutritionMint = Color(0xFF57D6C1)
+private val NutritionMuted = Color(0xFF9AAFC5)
+private val NutritionWhite = Color(0xFFF3F8FF)
 
 private data class MealEntry(
     val id: Long,
@@ -418,7 +418,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     LinearProgressIndicator(
                         progress = { animatedEnergyProgress },
                         modifier = Modifier.fillMaxWidth().height(8.dp),
-                        color = NutritionMint, trackColor = Color(0xFF45364D)
+                        color = NutritionMint, trackColor = Color(0xFF30445C)
                     )
                     if (calories > calorieTarget) {
                         Text("Hedefin ${calories - calorieTarget} kcal üzerinde kayıt var.",
@@ -426,11 +426,11 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = Color(0xFF45364D))
+                HorizontalDivider(color = Color(0xFF30445C))
                 Spacer(Modifier.height(16.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     MacroValue("Protein", protein, NutritionMint)
-                    MacroValue("Karbonhidrat", carbs, Color(0xFFEB91C6))
+                    MacroValue("Karbonhidrat", carbs, Color(0xFF80A9FF))
                     MacroValue("Yağ", fat, Color(0xFFFFC483))
                 }
                 if (proteinTarget != null) {
@@ -444,12 +444,12 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     LinearProgressIndicator(
                         progress = { (protein / proteinTarget).toFloat().coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth().height(7.dp),
-                        color = Color(0xFFEB91C6), trackColor = Color(0xFF45364D)
+                        color = Color(0xFF80A9FF), trackColor = Color(0xFF30445C)
                     )
                 }
                 if (meals.isNotEmpty()) {
                     Spacer(Modifier.height(16.dp))
-                    HorizontalDivider(color = Color(0xFF45364D))
+                    HorizontalDivider(color = Color(0xFF30445C))
                     Spacer(Modifier.height(12.dp))
                     Text(
                         "Makrolardan hesaplanan enerji: " + String.format(Locale.US, "%.0f kcal", macroCalories),
@@ -496,7 +496,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 LinearProgressIndicator(
                     progress = { animatedWaterProgress },
                     modifier = Modifier.fillMaxWidth().height(9.dp),
-                    color = Color(0xFFFFBE76),
+                    color = Color(0xFF57D6C1),
                     trackColor = Color(0xFF29445A)
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -620,7 +620,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 progress = { total.toFloat() / maxCalories },
                                 modifier = Modifier.weight(1f).height(8.dp),
                                 color = NutritionMint,
-                                trackColor = Color(0xFF45364D)
+                                trackColor = Color(0xFF30445C)
                             )
                         } else {
                             Box(Modifier.weight(1f).height(8.dp)
@@ -634,7 +634,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 }
                 val recordedDays = lastSevenDays.count { (day, _) -> recordedSevenDays[day] == true }
                 val sevenDayTotal = lastSevenDays.sumOf { it.second }
-                HorizontalDivider(color = Color(0xFF45364D))
+                HorizontalDivider(color = Color(0xFF30445C))
                 Text("7 günlük kayıt toplamı: $sevenDayTotal kcal", color = NutritionWhite, fontSize = 13.sp)
                 Text("Kayıt bulunan gün: $recordedDays / 7", color = NutritionMuted, fontSize = 12.sp)
                 Text("Boş günler sıfır tüketim anlamına gelmez. Grafik kaydedilen enerjiyi gösterir.",
@@ -671,9 +671,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 LinearProgressIndicator(
                     progress = { insights.recordedDays.toFloat() / insights.windowDays },
                     modifier = Modifier.fillMaxWidth().height(7.dp),
-                    color = NutritionMint, trackColor = Color(0xFF45364D)
+                    color = NutritionMint, trackColor = Color(0xFF30445C)
                 )
-                HorizontalDivider(color = Color(0xFF45364D))
+                HorizontalDivider(color = Color(0xFF30445C))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text("KAYITLI GÜN ORT.", color = NutritionMuted, fontSize = 10.sp)
@@ -770,10 +770,10 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 .background(Color(0xFF263544), RoundedCornerShape(4.dp))) {
                                 Box(Modifier.fillMaxHeight()
                                     .weight((meal.protein * 4 / macroEnergy).toFloat().coerceAtLeast(0.001f))
-                                    .background(Color(0xFFFFBE76)))
+                                    .background(Color(0xFF57D6C1)))
                                 Box(Modifier.fillMaxHeight()
                                     .weight((meal.carbs * 4 / macroEnergy).toFloat().coerceAtLeast(0.001f))
-                                    .background(Color(0xFFEB91C6)))
+                                    .background(Color(0xFF80A9FF)))
                                 Box(Modifier.fillMaxHeight()
                                     .weight((meal.fat * 9 / macroEnergy).toFloat().coerceAtLeast(0.001f))
                                     .background(Color(0xFFFFC483)))
