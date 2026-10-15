@@ -24,11 +24,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val SBack = Color(0xFF070B12)
-private val SCard = Color(0xFF121C28)
-private val SMint = Color(0xFF71E8C4)
-private val SText = Color(0xFFF4F8FC)
-private val SMuted = Color(0xFF8B9CB2)
+private val SBack = Color(0xFF110F1B)
+private val SCard = Color(0xFF211C30)
+private val SMint = Color(0xFFFFBE76)
+private val SText = Color(0xFFFFF7EE)
+private val SMuted = Color(0xFFB9ACCA)
 private val preferenceNames = listOf("metabol_local", "metabol_nutrition", "metabol_body", "metabol_profile")
 
 internal fun createBackup(context: Context): String {
@@ -372,12 +372,12 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
             Text("M E T A B O L", color = SMint, fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 3.sp, fontSize = 13.sp)
             Spacer(Modifier.height(24.dp))
-            Text("Ayarlar", color = SText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Senin alanın", color = SText, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(5.dp))
             Text("Uygulamanı kendi ihtiyaçlarına göre düzenle.", color = SMuted, fontSize = 13.sp)
             Spacer(Modifier.height(20.dp))
             Column(Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(Color(0xFF21473F), Color(0xFF172C37), SCard)),
+                .background(Brush.linearGradient(listOf(Color(0xFF68415C), Color(0xFF352742), SCard)),
                     RoundedCornerShape(26.dp)).padding(21.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("VERİLERİNİN KONTROLÜ SENDE", color = SMint, fontSize = 10.sp, letterSpacing = 1.5.sp)
