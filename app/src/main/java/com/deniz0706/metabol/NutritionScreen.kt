@@ -129,6 +129,32 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     var selectedGrams by remember { mutableStateOf("100") }
+    var savedFoods by remember {
+        mutableStateOf(runCatching {
+            val array = JSONArray(prefs.getString("saved_foods", "[]"))
+            (0 until array.length()).mapNotNull { index ->
+                val item = array.getJSONObject(index)
+                val name = item.getString("name")
+                val kcal = item.getDouble("kcal")
+                val protein = item.getDouble("protein")
+                val carbs = item.getDouble("carbs")
+                val fat = item.getDouble("fat")
+                if (name.isBlank() || !listOf(kcal, protein, carbs, fat).all { it.isFinite() } ||
+                    kcal !in 0.0..1000.0 || listOf(protein, carbs, fat).any { it !in 0.0..100.0 }) null
+                else FoodReference(name, kcal, protein, carbs, fat, "Önceden kaydettiğin ürün · Etiketten doğrula")
+            }
+        }.getOrDefault(emptyList()))
+    }
+    fun saveFoodReference(food: FoodReference) {
+        val updated = (listOf(food) + savedFoods.filterNot { it.name == food.name }).take(30)
+        savedFoods = updated
+        val array = JSONArray()
+        updated.forEach { item ->
+            array.put(JSONObject().put("name", item.name).put("kcal", item.kcal100)
+                .put("protein", item.protein100).put("carbs", item.carbs100).put("fat", item.fat100))
+        }
+        prefs.edit().putString("saved_foods", array.toString()).apply()
+    }
     var recentFoodNames by remember {
         mutableStateOf(runCatching {
             val saved = JSONArray(prefs.getString("recent_foods", "[]"))
@@ -381,6 +407,10 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
 
     if (catalogOpen) {
         var query by remember { mutableStateOf("") }
+        val savedResults = remember(query, savedFoods) {
+            val needle = query.trim()
+            savedFoods.filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }
+        }
         val localResults = remember(query, recentFoodNames) {
             FoodCatalog.search(query).sortedWith(
                 compareBy<FoodReference> {
@@ -482,6 +512,19 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 color = NutritionMuted, fontSize = 12.sp)
                         }
                     }
+                    if (savedResults.isNotEmpty()) {
+                        item {
+                            Text("KAYDETTİĞİN ÜRÜNLER · ${savedResults.size}",
+                                color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
+                        }
+                        items(savedResults) { food ->
+                            FoodSearchRow(food, true) {
+                                selectedFood = food
+                                selectedGrams = "100"
+                                catalogOpen = false
+                            }
+                        }
+                    }
                     item {
                         Spacer(Modifier.height(8.dp))
                         Text("ÇEVRİMDIŞI KATALOG · ${localResults.size} BESİN",
@@ -562,6 +605,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         save(meals + MealEntry(System.currentTimeMillis(), food.name,
                             portion.calories, portion.protein, portion.carbs, portion.fat))
                         rememberFood(food.name)
+                        if (food.note.startsWith("Open Food Facts")) saveFoodReference(food)
                         selectedFood = null
                     }
                 }) { Text("Günlüğe ekle", color = NutritionMint) }
