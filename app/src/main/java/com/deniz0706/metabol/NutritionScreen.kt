@@ -87,6 +87,16 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val today = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var selectedDay by remember { mutableStateOf(today) }
     val storageKey = "meals_$selectedDay"
+    val waterKey = "water_$selectedDay"
+    var waterMl by remember(waterKey) {
+        mutableIntStateOf(prefs.getString(waterKey, "0")?.toIntOrNull()?.coerceIn(0, 10000) ?: 0)
+    }
+    fun updateWater(delta: Int) {
+        val next = (waterMl + delta).coerceIn(0, 10000)
+        waterMl = next
+        prefs.edit().putString(waterKey, next.toString()).apply()
+    }
+
     fun shiftDay(days: Int) {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val current = format.parse(selectedDay) ?: Date()
@@ -341,6 +351,23 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         containerColor = Color(0xFF213345), contentColor = NutritionMint)) {
                     Text("›", fontSize = 25.sp)
                 }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().background(NutritionPanel, RoundedCornerShape(24.dp))
+                .padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("SU TAKİBİ", color = NutritionMint, fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                Text("$waterMl ml · seçilen gün", color = NutritionWhite,
+                    fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { updateWater(-250) }, enabled = waterMl >= 250,
+                        modifier = Modifier.weight(1f)) { Text("−250 ml") }
+                    Button(onClick = { updateWater(250) }, enabled = waterMl <= 9750,
+                        modifier = Modifier.weight(1f)) { Text("+250 ml") }
+                }
+                Text("Yalnızca kaydedilen su miktarıdır; kişisel su ihtiyacı tahmini değildir.",
+                    color = NutritionMuted, fontSize = 11.sp)
             }
         }
         item {
