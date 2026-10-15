@@ -203,9 +203,17 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
     ) { uri: Uri? ->
         if (uri != null) {
             message = runCatching {
-                val content = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                    ?: error("Dosya okunamadı")
-                if (content.length > 5_000_000) error("Dosya çok büyük")
+                val content = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                    val buffer = CharArray(8192)
+                    val output = StringBuilder()
+                    while (true) {
+                        val count = reader.read(buffer)
+                        if (count < 0) break
+                        if (output.length + count > 5_000_000) error("Dosya çok büyük")
+                        output.append(buffer, 0, count)
+                    }
+                    output.toString()
+                } ?: error("Dosya okunamadı")
                 val json = JSONObject(content)
                 if (json.optString("format") != "METABOL-backup" || json.optInt("version") != 1) {
                     error("Geçersiz METABOL yedeği")
