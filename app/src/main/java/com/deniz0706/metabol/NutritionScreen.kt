@@ -95,6 +95,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val protein = meals.sumOf { it.protein }
     val carbs = meals.sumOf { it.carbs }
     val fat = meals.sumOf { it.fat }
+    val macroCalories = protein * 4.0 + carbs * 4.0 + fat * 9.0
     LazyColumn(modifier.fillMaxSize().background(NutritionBg), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -125,6 +126,17 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     MacroValue("Protein", protein, NutritionMint)
                     MacroValue("Karbonhidrat", carbs, Color(0xFFA99BFF))
                     MacroValue("Yağ", fat, Color(0xFFFFC483))
+                }
+                if (meals.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFF2A394B))
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Makrolardan hesaplanan enerji: " + String.format(Locale.US, "%.0f kcal", macroCalories),
+                        color = NutritionMuted, fontSize = 12.sp
+                    )
+                    Text("Etiket kalorisi ile fark; lif, yuvarlama ve eksik makro verilerinden kaynaklanabilir.",
+                        color = NutritionMuted, fontSize = 11.sp)
                 }
             }
         }
