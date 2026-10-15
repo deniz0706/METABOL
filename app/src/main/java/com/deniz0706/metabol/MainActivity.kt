@@ -138,7 +138,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         // charts and food search) composing simultaneously on every tab switch.
         key(tab) {
             when (tab) {
-                0 -> Dashboard(entries, tab, goalRevision,
+                0 -> Dashboard(entries, tab, goalRevision, nutritionRevision,
                     onAddClick = { editing = null; addDialog = true },
                     onEdit = { editing = it; addDialog = true },
                     onDelete = { pendingDelete = it }, onNutritionClick = { tab = 1 },
@@ -231,7 +231,7 @@ private fun Header() {
 
 @Composable
 private fun Dashboard(
-    entries: List<WeightRecord>, tab: Int, goalRevision: Int, onAddClick: () -> Unit,
+    entries: List<WeightRecord>, tab: Int, goalRevision: Int, nutritionRevision: Int, onAddClick: () -> Unit,
     onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit,
     onNutritionClick: () -> Unit, modifier: Modifier = Modifier
 ) {
