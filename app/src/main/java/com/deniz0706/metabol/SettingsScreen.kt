@@ -292,6 +292,20 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
             }.getOrElse { "İçe aktarma başarısız: ${it.message}" }
         }
     }
+    val measurementLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            message = runCatching {
+                val source = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use {
+                    it.readText()
+                } ?: error("Dosya okunamadı")
+                val result = MeasurementImport.import(context, source)
+                (context as? android.app.Activity)?.recreate()
+                "Ölçümler aktarıldı: ${result.weightsAdded} kilo, ${result.bodyAdded} vücut analizi. ${result.skipped} tarih atlandı."
+            }.getOrElse { "Ölçüm aktarımı başarısız: ${it.message}" }
+        }
+    }
     LazyColumn(modifier.fillMaxSize().background(SBack), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item {
@@ -435,6 +449,13 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                 }
                 OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
                     modifier = Modifier.fillMaxWidth()) { Text("Yedekten geri yükle", color = SMint) }
+                OutlinedButton(onClick = {
+                    measurementLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Geçmiş ölçümleri JSON'dan ekle", color = SMint)
+                }
+                Text("Bu seçenek mevcut ölçümleri silmez; aynı tarihli kayıtları atlar. Kesin tarihi olmayan veriler yalnızca kaynak dosyada korunur. Aktarmadan önce yedek al.",
+                    color = SMuted, fontSize = 12.sp)
                 Text("Geri yükleme mevcut kayıtların yerine geçer. Önce yedek alman önerilir.",
                     color = SMuted, fontSize = 12.sp)
             }
