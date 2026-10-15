@@ -165,6 +165,13 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             }
         }
         item {
+            Button(onClick = { editingRecord = null; showAdd = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = BodyMint, contentColor = BodyBg)) {
+                Text("+  Vücut ölçümü ekle", fontWeight = FontWeight.Bold)
+            }
+        }
+        item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 BodyMetric("YAĞ ORANI", latest?.fatPercent, "%", Modifier.weight(1f))
                 BodyMetric("KAS KÜTLESİ", latest?.muscleKg, "kg", Modifier.weight(1f))
@@ -303,13 +310,6 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
                         }
                     }
                 }
-            }
-        }
-        item {
-            Button(onClick = { editingRecord = null; showAdd = true }, modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BodyMint, contentColor = BodyBg)) {
-                Text("+  Vücut ölçümü ekle", fontWeight = FontWeight.Bold)
             }
         }
         if (records.isNotEmpty()) {
