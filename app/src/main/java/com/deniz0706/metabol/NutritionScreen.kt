@@ -7,6 +7,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
@@ -324,6 +329,13 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val carbs = meals.sumOf { it.carbs }
     val fat = meals.sumOf { it.fat }
     val macroCalories = protein * 4.0 + carbs * 4.0 + fat * 9.0
+    val animatedWaterProgress by animateFloatAsState(
+        (waterMl / 2000f).coerceIn(0f, 1f), tween(650), label = "water-fill"
+    )
+    val animatedEnergyProgress by animateFloatAsState(
+        calorieTarget?.let { (calories.toFloat() / it).coerceIn(0f, 1f) } ?: 0f,
+        tween(650), label = "energy-fill"
+    )
     LazyColumn(modifier.fillMaxSize().background(NutritionBg), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -382,15 +394,77 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             }
         }
         item {
-            val waterReference = 2000
-            val waterProgress = (waterMl.toFloat() / waterReference).coerceIn(0f, 1f)
+            Column(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF79445E), Color(0xFF38263E), NutritionPanel)), RoundedCornerShape(28.dp)).border(1.dp, Color(0xFF715068), RoundedCornerShape(28.dp)).padding(23.dp)) {
+                Text("TOPLAM ENERJİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("$calories", color = NutritionWhite, fontSize = 49.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.width(8.dp))
+                    Text("kcal", color = NutritionMint, fontSize = 17.sp,
+                        modifier = Modifier.padding(bottom = 10.dp))
+                }
+                Text("${meals.size} öğün kaydedildi", color = NutritionMuted, fontSize = 12.sp)
+                if (calorieTarget != null) {
+                    Spacer(Modifier.height(17.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("GÜNLÜK ENERJİ HEDEFİ", color = NutritionMuted, fontSize = 10.sp)
+                        Text("$calories / $calorieTarget kcal", color = NutritionMint,
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { animatedEnergyProgress },
+                        modifier = Modifier.fillMaxWidth().height(8.dp),
+                        color = NutritionMint, trackColor = Color(0xFF45364D)
+                    )
+                    if (calories > calorieTarget) {
+                        Text("Hedefin ${calories - calorieTarget} kcal üzerinde kayıt var.",
+                            color = NutritionMuted, fontSize = 11.sp)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                HorizontalDivider(color = Color(0xFF45364D))
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    MacroValue("Protein", protein, NutritionMint)
+                    MacroValue("Karbonhidrat", carbs, Color(0xFFEB91C6))
+                    MacroValue("Yağ", fat, Color(0xFFFFC483))
+                }
+                if (proteinTarget != null) {
+                    Spacer(Modifier.height(16.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("PROTEİN HEDEFİ", color = NutritionMuted, fontSize = 10.sp)
+                        Text("${String.format(Locale.US, "%.1f", protein)} / ${String.format(Locale.US, "%.1f", proteinTarget)} g",
+                            color = NutritionMint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { (protein / proteinTarget).toFloat().coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().height(7.dp),
+                        color = Color(0xFFEB91C6), trackColor = Color(0xFF45364D)
+                    )
+                }
+                if (meals.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFF45364D))
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Makrolardan hesaplanan enerji: " + String.format(Locale.US, "%.0f kcal", macroCalories),
+                        color = NutritionMuted, fontSize = 12.sp
+                    )
+                    Text("Etiket kalorisi ile fark; lif, yuvarlama ve eksik makro verilerinden kaynaklanabilir.",
+                        color = NutritionMuted, fontSize = 11.sp)
+                }
+            }
+        }
+        item {
             Column(
                 Modifier.fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(listOf(Color(0xFF51314E), Color(0xFF271D36))),
+                        Brush.verticalGradient(listOf(Color(0xFF263C5C), Color(0xFF201C37))),
                         RoundedCornerShape(26.dp)
                     )
-                    .border(1.dp, Color(0xFF29475C), RoundedCornerShape(26.dp))
+                    .border(1.dp, Color(0xFF38527C), RoundedCornerShape(26.dp))
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -417,7 +491,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     }
                 }
                 LinearProgressIndicator(
-                    progress = { waterProgress },
+                    progress = { animatedWaterProgress },
                     modifier = Modifier.fillMaxWidth().height(9.dp),
                     color = Color(0xFFFFBE76),
                     trackColor = Color(0xFF29445A)
@@ -494,70 +568,6 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     noteSaved = true
                 }, modifier = Modifier.fillMaxWidth()) {
                     Text(if (noteSaved) "Kaydedildi" else "Notu kaydet")
-                }
-            }
-        }
-        item {
-            Column(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF1C3740), Color(0xFF172535), NutritionPanel)), RoundedCornerShape(28.dp)).border(1.dp, Color(0xFF2B4850), RoundedCornerShape(28.dp)).padding(23.dp)) {
-                Text("TOPLAM ENERJİ", color = NutritionMuted, fontSize = 11.sp, letterSpacing = 2.sp)
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text("$calories", color = NutritionWhite, fontSize = 49.sp, fontWeight = FontWeight.ExtraBold)
-                    Spacer(Modifier.width(8.dp))
-                    Text("kcal", color = NutritionMint, fontSize = 17.sp,
-                        modifier = Modifier.padding(bottom = 10.dp))
-                }
-                Text("${meals.size} öğün kaydedildi", color = NutritionMuted, fontSize = 12.sp)
-                if (calorieTarget != null) {
-                    Spacer(Modifier.height(17.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("GÜNLÜK ENERJİ HEDEFİ", color = NutritionMuted, fontSize = 10.sp)
-                        Text("$calories / $calorieTarget kcal", color = NutritionMint,
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { (calories.toFloat() / calorieTarget).coerceIn(0f, 1f) },
-                        modifier = Modifier.fillMaxWidth().height(8.dp),
-                        color = NutritionMint, trackColor = Color(0xFF45364D)
-                    )
-                    if (calories > calorieTarget) {
-                        Text("Hedefin ${calories - calorieTarget} kcal üzerinde kayıt var.",
-                            color = NutritionMuted, fontSize = 11.sp)
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = Color(0xFF45364D))
-                Spacer(Modifier.height(16.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    MacroValue("Protein", protein, NutritionMint)
-                    MacroValue("Karbonhidrat", carbs, Color(0xFFEB91C6))
-                    MacroValue("Yağ", fat, Color(0xFFFFC483))
-                }
-                if (proteinTarget != null) {
-                    Spacer(Modifier.height(16.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("PROTEİN HEDEFİ", color = NutritionMuted, fontSize = 10.sp)
-                        Text("${String.format(Locale.US, "%.1f", protein)} / ${String.format(Locale.US, "%.1f", proteinTarget)} g",
-                            color = NutritionMint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { (protein / proteinTarget).toFloat().coerceIn(0f, 1f) },
-                        modifier = Modifier.fillMaxWidth().height(7.dp),
-                        color = Color(0xFFEB91C6), trackColor = Color(0xFF45364D)
-                    )
-                }
-                if (meals.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider(color = Color(0xFF45364D))
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "Makrolardan hesaplanan enerji: " + String.format(Locale.US, "%.0f kcal", macroCalories),
-                        color = NutritionMuted, fontSize = 12.sp
-                    )
-                    Text("Etiket kalorisi ile fark; lif, yuvarlama ve eksik makro verilerinden kaynaklanabilir.",
-                        color = NutritionMuted, fontSize = 11.sp)
                 }
             }
         }
