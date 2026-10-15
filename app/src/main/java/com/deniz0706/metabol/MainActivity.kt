@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -126,16 +128,25 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
             }
         }
     ) { insets ->
-        if (tab == 0) {
-            Dashboard(entries, tab, goalRevision, onAddClick = { editing = null; addDialog = true }, onEdit = { editing = it; addDialog = true }, onDelete = { pendingDelete = it }, modifier = Modifier.padding(insets))
-        } else if (tab == 2) {
-            AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) }, Modifier.padding(insets))
-        } else if (tab == 1) {
-            NutritionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
-        } else if (tab == 3) {
-            BodyCompositionScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets))
-        } else {
-            SettingsScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets), onGoalChanged = { goalRevision++ })
+        Crossfade(
+            targetState = tab,
+            animationSpec = tween(durationMillis = 220),
+            label = "metabol-tab-transition"
+        ) { selectedTab ->
+            when (selectedTab) {
+                0 -> Dashboard(entries, selectedTab, goalRevision,
+                    onAddClick = { editing = null; addDialog = true },
+                    onEdit = { editing = it; addDialog = true },
+                    onDelete = { pendingDelete = it }, modifier = Modifier.padding(insets))
+                1 -> NutritionScreen(androidx.compose.ui.platform.LocalContext.current,
+                    Modifier.padding(insets))
+                2 -> AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) },
+                    Modifier.padding(insets))
+                3 -> BodyCompositionScreen(androidx.compose.ui.platform.LocalContext.current,
+                    Modifier.padding(insets))
+                else -> SettingsScreen(androidx.compose.ui.platform.LocalContext.current,
+                    Modifier.padding(insets), onGoalChanged = { goalRevision++ })
+            }
         }
     }
     if (pendingDelete != null) {
