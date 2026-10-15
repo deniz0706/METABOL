@@ -127,9 +127,9 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
         }
         item {
             Column(Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(Color(0xFF714361), Color(0xFF3A2B4D), APanel)),
+                .background(Brush.linearGradient(listOf(Color(0xFF21445B), Color(0xFF142A42), APanel)),
                     RoundedCornerShape(28.dp))
-                .border(1.dp, Color(0xFF76506D), RoundedCornerShape(28.dp))
+                .border(1.dp, Color(0xFF35566B), RoundedCornerShape(28.dp))
                 .padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("SEÇİLEN DÖNEMDE KİLO FARKI", color = AMint, fontSize = 10.sp, letterSpacing = 1.8.sp)
                 Text(stats.change?.let { (if (animatedChange > 0f) "+" else "") + fmt.format(animatedChange) + " kg" } ?: "—",
@@ -150,7 +150,7 @@ internal fun AnalysisScreen(points: List<WeightPoint>, modifier: Modifier = Modi
                     }
                     Text(direction, color = AMint, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
-                HorizontalDivider(color = Color(0xFF6B4966))
+                HorizontalDivider(color = AEdge)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text("İLK ÖLÇÜM", color = AMuted, fontSize = 10.sp)
