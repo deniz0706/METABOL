@@ -114,6 +114,13 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     var onlineError by remember { mutableStateOf<String?>(null) }
     var onlineSearched by remember { mutableStateOf(false) }
     var searchGeneration by remember { mutableIntStateOf(0) }
+    // Invalidate pending responses when the explorer closes, including dismiss/back.
+    LaunchedEffect(catalogOpen) {
+        if (!catalogOpen) {
+            searchGeneration++
+            onlineLoading = false
+        }
+    }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     fun initialGrams(food: FoodReference): String =
         Regex("""Paket: (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
