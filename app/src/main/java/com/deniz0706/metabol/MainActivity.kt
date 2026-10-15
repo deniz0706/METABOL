@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -93,6 +92,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
     var addDialog by remember { mutableStateOf(false) }
     var goalRevision by remember { mutableIntStateOf(0) }
     var editing by remember { mutableStateOf<WeightRecord?>(null) }
+    var pendingDelete by remember { mutableStateOf<WeightRecord?>(null) }
     Scaffold(
         containerColor = Bg,
         bottomBar = {
@@ -109,7 +109,7 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         }
     ) { insets ->
         if (tab == 0) {
-            Dashboard(entries, tab, goalRevision, onAddClick = { editing = null; addDialog = true }, onEdit = { editing = it; addDialog = true }, onDelete = onDelete, modifier = Modifier.padding(insets))
+            Dashboard(entries, tab, goalRevision, onAddClick = { editing = null; addDialog = true }, onEdit = { editing = it; addDialog = true }, onDelete = { pendingDelete = it }, modifier = Modifier.padding(insets))
         } else if (tab == 2) {
             AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) }, Modifier.padding(insets))
         } else if (tab == 1) {
@@ -119,6 +119,22 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
         } else {
             SettingsScreen(androidx.compose.ui.platform.LocalContext.current, Modifier.padding(insets), onGoalChanged = { goalRevision++ })
         }
+    }
+    if (pendingDelete != null) {
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text("Ölçümü sil?") },
+            text = { Text("Bu kilo ölçümü kalıcı olarak silinecek.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingDelete?.let(onDelete)
+                    pendingDelete = null
+                }) { Text("Sil", color = Color(0xFFFF879A)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) { Text("Vazgeç") }
+            }
+        )
     }
     if (addDialog) {
         var value by remember(editing) { mutableStateOf(editing?.kg?.let { numberFormat.format(it) } ?: "") }
@@ -245,7 +261,7 @@ private fun Dashboard(
                     }
                 }
                 HorizontalDivider(color = Edge)
-                WeightChart(entries, Modifier.fillMaxWidth().height(248.dp))
+                WeightChart(entries, Modifier.fillMaxWidth().height(340.dp))
                 Button(onClick = onAddClick, modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(15.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = Bg)) {
