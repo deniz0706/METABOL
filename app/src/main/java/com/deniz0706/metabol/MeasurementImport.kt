@@ -83,4 +83,44 @@ internal object MeasurementImport {
         require(archive.edit().putString("measurement_source", source).commit()) { "Kaynak dosya arşivlenemedi" }
         return Result(addedWeights, addedBodies, skipped)
     }
+
+    /** Adds estimated daily nutrition totals without replacing days the user already logged. */
+    fun importNutrition(context: Context, source: String): Pair<Int, Int> {
+        require(source.length <= 1_000_000) { "Dosya çok büyük" }
+        val root = JSONObject(source)
+        require(root.optString("format") == "metabol-estimated-nutrition-history" &&
+            root.optInt("schemaVersion") == 1) { "Beslenme dosyası tanınmadı" }
+        val days = root.getJSONArray("dailyNutrition")
+        require(days.length() <= 5000) { "Çok fazla gün var" }
+        val prefs = context.getSharedPreferences("metabol_nutrition", Context.MODE_PRIVATE)
+        val zone = ZoneId.of("Europe/Istanbul")
+        val prepared = linkedMapOf<String, String>()
+        var skipped = 0
+        for (i in 0 until days.length()) {
+            val item = days.getJSONObject(i)
+            val day = LocalDate.parse(item.getString("date"))
+            require(!day.isAfter(LocalDate.now(zone)) && !day.isBefore(LocalDate.of(2000, 1, 1))) {
+                "Geçersiz tarih: $day"
+            }
+            val key = "meals_$day"
+            if (prefs.contains(key) || prepared.containsKey(key)) { skipped++; continue }
+            val calories = item.getInt("totalCaloriesKcal")
+            val protein = item.getDouble("proteinG")
+            val carbs = item.getDouble("carbsG")
+            val fat = item.getDouble("fatG")
+            require(calories in 0..10000 && listOf(protein, carbs, fat).all {
+                it.isFinite() && it in 0.0..1000.0
+            }) { "Geçersiz beslenme verisi: $day" }
+            // The source only contains daily totals, not a verified meal breakdown.
+            val meal = JSONObject().put("id", day.atTime(12, 0).atZone(zone).toInstant().toEpochMilli())
+                .put("name", "Tahmini günlük toplam (gerçek öğün kaydı değil)")
+                .put("calories", calories).put("protein", protein)
+                .put("carbs", carbs).put("fat", fat)
+            prepared[key] = JSONArray().put(meal).toString()
+        }
+        val editor = prefs.edit()
+        prepared.forEach { (key, value) -> editor.putString(key, value) }
+        require(editor.commit()) { "Beslenme verileri kaydedilemedi" }
+        return prepared.size to skipped
+    }
 }
