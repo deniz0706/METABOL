@@ -82,6 +82,31 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
     var comparisonEnd by remember { mutableStateOf<Long?>(null) }
     val startRecord = records.firstOrNull { it.id == comparisonStart } ?: records.firstOrNull()
     val endRecord = records.firstOrNull { it.id == comparisonEnd } ?: records.lastOrNull()
+    val weightEntries = remember(context) {
+        runCatching {
+            val weights = context.getSharedPreferences("metabol_local", Context.MODE_PRIVATE)
+            val array = JSONArray(weights.getString("weights", "[]"))
+            (0 until array.length()).map { index ->
+                val obj = array.getJSONObject(index)
+                obj.getLong("time") to obj.getDouble("kg")
+            }.sortedBy { it.first }
+        }.getOrDefault(emptyList())
+    }
+    // Only combine readings from the same calendar day; never silently use an older weight.
+    val dateKey = SimpleDateFormat("yyyy-MM-dd", Locale("tr", "TR"))
+    val weightByDay = weightEntries.groupBy { dateKey.format(Date(it.first)) }
+        .mapValues { (_, values) -> values.last().second }
+    data class EstimatedMass(val fatKg: Double, val leanKg: Double)
+    fun estimateMass(record: BodyRecord?): EstimatedMass? {
+        if (record == null) return null
+        val weight = weightByDay[dateKey.format(Date(record.id))] ?: return null
+        val fat = record.fatPercent ?: return null
+        if (weight !in 20.0..400.0 || fat !in 0.0..75.0) return null
+        return EstimatedMass(weight * fat / 100.0, weight * (1.0 - fat / 100.0))
+    }
+    val latestMass = estimateMass(latest)
+    val startMass = estimateMass(startRecord)
+    val endMass = estimateMass(endRecord)
     val comparisonFields = listOf(
         Triple("Yağ oranı", startRecord?.fatPercent to endRecord?.fatPercent, "%"),
         Triple("Kas kütlesi", startRecord?.muscleKg to endRecord?.muscleKg, "kg"),
@@ -127,6 +152,35 @@ internal fun BodyCompositionScreen(context: Context, modifier: Modifier = Modifi
             }
         }
         item { BodyMetric("BEL ÇEVRESİ", latest?.waistCm, "cm", Modifier.fillMaxWidth()) }
+
+        item {
+            Column(Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("TAHMİNİ YAĞ / YAĞSIZ KÜTLE", color = BodyMint,
+                    fontSize = 11.sp, letterSpacing = 1.2.sp)
+                if (latestMass == null) {
+                    Text("Hesaplama için vücut analiziyle aynı güne ait kilo ve yağ oranı ölçümü gerekli.",
+                        color = BodyMuted, fontSize = 12.sp)
+                } else {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        BodyMetric("YAĞ KÜTLESİ", latestMass.fatKg, "kg", Modifier.weight(1f))
+                        BodyMetric("YAĞSIZ KÜTLE", latestMass.leanKg, "kg", Modifier.weight(1f))
+                    }
+                }
+                if (startRecord?.id != endRecord?.id && startMass != null && endMass != null) {
+                    Text(
+                        "Seçili tarihler: yağ " +
+                            String.format(Locale("tr", "TR"), "%+.1f kg", endMass.fatKg - startMass.fatKg) +
+                            " · yağsız " +
+                            String.format(Locale("tr", "TR"), "%+.1f kg", endMass.leanKg - startMass.leanKg),
+                        color = BodyMint, fontSize = 12.sp
+                    )
+                }
+                Text("Kilo × yağ oranından hesaplanan yaklaşık değerlerdir. Yağsız kütle yalnızca kas değildir; su, kemik ve organları da kapsar.",
+                    color = BodyMuted, fontSize = 11.sp)
+            }
+        }
+
         if (previous != null && latest != null) {
             item {
                 Column(Modifier.fillMaxWidth().background(BodyCard, RoundedCornerShape(22.dp)).padding(18.dp),
