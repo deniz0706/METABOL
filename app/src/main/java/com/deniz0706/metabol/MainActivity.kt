@@ -137,7 +137,8 @@ private fun MetabolApp(entries: List<WeightRecord>, onAdd: (WeightRecord) -> Uni
                 0 -> Dashboard(entries, selectedTab, goalRevision,
                     onAddClick = { editing = null; addDialog = true },
                     onEdit = { editing = it; addDialog = true },
-                    onDelete = { pendingDelete = it }, modifier = Modifier.padding(insets))
+                    onDelete = { pendingDelete = it }, onNutritionClick = { tab = 1 },
+                    modifier = Modifier.padding(insets))
                 1 -> NutritionScreen(androidx.compose.ui.platform.LocalContext.current,
                     Modifier.padding(insets))
                 2 -> AnalysisScreen(entries.map { WeightPoint(it.time, it.kg) },
@@ -227,13 +228,29 @@ private fun Header() {
 @Composable
 private fun Dashboard(
     entries: List<WeightRecord>, tab: Int, goalRevision: Int, onAddClick: () -> Unit,
-    onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit, modifier: Modifier = Modifier
+    onEdit: (WeightRecord) -> Unit, onDelete: (WeightRecord) -> Unit,
+    onNutritionClick: () -> Unit, modifier: Modifier = Modifier
 ) {
     val latest = entries.lastOrNull()
     val context = androidx.compose.ui.platform.LocalContext.current
     val goal = remember(goalRevision) {
         context.getSharedPreferences("metabol_profile", android.content.Context.MODE_PRIVATE)
             .getString("goal_weight", null)?.toFloatOrNull()
+    }
+    val todayNutrition = remember {
+        val nutrition = context.getSharedPreferences("metabol_nutrition", android.content.Context.MODE_PRIVATE)
+        val todayKey = "meals_" + SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        runCatching {
+            val array = JSONArray(nutrition.getString(todayKey, "[]"))
+            var kcal = 0
+            var protein = 0.0
+            for (i in 0 until array.length()) {
+                val meal = array.getJSONObject(i)
+                kcal += meal.optInt("calories", 0)
+                protein += meal.optDouble("protein", 0.0)
+            }
+            Triple(array.length(), kcal, protein)
+        }.getOrDefault(Triple(0, 0, 0.0))
     }
     val first = entries.firstOrNull()
     val change = if (latest != null && first != null) latest.kg - first.kg else null
@@ -310,6 +327,42 @@ private fun Dashboard(
                 MetricCard("ÖLÇÜM SAYISI", entries.size.toString(), "toplam kayıt", Modifier.weight(1f))
                 MetricCard("DEĞİŞİM", change?.let { (if (it > 0) "+" else "") + numberFormat.format(it) } ?: "—",
                     "kilogram", Modifier.weight(1f))
+            }
+        }
+        item {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.linearGradient(listOf(Color(0xFF1B2E3B), Surface)),
+                        RoundedCornerShape(24.dp))
+                    .border(1.dp, Edge, RoundedCornerShape(24.dp))
+                    .clickable(onClick = onNutritionClick).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("BUGÜNKÜ BESLENME", color = Mint, fontSize = 11.sp, letterSpacing = 1.5.sp)
+                    Text("Günlüğe git  ›", color = Mint, fontSize = 12.sp)
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text("${todayNutrition.second}", color = White,
+                            fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("kayıtlı kcal", color = Muted, fontSize = 11.sp)
+                    }
+                    Column {
+                        Text(String.format(Locale.US, "%.1f g", todayNutrition.third),
+                            color = White, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                        Text("protein", color = Muted, fontSize = 11.sp)
+                    }
+                    Column {
+                        Text("${todayNutrition.first}", color = White,
+                            fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                        Text("öğün", color = Muted, fontSize = 11.sp)
+                    }
+                }
+                if (todayNutrition.first == 0) {
+                    Text("Bugün henüz öğün kaydı yok.", color = Muted, fontSize = 12.sp)
+                }
             }
         }
         item {
