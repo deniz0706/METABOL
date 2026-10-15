@@ -86,7 +86,10 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         onlineSearched = true
         val generation = ++searchGeneration
         Thread {
-            val result = runCatching { OpenFoodFacts.search(query) }
+            val result = runCatching {
+                if (query.trim().matches(Regex("[0-9]{8,14}"))) OpenFoodFacts.lookupBarcode(query.trim())
+                else OpenFoodFacts.search(query)
+            }
             Handler(Looper.getMainLooper()).post {
                 if (generation == searchGeneration) {
                     onlineLoading = false
@@ -323,7 +326,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = query, onValueChange = { query = it },
-                        label = { Text("Besin ara: muz, tavuk, pilav...") },
+                        label = { Text("Besin adı veya barkod numarası") },
                         singleLine = true, modifier = Modifier.fillMaxWidth()
                     )
                     Button(
@@ -331,7 +334,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         enabled = query.trim().length >= 2 && !onlineLoading,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = NutritionMint, contentColor = NutritionBg)
-                    ) { Text(if (onlineLoading) "Aranıyor..." else "İnternette ürün ara", fontSize = 12.sp) }
+                    ) { Text(if (onlineLoading) "Aranıyor..." else if (query.trim().matches(Regex("[0-9]{8,14}"))) "Barkodla ürün bul" else "İnternette ürün ara", fontSize = 12.sp) }
                     Text("Çevrimiçi arama isteğe bağlıdır. Arama metni Open Food Facts'e gönderilir.",
                         color = NutritionMuted, fontSize = 10.sp)
                     if (onlineLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = NutritionMint)
