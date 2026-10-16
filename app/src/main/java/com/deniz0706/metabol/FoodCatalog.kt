@@ -115,9 +115,28 @@ internal object FoodCatalog {
     private val indexedFoods by lazy { foods.map { it to normalize(it.name) } }
 
     fun search(query: String): List<FoodReference> {
-        val normalized = normalize(query.trim())
+        val normalized = normalize(query.trim()).replace(Regex("\\s+"), " ")
         if (normalized.isEmpty()) return foods
-        return indexedFoods.filter { it.second.contains(normalized) }.map { it.first }
+        val terms = normalized.split(' ').filter { it.isNotBlank() }
+        // Prefer exact and prefix matches; allow words in a different order
+        // (e.g. "tavuk göğsü" / "göğsü tavuk") without scanning or sorting
+        // the full catalog more than once.
+        return indexedFoods.asSequence()
+            .mapNotNull { (food, indexedName) ->
+                val rank = when {
+                    indexedName == normalized -> 0
+                    indexedName.startsWith(normalized) -> 1
+                    indexedName.contains(normalized) -> 2
+                    terms.all { indexedName.contains(it) } -> 3
+                    else -> return@mapNotNull null
+                }
+                rank to food
+            }
+            .sortedWith(compareBy<Pair<Int, FoodReference>> { it.first }
+                .thenBy { it.second.name.length }
+                .thenBy { it.second.name })
+            .map { it.second }
+            .toList()
     }
 
     fun calculate(food: FoodReference, grams: Double): FoodPortion {
