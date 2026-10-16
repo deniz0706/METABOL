@@ -1199,8 +1199,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             confirmButton = {
                 TextButton(onClick = {
                     val existing = meals.map { it.id }.toMutableSet()
-                    val copied = previousMeals.mapIndexed { index, meal ->
-                        var id = System.currentTimeMillis() + index
+                    val copied = previousMeals.map { meal ->
+                        var id = System.currentTimeMillis()
                         while (id in existing) id++
                         existing.add(id)
                         meal.copy(id = id)
@@ -1220,8 +1220,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     if (pendingDeleteMeal != null) {
         AlertDialog(
             onDismissRequest = { pendingDeleteMeal = null },
-            title = { Text("Öğünü sil?") },
-            text = { Text("Bu öğün seçili günün kayıtlarından silinecek.") },
+            containerColor = NutritionPanel,
+            title = { Text("Öğünü sil?", color = NutritionWhite) },
+            text = { Text("“${pendingDeleteMeal?.name.orEmpty()}” seçili günün kayıtlarından silinecek. Bu işlem geri alınamaz.") },
             confirmButton = {
                 TextButton(onClick = {
                     pendingDeleteMeal?.let { target -> save(meals.filterNot { it.id == target.id }) }
