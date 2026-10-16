@@ -317,7 +317,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         NutritionInsights.summarize(recorded, insightsWindow, anchor)
         }
     }
-    val profilePrefs = context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE)
+    val profilePrefs = remember(context) { context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE) }
     val calorieTarget = profilePrefs.getString("calorie_target", null)?.toIntOrNull()
         ?.takeIf { it in 500..10000 }
     val proteinTarget = profilePrefs.getString("protein_target", null)?.toDoubleOrNull()
@@ -325,10 +325,19 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     val recordedSevenDays = remember(lastSevenDays, historyRevision) {
         lastSevenDays.map { (day, _) -> day to prefs.contains("meals_$day") }.toMap()
     }
-    val calories = meals.sumOf { it.calories }
-    val protein = meals.sumOf { it.protein }
-    val carbs = meals.sumOf { it.carbs }
-    val fat = meals.sumOf { it.fat }
+    // Water and dialog state changes should not recalculate the entire meal list.
+    val totals = remember(meals) {
+        doubleArrayOf(
+            meals.sumOf { it.calories }.toDouble(),
+            meals.sumOf { it.protein },
+            meals.sumOf { it.carbs },
+            meals.sumOf { it.fat }
+        )
+    }
+    val calories = totals[0].toInt()
+    val protein = totals[1]
+    val carbs = totals[2]
+    val fat = totals[3]
     val macroCalories = protein * 4.0 + carbs * 4.0 + fat * 9.0
     val animatedCalories by animateIntAsState(calories, tween(700), label = "calorie-count")
     val animatedWater by animateIntAsState(waterMl, tween(700), label = "water-count")
