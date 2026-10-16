@@ -294,8 +294,13 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
     var scienceHeight by remember { mutableStateOf(profilePrefs.getString("science_height", "") ?: "") }
     var scienceSex by remember { mutableStateOf(profilePrefs.getString("science_sex", "male") ?: "male") }
     var scienceActivity by remember { mutableStateOf(profilePrefs.getString("science_activity", "1.375") ?: "1.375") }
-    val scienceValid = (scienceAge.toIntOrNull() ?: 0) in 18..100 &&
-        (scienceHeight.replace(',', '.').toDoubleOrNull() ?: 0.0) in 100.0..250.0
+    val allowedActivityFactors = setOf("1.2", "1.375", "1.55", "1.725", "1.9")
+    val parsedScienceHeight = scienceHeight.trim().replace(',', '.').toDoubleOrNull()
+    val scienceValid = (scienceAge.trim().toIntOrNull() ?: 0) in 18..100 &&
+        parsedScienceHeight != null && parsedScienceHeight.isFinite() &&
+        parsedScienceHeight in 100.0..250.0 &&
+        scienceSex in setOf("male", "female") &&
+        scienceActivity in allowedActivityFactors
     var pendingImport by remember { mutableStateOf<String?>(null) }
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -437,9 +442,9 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                     enter = expandVertically() + fadeIn(),
                     exit = shrinkVertically() + fadeOut()) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(scienceAge, { scienceAge = it }, label = { Text("Yaş") },
+                OutlinedTextField(scienceAge, { scienceAge = it.take(3) }, label = { Text("Yaş") },
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(scienceHeight, { scienceHeight = it }, label = { Text("Boy (cm)") },
+                OutlinedTextField(scienceHeight, { scienceHeight = it.take(8) }, label = { Text("Boy (cm)") },
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 Text("Denklemde kullanılan biyolojik cinsiyet", color = SMuted, fontSize = 12.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -455,8 +460,8 @@ internal fun SettingsScreen(context: Context, modifier: Modifier = Modifier, onG
                 }
                 Button(onClick = {
                     val success = profilePrefs.edit()
-                        .putString("science_age", scienceAge)
-                        .putString("science_height", scienceHeight.replace(',', '.'))
+                        .putString("science_age", scienceAge.trim())
+                        .putString("science_height", scienceHeight.trim().replace(',', '.'))
                         .putString("science_sex", scienceSex)
                         .putString("science_activity", scienceActivity).commit()
                     message = if (success) "Metabolizma profili kaydedildi." else "Profil kaydedilemedi."
