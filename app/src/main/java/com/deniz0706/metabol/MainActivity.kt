@@ -615,12 +615,12 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                 Text("Grafik için ölçüm ekle", color = Muted)
             }
         } else {
-            val start = periodStart ?: records.first().time
+            val start = records.first().time
             val end = if (periodStart != null) today else records.last().time
             val span = (end - start).coerceAtLeast(1L)
             if (periodStart != null) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Başlangıç: ${dateFormat.format(Date(periodStart))}",
+                    Text("İlk ölçüm: ${dateFormat.format(Date(start))}",
                         color = Muted, fontSize = 10.sp)
                     Text("Bugün: ${dateFormat.format(Date(today))}",
                         color = Mint, fontSize = 10.sp)
@@ -644,7 +644,7 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                 val width = (right - left).coerceAtLeast(1f)
                 val height = (bottom - top).coerceAtLeast(1f)
                 fun point(record: WeightRecord): Offset {
-                    val x = if (records.size == 1) 0.5f else (record.time - start).toFloat() / span
+                    val x = if (records.size == 1 && periodStart == null) 0.5f else (record.time - start).toFloat() / span
                     return Offset(left + x * width, top + (max - record.kg) / range * height)
                 }
                 axisPaint.textSize = 10.sp.toPx()
