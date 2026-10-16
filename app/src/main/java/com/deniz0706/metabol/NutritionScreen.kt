@@ -1255,9 +1255,27 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
                     OutlinedTextField(f, { f = it }, label = { Text("Yağ (g)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
-                    val energyPreview = (p.replace(',', '.').toDoubleOrNull() ?: 0.0) * 4 + (c.replace(',', '.').toDoubleOrNull() ?: 0.0) * 4 + (f.replace(',', '.').toDoubleOrNull() ?: 0.0) * 9
-                    Text("Makrolardan tahmini enerji: ${energyPreview.toInt()} kcal", color = NutritionMint, fontSize = 12.sp)
-                    TextButton(onClick = { kcal = energyPreview.toInt().toString() }) { Text("Hesaplanan kaloriyi kullan") }
+                    val previewProtein = p.replace(',', '.').toDoubleOrNull()
+                    val previewCarbs = c.replace(',', '.').toDoubleOrNull()
+                    val previewFat = f.replace(',', '.').toDoubleOrNull()
+                    val previewValid = listOf(previewProtein, previewCarbs, previewFat)
+                        .all { it != null && it.isFinite() && it in 0.0..1000.0 }
+                    val energyPreview = if (previewValid)
+                        (previewProtein!! * 4 + previewCarbs!! * 4 + previewFat!! * 9)
+                    else null
+                    Text(
+                        if (energyPreview != null)
+                            "Makrolardan tahmini enerji: ${energyPreview.toInt()} kcal"
+                        else "Kalori hesabı için geçerli makro değerleri gir.",
+                        color = if (energyPreview != null) NutritionMint else NutritionMuted,
+                        fontSize = 12.sp
+                    )
+                    TextButton(
+                        enabled = energyPreview != null && energyPreview in 0.0..10000.0,
+                        onClick = { energyPreview?.let { kcal = it.toInt().toString() } }
+                    ) { Text("Hesaplanan kaloriyi kullan") }
+                    Text("4/4/9 kcal/g tahminidir; etiket kalorisi farklı olabilir.",
+                        color = NutritionMuted, fontSize = 11.sp)
                 }
             },
             confirmButton = {
