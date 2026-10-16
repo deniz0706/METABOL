@@ -147,7 +147,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
     }
     var selectedFood by remember { mutableStateOf<FoodReference?>(null) }
     fun initialGrams(food: FoodReference): String =
-        Regex("""Paket: (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
+        Regex("""(?:Paket|1 adet): (\d+) g""").find(food.note)?.groupValues?.get(1) ?: "100"
     var selectedGrams by remember { mutableStateOf("100") }
     val searchExecutor = remember { Executors.newSingleThreadExecutor() }
     DisposableEffect(searchExecutor) {
