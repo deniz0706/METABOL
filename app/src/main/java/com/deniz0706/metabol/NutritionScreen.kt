@@ -1246,15 +1246,50 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             text = {
                 Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(name, { name = it }, label = { Text("Besin / öğün adı") }, singleLine = true)
-                    OutlinedTextField(kcal, { kcal = it }, label = { Text("Kalori (kcal)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
-                    OutlinedTextField(p, { p = it }, label = { Text("Protein (g)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
-                    OutlinedTextField(c, { c = it }, label = { Text("Karbonhidrat (g)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
-                    OutlinedTextField(f, { f = it }, label = { Text("Yağ (g)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it.take(120) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Besin / öğün adı") },
+                        singleLine = true,
+                        isError = name.isBlank()
+                    )
+                    OutlinedTextField(
+                        value = kcal,
+                        onValueChange = { kcal = it.take(12) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Kalori (kcal)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = kcal.isNotBlank() && kcal.replace(',', '.').toDoubleOrNull() == null
+                    )
+                    OutlinedTextField(
+                        value = p,
+                        onValueChange = { p = it.take(12) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Protein (g)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        isError = p.isNotBlank() && p.replace(',', '.').toDoubleOrNull() == null
+                    )
+                    OutlinedTextField(
+                        value = c,
+                        onValueChange = { c = it.take(12) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Karbonhidrat (g)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        isError = c.isNotBlank() && c.replace(',', '.').toDoubleOrNull() == null
+                    )
+                    OutlinedTextField(
+                        value = f,
+                        onValueChange = { f = it.take(12) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Yağ (g)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        isError = f.isNotBlank() && f.replace(',', '.').toDoubleOrNull() == null
+                    )
                     val previewProtein = p.replace(',', '.').toDoubleOrNull()
                     val previewCarbs = c.replace(',', '.').toDoubleOrNull()
                     val previewFat = f.replace(',', '.').toDoubleOrNull()
