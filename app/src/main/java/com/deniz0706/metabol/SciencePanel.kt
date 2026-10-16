@@ -23,13 +23,14 @@ import kotlinx.coroutines.withContext
 internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
     val profilePrefs = remember(context) { context.getSharedPreferences("metabol_profile", Context.MODE_PRIVATE) }
     val nutritionPrefs = remember(context) { context.getSharedPreferences("metabol_nutrition", Context.MODE_PRIVATE) }
-    val profile = remember {
+    // Read the saved profile on recomposition so returning from Settings refreshes the estimate.
+    val profile = run {
         val age = profilePrefs.getString("science_age", null)?.toIntOrNull()
         val height = profilePrefs.getString("science_height", null)?.toDoubleOrNull()
         val activity = profilePrefs.getString("science_activity", null)?.toDoubleOrNull()
         val sex = profilePrefs.getString("science_sex", null)
         if (age != null && age in 18..100 && height != null && height in 100.0..250.0 &&
-            activity != null && activity in 1.2..1.9 && sex in listOf("male", "female"))
+            activity != null && activity.isFinite() && activity in setOf(1.2, 1.375, 1.55, 1.725, 1.9) && sex in listOf("male", "female"))
             MetabolicScience.Profile(age!!, height, sex == "male", activity)
         else null
     }
@@ -51,11 +52,11 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
         MetabolicScience.estimate(profile, data, LocalDate.now())
         }
     }
-    val mint = Color(0xFFFFBE76)
-    val muted = Color(0xFFB9ACCA)
-    val white = Color(0xFFFFF7EE)
+    val mint = Color(0xFF57D6C1)
+    val muted = Color(0xFF9AAFC5)
+    val white = Color(0xFFF3F8FF)
     val result = estimate
-    Column(Modifier.fillMaxWidth().background(Color(0xFF211C30), RoundedCornerShape(24.dp)).padding(20.dp),
+    Column(Modifier.fillMaxWidth().background(Color(0xFF172337), RoundedCornerShape(24.dp)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("METABOL · METABOLİZMA REHBERİ", color = mint, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Text("Vücudunun yaklaşık enerji ihtiyacı", color = white, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -113,7 +114,7 @@ internal fun SciencePanel(context: Context, points: List<WeightPoint>) {
             false -> "Trend devam ediyor"
             null -> "Veri yetersiz"
         })
-        HorizontalDivider(color = Color(0xFF45364D))
+        HorizontalDivider(color = Color(0xFF30445C))
         Text("Aşağıdaki 30 günlük değer bir senaryodur; hedef veya gerçekleşeceği kesin bir sonuç değildir.",
             color = muted, fontSize = 11.sp)
         Metric("Bu hız sürerse 30 gün sonraki tahmin", result.forecast30Kg?.let {
