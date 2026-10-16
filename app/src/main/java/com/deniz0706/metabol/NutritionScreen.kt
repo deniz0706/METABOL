@@ -892,14 +892,20 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         }
     }
         var category by remember { mutableStateOf("Tümü") }
-        val savedResults = remember(query, savedFoods) {
-            val needle = query.trim()
+        // Keep the text field responsive while postponing catalog filtering
+        // until the user pauses briefly. Barcode/network search stays explicit.
+        val debouncedQuery by produceState(initialValue = query, key1 = query) {
+            kotlinx.coroutines.delay(140)
+            value = query
+        }
+        val savedResults = remember(debouncedQuery, savedFoods) {
+            val needle = debouncedQuery.trim()
             savedFoods.filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }
         }
-        val localResults = remember(query, category, recentFoodNames) {
-            val results = FoodCatalog.search(query)
+        val localResults = remember(debouncedQuery, category, recentFoodNames) {
+            val results = FoodCatalog.search(debouncedQuery)
                 .filter { category == "Tümü" || FoodCatalog.categoryOf(it) == category }
-            if (query.isNotBlank()) {
+            if (debouncedQuery.isNotBlank()) {
                 // FoodCatalog already ranks exact, prefix and multiword matches.
                 // Avoid a second full sort that would erase that relevance ranking.
                 results
