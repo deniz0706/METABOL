@@ -1016,7 +1016,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
                             Spacer(Modifier.height(5.dp))
                         }
-                        items(onlineResults) { food ->
+                        items(onlineResults, key = { "online:${it.name}" }, contentType = { "food" }) { food ->
                             FoodSearchRow(food, true) {
                                 selectedFood = food
                                 selectedGrams = initialGrams(food)
@@ -1034,7 +1034,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                             Text("KAYDETTİĞİN ÜRÜNLER · ${savedResults.size}",
                                 color = NutritionMint, fontSize = 11.sp, letterSpacing = 1.4.sp)
                         }
-                        items(savedResults) { food ->
+                        items(savedResults, key = { "saved:${it.name}" }, contentType = { "saved-food" }) { food ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.weight(1f)) {
                                     FoodSearchRow(food, true) {
@@ -1073,7 +1073,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                 color = NutritionMuted, fontSize = 12.sp)
                         }
                     }
-                    items(localResults, key = { it.name }) { food ->
+                    items(localResults, key = { "local:${it.name}" }, contentType = { "food" }) { food ->
                         FoodSearchRow(food, false) {
                             selectedFood = food
                             selectedGrams = "100"
