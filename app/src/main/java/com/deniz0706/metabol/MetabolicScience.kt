@@ -97,9 +97,22 @@ internal object MetabolicScience {
                 projected += gap / density * (0.85 + 0.15 * exp(-day / 30.0))
             }
         } else projected = null
+        // Estimate short-term noise around the weight trend, rather than using the
+        // raw standard deviation (which incorrectly treats steady fat loss as noise).
         val fluctuations = if (recentWeights.size >= 5) {
+            val firstDay = recentWeights.first().date.toEpochDay().toDouble()
+            val offsets = recentWeights.map { it.date.toEpochDay() - firstDay }
             val values = recentWeights.map { it.weightKg!! }
-            sqrt(values.map { (it - values.average()) * (it - values.average()) }.average())
+            val meanX = offsets.average()
+            val meanY = values.average()
+            val varianceX = offsets.sumOf { (it - meanX) * (it - meanX) }
+            val slope = if (varianceX > 0.0)
+                offsets.indices.sumOf { (offsets[it] - meanX) * (values[it] - meanY) } / varianceX
+            else 0.0
+            sqrt(offsets.indices.map { index ->
+                val residual = values[index] - (meanY + slope * (offsets[index] - meanX))
+                residual * residual
+            }.average())
         } else 1.0
         val uncertainty = max(1.5, fluctuations * 2.5 + 0.5) +
             (if (reliability < 70) 1.0 else 0.0) + (forecastError ?: 0.0)
