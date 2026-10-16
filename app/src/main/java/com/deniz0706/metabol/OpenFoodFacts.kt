@@ -115,14 +115,18 @@ internal object OpenFoodFacts {
                 val count = match.groupValues[1].toIntOrNull() ?: 1
                 val amount = match.groupValues[2].replace(",", ".").toDoubleOrNull() ?: 0.0
                 val multiplier = if (match.groupValues[3].lowercase().startsWith("k")) 1000.0 else 1.0
-                count * amount * multiplier
+                amount * multiplier
             } ?: Double.NaN
-            // Prefer the package text for multipacks; metadata can describe one item.
+            // For "2 x 35 g" start with one 35 g serving, not the entire 70 g pack.
+            // The user can still enter the total amount in the portion dialog.
+            val multipackCount = quantityMatch?.groupValues?.get(1)?.toIntOrNull() ?: 1
             val rawGrams = if (textGrams.isFinite()) textGrams else metadataGrams
             val packageGrams = rawGrams.takeIf { it.isFinite() && it in 1.0..5000.0 }
-                ?.toInt()?.takeIf { it > 0 }
-            val note = if (packageGrams != null) "Open Food Facts · Paket: ${packageGrams} g · Etiketten doğrula"
-                else "Open Food Facts · Etiketten doğrula"
+                ?.let { kotlin.math.round(it).toInt() }?.takeIf { it > 0 }
+            val note = if (packageGrams != null) {
+                val portionLabel = if (multipackCount > 1) "1 adet" else "Paket"
+                "Open Food Facts · ${portionLabel}: ${packageGrams} g · Etiketten doğrula"
+            } else "Open Food Facts · Etiketten doğrula"
             FoodReference(displayName.take(120),kcal,p,c,f,note)
         }.distinctBy { it.name }.take(60)
     }
