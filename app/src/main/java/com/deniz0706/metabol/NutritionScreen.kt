@@ -1252,7 +1252,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Besin / öğün adı") },
                         singleLine = true,
-                        isError = name.isBlank()
+                        isError = name.isNotEmpty() && name.isBlank()
                     )
                     OutlinedTextField(
                         value = kcal,
@@ -1261,7 +1261,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         label = { Text("Kalori (kcal)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        isError = kcal.isNotBlank() && kcal.replace(',', '.').toDoubleOrNull() == null
+                        isError = kcal.isNotBlank() && kcal.toIntOrNull()?.let { it in 0..10000 } != true
                     )
                     OutlinedTextField(
                         value = p,
@@ -1270,7 +1270,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         label = { Text("Protein (g)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
-                        isError = p.isNotBlank() && p.replace(',', '.').toDoubleOrNull() == null
+                        isError = p.isNotBlank() && p.replace(',', '.').toDoubleOrNull()?.let { it.isFinite() && it in 0.0..1000.0 } != true
                     )
                     OutlinedTextField(
                         value = c,
@@ -1279,7 +1279,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         label = { Text("Karbonhidrat (g)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
-                        isError = c.isNotBlank() && c.replace(',', '.').toDoubleOrNull() == null
+                        isError = c.isNotBlank() && c.replace(',', '.').toDoubleOrNull()?.let { it.isFinite() && it in 0.0..1000.0 } != true
                     )
                     OutlinedTextField(
                         value = f,
@@ -1288,7 +1288,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         label = { Text("Yağ (g)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
-                        isError = f.isNotBlank() && f.replace(',', '.').toDoubleOrNull() == null
+                        isError = f.isNotBlank() && f.replace(',', '.').toDoubleOrNull()?.let { it.isFinite() && it in 0.0..1000.0 } != true
                     )
                     val previewProtein = p.replace(',', '.').toDoubleOrNull()
                     val previewCarbs = c.replace(',', '.').toDoubleOrNull()
