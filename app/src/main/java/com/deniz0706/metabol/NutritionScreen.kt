@@ -897,14 +897,18 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             savedFoods.filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }
         }
         val localResults = remember(query, category, recentFoodNames) {
-            FoodCatalog.search(query).filter { category == "Tümü" || FoodCatalog.categoryOf(it) == category }.sortedWith(
-                compareBy<FoodReference> {
-                    if (query.isBlank()) {
-                        val index = recentFoodNames.indexOf(it.name)
-                        if (index >= 0) index else if (FoodCatalog.categoryOf(it) == "Yemekler") 100 else 200
-                    } else 0
-                }.thenBy { it.name }
-            )
+            val recentRanks = recentFoodNames.withIndex().associate { it.value to it.index }
+            val blankQuery = query.isBlank()
+            FoodCatalog.search(query)
+                .asSequence()
+                .map { food -> food to FoodCatalog.categoryOf(food) }
+                .filter { (_, foodCategory) -> category == "Tümü" || foodCategory == category }
+                .sortedWith(compareBy<Pair<FoodReference, String>> { (food, foodCategory) ->
+                    if (!blankQuery) 0
+                    else recentRanks[food.name] ?: if (foodCategory == "Yemekler") 100 else 200
+                }.thenBy { (food, _) -> food.name })
+                .map { (food, _) -> food }
+                .toList()
         }
         Dialog(
             onDismissRequest = { catalogOpen = false },
@@ -1046,7 +1050,8 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                                     updated.forEach { item ->
                                         array.put(JSONObject().put("name", item.name)
                                             .put("kcal", item.kcal100).put("protein", item.protein100)
-                                            .put("carbs", item.carbs100).put("fat", item.fat100))
+                                            .put("carbs", item.carbs100).put("fat", item.fat100)
+                                            .put("note", item.note))
                                     }
                                     prefs.edit().putString("saved_foods", array.toString()).apply()
                                 }) { Text("Sil", color = Color(0xFFFF879A), fontSize = 11.sp) }
