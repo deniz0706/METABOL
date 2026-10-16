@@ -70,6 +70,13 @@ internal object FoodCatalog {
             food.note.contains("TAHIL") -> "Tahıl"
             food.note.contains("SUT") -> "Süt ürünleri"
             food.note.contains("KURUYEMIS") -> "Kuruyemiş"
+            // Core reference foods do not carry category tags. Categorize them
+            // explicitly instead of silently putting fruit and meat into "Yemekler".
+            name in setOf("muz", "elma", "portakal") -> "Meyve"
+            name in setOf("domates", "salatalık", "patates (haşlanmış)", "mercimek (haşlanmış)") -> "Sebze"
+            name in setOf("badem") -> "Kuruyemiş"
+            name.contains("tavuk göğsü") || name.contains("ton balığı") ||
+                name.contains("dana kıyma") -> "Et ve balık"
             else -> when {
                 name.contains("ekmek") || name.contains("pirinç") || name.contains("bulgur") || name.contains("yulaf") -> "Tahıl"
                 name.contains("süt") || name.contains("yoğurt") -> "Süt ürünleri"
