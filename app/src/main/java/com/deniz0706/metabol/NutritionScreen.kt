@@ -767,7 +767,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                     color = NutritionMuted, modifier = Modifier.padding(vertical = 20.dp))
             }
         } else {
-            items(meals, key = { it.id }) { meal ->
+            items(meals, key = { "meal:${it.id}" }, contentType = { "meal-card" }) { meal ->
                 Column(
                     Modifier.fillMaxWidth()
                         .background(NutritionPanel, RoundedCornerShape(18.dp))
