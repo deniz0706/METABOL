@@ -475,7 +475,7 @@ private fun Dashboard(
                         fontWeight = FontWeight.Bold)
                     Text("${entries.size} ölçüm", color = Muted, fontSize = 12.sp)
                 }
-                WeightChart(entries, Modifier.fillMaxWidth().height(350.dp))
+                WeightChart(entries, Modifier.fillMaxWidth().height(390.dp))
             }
         }
         item {
@@ -487,10 +487,22 @@ private fun Dashboard(
         }
         item {
             Column(Modifier.fillMaxWidth().background(Surface, RoundedCornerShape(24.dp)).border(1.dp, Edge, RoundedCornerShape(24.dp)).padding(20.dp)) {
-                Text("Ölçüm geçmişi", color = White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                var showAllMeasurements by remember { mutableStateOf(false) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("Ölçüm geçmişi", color = White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    if (entries.size > 8) {
+                        TextButton(onClick = { showAllMeasurements = !showAllMeasurements }) {
+                            Text(if (showAllMeasurements) "Son 8'i göster" else "Tümünü göster (${entries.size})",
+                                color = Mint, fontSize = 12.sp)
+                        }
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 if (entries.isEmpty()) Text("Henüz kayıt yok. İlk kilonu ekle.", color = Muted)
-                entries.takeLast(8).reversed().forEach { entry ->
+                val visibleMeasurements = if (showAllMeasurements) entries.asReversed()
+                    else entries.takeLast(8).asReversed()
+                visibleMeasurements.forEach { entry ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(dateFormat.format(Date(entry.time)), color = Muted, modifier = Modifier.weight(1f))
                         Text(numberFormat.format(entry.kg) + " kg", color = White, fontWeight = FontWeight.SemiBold)
