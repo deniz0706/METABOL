@@ -97,6 +97,12 @@ internal object MetabolicScience {
                 projected += gap / density * (0.85 + 0.15 * exp(-day / 30.0))
             }
         } else projected = null
+        // This is an illustrative scenario, not a physiological prediction.
+        // Reject extreme outputs instead of displaying implausible body weights.
+        projected = projected?.takeIf { candidate ->
+            candidate.isFinite() && candidate in 20.0..500.0 &&
+                lastWeight != null && abs(candidate - lastWeight) <= 6.0
+        }
         // Estimate short-term noise around the weight trend, rather than using the
         // raw standard deviation (which incorrectly treats steady fat loss as noise).
         val fluctuations = if (recentWeights.size >= 5) {
@@ -116,6 +122,8 @@ internal object MetabolicScience {
         } else 1.0
         val uncertainty = max(1.5, fluctuations * 2.5 + 0.5) +
             (if (reliability < 70) 1.0 else 0.0) + (forecastError ?: 0.0)
+        val forecastLow = projected?.minus(uncertainty)?.coerceAtLeast(20.0)
+        val forecastHigh = projected?.plus(uncertainty)?.coerceAtMost(500.0)
         val message = when {
             profile == null -> "Yaş, boy, biyolojik cinsiyet ve aktivite düzeyini Ayarlar'dan gir."
             lastWeight == null -> "Önce kilo ölçümü kaydet."
@@ -126,7 +134,7 @@ internal object MetabolicScience {
             else -> "Kişisel enerji harcaması yalnızca kayıtların eksiksiz olduğu varsayımıyla tahmin edilir."
         }
         return Estimate(bmr, initial, inferred, recorded.size, recentWeights.size, trend,
-            average, projected, projected?.minus(uncertainty), projected?.plus(uncertainty),
+            average, projected, forecastLow, forecastHigh,
             plateau, message, reliability, reliabilityLabel, expectedTdeeChange, forecastError)
     }
     private fun median(values: List<Double>): Double {
