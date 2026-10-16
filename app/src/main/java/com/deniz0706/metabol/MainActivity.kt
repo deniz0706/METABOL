@@ -475,7 +475,7 @@ private fun Dashboard(
                         fontWeight = FontWeight.Bold)
                     Text("${entries.size} ölçüm", color = Muted, fontSize = 12.sp)
                 }
-                WeightChart(entries, Modifier.fillMaxWidth().height(390.dp))
+                WeightChart(entries, Modifier.fillMaxWidth().height(500.dp))
             }
         }
         item {
