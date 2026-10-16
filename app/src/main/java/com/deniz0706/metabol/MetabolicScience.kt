@@ -26,8 +26,11 @@ internal object MetabolicScience {
     fun estimate(profile: Profile?, days: List<Day>, today: LocalDate): Estimate {
         // One calendar day must count only once toward evidence thresholds. Merge partial
         // records rather than treating duplicate entries as additional days.
-        val valid = days.filter { !it.date.isAfter(today) }
-            .groupBy { it.date }
+        val valid = days.filter { day ->
+            !day.date.isAfter(today) &&
+                (day.weightKg == null || (day.weightKg.isFinite() && day.weightKg in 20.0..500.0)) &&
+                (day.calories == null || day.calories in 0..10000)
+        }.groupBy { it.date }
             .map { (date, entries) ->
                 Day(date, entries.lastOrNull { it.weightKg != null }?.weightKg,
                     entries.lastOrNull { it.calories != null }?.calories)
@@ -55,8 +58,13 @@ internal object MetabolicScience {
         val trend = robustTrend(recentWeights)
         // Energy balance is a rough diagnostic. 7700 kcal/kg is NOT used as a physiological
         // prediction law; water changes, incomplete food logging and adaptive expenditure matter.
+        // Do not infer expenditure from a calorie log with implausibly low daily
+        // totals: these often represent partial logging, not true intake.
+        val plausibleIntake = recorded.isNotEmpty() &&
+            recorded.count { (it.calories ?: 0) >= 800 } >= 21 &&
+            average != null && average >= 1000.0
         val sufficient = recorded.size >= 21 && recentWeights.size >= 8 && span >= 21 &&
-            recorded.size.toDouble() / 28 >= 0.75 && trend != null
+            recorded.size.toDouble() / 28 >= 0.75 && trend != null && plausibleIntake
         val inferred = if (sufficient) (average!! - trend!! * 7700 / 7)
             .takeIf { it in 900.0..6500.0 } else null
         val reliability = ((recorded.size.coerceIn(0,28) / 28.0) * 45 +
@@ -99,6 +107,7 @@ internal object MetabolicScience {
             profile == null -> "Yaş, boy, biyolojik cinsiyet ve aktivite düzeyini Ayarlar'dan gir."
             lastWeight == null -> "Önce kilo ölçümü kaydet."
             !freshWeight -> "Son kilo ölçümün 14 günden eski. Güncel metabolizma tahmini için yeni bir ölçüm kaydet."
+            !plausibleIntake && recorded.size >= 21 -> "Günlük kalori kayıtları eksik veya çok düşük görünüyor. Bu verilerden güvenilir kişisel enerji harcaması çıkarılamaz." 
             !sufficient -> "Kişisel enerji harcaması için son 28 günde en az 21 günlük beslenme ve 21 güne yayılan en az 8 kilo kaydı gerekli."
             inferred == null -> "Verilerden makul bir enerji harcaması tahmini çıkarılamadı; kayıtları kontrol et."
             else -> "Kişisel enerji harcaması yalnızca kayıtların eksiksiz olduğu varsayımıyla tahmin edilir."
