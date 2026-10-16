@@ -475,7 +475,7 @@ private fun Dashboard(
                         fontWeight = FontWeight.Bold)
                     Text("${entries.size} ölçüm", color = Muted, fontSize = 12.sp)
                 }
-                WeightChart(entries, Modifier.fillMaxWidth().height(260.dp))
+                WeightChart(entries, Modifier.fillMaxWidth().height(350.dp))
             }
         }
         item {
@@ -534,10 +534,22 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
     )
     var chartPeriod by remember { mutableIntStateOf(0) }
     val today = System.currentTimeMillis()
-    val records = remember(entries, chartPeriod) {
+    val todayStart = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+    val periodDays = when (chartPeriod) { 1 -> 7; 2 -> 30; 3 -> 90; else -> null }
+    val periodStart = periodDays?.let { days ->
+        Calendar.getInstance().apply {
+            timeInMillis = todayStart
+            add(Calendar.DAY_OF_YEAR, -(days - 1))
+        }.timeInMillis
+    }
+    val records = remember(entries, chartPeriod, todayStart) {
         entries.sortedBy { it.time }.filter {
-            val days = when (chartPeriod) { 1 -> 7L; 2 -> 30L; 3 -> 90L; else -> null }
-            days == null || (it.time >= today - days * 86_400_000L && it.time <= today)
+            periodStart == null || (it.time >= periodStart && it.time < todayStart + 86_400_000L)
         }
     }
     LaunchedEffect(records) {
@@ -591,9 +603,18 @@ private fun WeightChart(entries: List<WeightRecord>, modifier: Modifier = Modifi
                 Text("Grafik için ölçüm ekle", color = Muted)
             }
         } else {
-            val start = records.first().time
-            val span = (records.last().time - start).coerceAtLeast(1L)
-            Canvas(Modifier.fillMaxWidth().weight(1f).pointerInput(records) {
+            val start = periodStart ?: records.first().time
+            val end = if (periodStart != null) today else records.last().time
+            val span = (end - start).coerceAtLeast(1L)
+            if (periodStart != null) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Başlangıç: ${dateFormat.format(Date(periodStart))}",
+                        color = Muted, fontSize = 10.sp)
+                    Text("Bugün: ${dateFormat.format(Date(today))}",
+                        color = Mint, fontSize = 10.sp)
+                }
+            }
+            Canvas(Modifier.fillMaxWidth().weight(1f).pointerInput(records, start, span) {
                 detectTapGestures { touch ->
                     val left = 12.dp.toPx()
                     val right = size.width - 48.dp.toPx()
