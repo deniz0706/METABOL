@@ -1240,7 +1240,7 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
         val valid = name.isNotBlank() && name.length <= 120 && (kcal.toIntOrNull() ?: -1) in 0..10000 &&
             listOf(p, c, f).all { (it.replace(',', '.').toDoubleOrNull() ?: -1.0) in 0.0..1000.0 }
         AlertDialog(
-            onDismissRequest = { dialogOpen = false },
+            onDismissRequest = { dialogOpen = false; editingMeal = null },
             containerColor = NutritionPanel,
             title = { Text(if (editingMeal == null) "Öğün ekle" else "Öğünü düzenle", color = NutritionWhite) },
             text = {
@@ -1316,15 +1316,28 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             confirmButton = {
                 TextButton(enabled = valid, onClick = {
                     if (valid) {
-                        val newEntry = MealEntry(editingMeal?.id ?: System.currentTimeMillis(), name.trim(), kcal.toInt(),
-                            p.replace(',', '.').toDouble(), c.replace(',', '.').toDouble(),
-                            f.replace(',', '.').toDouble())
-                        save(if (editingMeal == null) meals + newEntry else meals.map { if (it.id == editingMeal!!.id) newEntry else it })
+                        val entryId = editingMeal?.id ?: generateSequence(System.currentTimeMillis()) { it + 1 }
+                            .first { candidate -> meals.none { it.id == candidate } }
+                        val newEntry = MealEntry(
+                            entryId, name.trim(), kcal.toInt(),
+                            p.replace(',', '.').toDouble(),
+                            c.replace(',', '.').toDouble(),
+                            f.replace(',', '.').toDouble()
+                        )
+                        val updatedMeals = if (editingMeal == null) {
+                            meals + newEntry
+                        } else {
+                            meals.map { existing ->
+                                if (existing.id == entryId) newEntry else existing
+                            }
+                        }
+                        save(updatedMeals)
                         dialogOpen = false
+                        editingMeal = null
                     }
                 }) { Text("Kaydet") }
             },
-            dismissButton = { TextButton(onClick = { dialogOpen = false }) { Text("İptal") } }
+            dismissButton = { TextButton(onClick = { dialogOpen = false; editingMeal = null }) { Text("İptal") } }
         )
     }
 }
