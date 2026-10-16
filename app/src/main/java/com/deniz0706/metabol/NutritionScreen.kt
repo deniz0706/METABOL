@@ -1255,6 +1255,9 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
                     OutlinedTextField(f, { f = it }, label = { Text("Yağ (g)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
+                    val energyPreview = (p.replace(',', '.').toDoubleOrNull() ?: 0.0) * 4 + (c.replace(',', '.').toDoubleOrNull() ?: 0.0) * 4 + (f.replace(',', '.').toDoubleOrNull() ?: 0.0) * 9
+                    Text("Makrolardan tahmini enerji: ${energyPreview.toInt()} kcal", color = NutritionMint, fontSize = 12.sp)
+                    TextButton(onClick = { kcal = energyPreview.toInt().toString() }) { Text("Hesaplanan kaloriyi kullan") }
                 }
             },
             confirmButton = {
