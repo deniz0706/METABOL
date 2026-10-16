@@ -897,18 +897,18 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
             savedFoods.filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }
         }
         val localResults = remember(query, category, recentFoodNames) {
-            val recentRanks = recentFoodNames.withIndex().associate { it.value to it.index }
-            val blankQuery = query.isBlank()
-            FoodCatalog.search(query)
-                .asSequence()
-                .map { food -> food to FoodCatalog.categoryOf(food) }
-                .filter { (_, foodCategory) -> category == "Tümü" || foodCategory == category }
-                .sortedWith(compareBy<Pair<FoodReference, String>> { (food, foodCategory) ->
-                    if (!blankQuery) 0
-                    else recentRanks[food.name] ?: if (foodCategory == "Yemekler") 100 else 200
-                }.thenBy { (food, _) -> food.name })
-                .map { (food, _) -> food }
-                .toList()
+            val results = FoodCatalog.search(query)
+                .filter { category == "Tümü" || FoodCatalog.categoryOf(it) == category }
+            if (query.isNotBlank()) {
+                // FoodCatalog already ranks exact, prefix and multiword matches.
+                // Avoid a second full sort that would erase that relevance ranking.
+                results
+            } else {
+                val recentRanks = recentFoodNames.withIndex().associate { it.value to it.index }
+                results.sortedWith(compareBy<FoodReference> {
+                    recentRanks[it.name] ?: if (FoodCatalog.categoryOf(it) == "Yemekler") 100 else 200
+                }.thenBy { it.name })
+            }
         }
         Dialog(
             onDismissRequest = { catalogOpen = false },
