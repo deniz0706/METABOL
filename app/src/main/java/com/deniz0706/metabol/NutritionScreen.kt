@@ -1310,6 +1310,16 @@ internal fun NutritionScreen(context: Context, modifier: Modifier = Modifier) {
                         enabled = energyPreview != null && energyPreview in 0.0..10000.0,
                         onClick = { energyPreview?.let { kcal = it.toInt().toString() } }
                     ) { Text("Hesaplanan kaloriyi kullan") }
+                    val enteredCalories = kcal.toIntOrNull()
+                    if (energyPreview != null && enteredCalories != null &&
+                        energyPreview > 0.0 &&
+                        kotlin.math.abs(enteredCalories - energyPreview) > energyPreview * 0.2
+                    ) {
+                        Text(
+                            "Girilen kalori ile makrolardan hesaplanan enerji arasında %20'den fazla fark var. Etiket değerlerini kontrol et.",
+                            color = Color(0xFFFFC483), fontSize = 11.sp
+                        )
+                    }
                     Text("4/4/9 kcal/g tahminidir; etiket kalorisi farklı olabilir.",
                         color = NutritionMuted, fontSize = 11.sp)
                 }
